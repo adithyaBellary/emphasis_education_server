@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "lib": [
+      "esnext.asynciterable",
+      "ES2018.Promise"
+    ]
+  }
+}
