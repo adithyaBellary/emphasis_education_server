@@ -106,11 +106,7 @@ export type CreateUserPayload = {
 export type Query = {
   __typename?: 'Query';
   getMessages?: Maybe<Array<Maybe<MessageType>>>;
-  getUserID?: Maybe<Scalars['String']>;
-  getUser?: Maybe<TestUser>;
   getFamily?: Maybe<Array<Maybe<UserInfoType>>>;
-  getClasses?: Maybe<Array<Maybe<Scalars['String']>>>;
-  queryUserID?: Maybe<Scalars['Int']>;
   searchUsers: Array<Maybe<UserInfoType>>;
 };
 
@@ -121,18 +117,8 @@ export type QueryGetMessagesArgs = {
 };
 
 
-export type QueryGetUserArgs = {
-  id: Scalars['String'];
-};
-
-
 export type QueryGetFamilyArgs = {
   groupID: Scalars['String'];
-};
-
-
-export type QueryQueryUserIdArgs = {
-  email?: Maybe<Scalars['String']>;
 };
 
 
