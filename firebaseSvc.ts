@@ -1,6 +1,5 @@
-// import firebase from 'firebase';
-import * as firebase from 'firebase';
-import * as moment from 'moment';
+import firebase from 'firebase';
+import moment from 'moment';
 import { MD5 } from "crypto-js"
 
 import pubsub from './pubsub';
