@@ -1,6 +1,6 @@
-// import { ApolloServer } from 'apollo-server';
+import { ApolloServer } from 'apollo-server';
 import express from 'express';
-import { ApolloServer } from 'apollo-server-express';
+// import { ApolloServer } from 'apollo-server-express';
 
 import typeDefs from './schema';
 import resolvers from './resolvers';
@@ -15,11 +15,11 @@ const server = new ApolloServer({
   })
 });
 
-const app = express();
-server.applyMiddleware({ app });
+// const app = express();
+// server.applyMiddleware({ app });
 // app.use('/', (req, res) => 'hi')
-app.listen({port: process.env.PORT || 4000}, () => console.log(`server on ${server.graphqlPath}`))
+// app.listen({port: process.env.PORT || 4000}, () => console.log(`server on ${server.graphqlPath}`))
 
-// server.listen(process.env.PORT || 4000).then(({ url }) => {
-//   console.log(`🚀 Server ready at ${url}`);
-// });
+server.listen(process.env.PORT || 4000).then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
