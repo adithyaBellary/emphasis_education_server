@@ -40,6 +40,18 @@ class dataSource extends RESTDataSource {
   async searchUsers(searchTerm: string) {
     return await firebaseSvc.searchUsers(searchTerm);
   }
+
+  async searchClasses(searchTerm: string) {
+    return await firebaseSvc.searchClasses(searchTerm)
+  }
+
+  async addClass(className: string) {
+    return await firebaseSvc.addClass(className)
+  }
+
+  async deleteClass(className: string) {
+    return await firebaseSvc.deleteClass(className)
+  }
 }
 
 export default dataSource;

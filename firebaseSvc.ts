@@ -12,12 +12,12 @@ import {
   LoginPayload,
   MessageType,
 } from './types/schema-types';
-import { EventEmitter } from 'events';
 
 const MESSAGE_REF_BASE: string = 'Messages';
 const User_REF_BASE: string = 'Users';
 const NUM_MESSAGES_BASE: string = 'NumberOfMessages';
 const FAMILY_REF_BASE: string = 'Family';
+const CLASS_REF_BASE: string = 'Classes';
 
 class FireBaseSVC {
   constructor() {
@@ -28,6 +28,8 @@ class FireBaseSVC {
 
   login = async (user: MutationLoginArgs) => {
     let res: boolean;
+    // here is where we would need to firebase.auth().setPersistence i think
+    // https://firebase.google.com/docs/auth/web/auth-state-persistence
     const output = await firebase.auth().signInWithEmailAndPassword(
       user.email,
       user.password
@@ -164,6 +166,10 @@ class FireBaseSVC {
     return firebase.database().ref(`${FAMILY_REF_BASE}/${groupID}`);
   }
 
+  _refClasses() {
+    return firebase.database().ref(`${CLASS_REF_BASE}`);
+  }
+
   async pushUser(name, email, userType, phoneNumber, hash, groupID) {
     const testChatIds: Array<string> = ['test', 'test2'];
     const user_and_id: UserInfoType = {
@@ -173,6 +179,8 @@ class FireBaseSVC {
       _id: hash,
       userType: userType,
       chatIDs: testChatIds,
+      // we do not know what classes this user will be a part of so let us just let them be empty
+      classes: [],
       groupID
     }
     await this._refUserID(hash).push(user_and_id);
@@ -353,7 +361,7 @@ class FireBaseSVC {
           relevantFields.forEach((_field) => {
             let field = _user[_field];
             if (_field === 'email') { field = field.split('@')[0] }
-            if (field.toLowerCase().includes(searchTerm.toLocaleLowerCase())) {
+            if (field.toLowerCase().includes(searchTerm.toLowerCase())) {
               flag = true;
               return;
             }
@@ -363,6 +371,44 @@ class FireBaseSVC {
 
         return Users;
       })
+  }
+
+  async searchClasses(searchTerm: string) {
+    return await this._refClasses().once('value')
+      .then(snap => {
+        const val = snap.val();
+        if (!val) { return { classes: []}}
+        const keys = Object.keys(val);
+        const classes = keys.map(k => {
+          const c = val[k]
+          if (c.toLocaleLowerCase().includes(searchTerm.toLowerCase())) {
+            return c;
+          }
+        }).filter(c => !!c)
+        return { classes }
+      })
+  }
+
+  async addClass(className: string) {
+    // check to see if we have already added this class
+    const allClasses = await this.searchClasses('');
+    console.log('allclasses', allClasses);
+    if (allClasses.classes.includes(className)) {
+      return { res: false, message: 'This class already exists'}
+    }
+    await this._refClasses().push(className)
+    return { res: true, message: 'N/A'};
+  }
+
+  async deleteClass(className: string) {
+    const allClasses = await this.searchClasses(className);
+    if (allClasses.classes.length) {
+      // todo fix delete
+      await this._refClasses().child(className).remove()
+      return { res: true, message: 'THIS DOES NOT WORK YET'}
+    } else {
+      return {res: false, message: 'THIS DOES NOT WORK YET'}
+    }
   }
 }
 

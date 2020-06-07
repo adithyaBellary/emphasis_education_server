@@ -15,6 +15,9 @@ const resolvers = {
     },
     searchUsers: async (_, { searchTerm }, { dataSources}) => {
       return await dataSources.f.searchUsers(searchTerm)
+    },
+    searchClasses: async (_, { searchTerm }, { dataSources }) => {
+      return await dataSources.f.searchClasses(searchTerm)
     }
   },
 
@@ -49,6 +52,12 @@ const resolvers = {
         );
       });
       return true;
+    },
+    addClass: async (_, { className }, { dataSources }) => {
+      return await dataSources.f.addClass(className);
+    },
+    deleteClass: async (_, { className }, { dataSources }) => {
+      return await dataSources.f.deleteClass(className);
     }
   },
 

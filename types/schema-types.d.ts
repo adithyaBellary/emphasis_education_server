@@ -95,7 +95,17 @@ export type UserInfoType = {
   userType: Permission;
   _id: Scalars['String'];
   chatIDs: Array<Maybe<Scalars['String']>>;
+  classes?: Maybe<Array<Maybe<Class>>>;
   groupID: Scalars['String'];
+};
+
+export type Class = {
+  __typename?: 'Class';
+  _id?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  userID?: Maybe<Scalars['String']>;
+  tutorID?: Maybe<Scalars['String']>;
+  chatID?: Maybe<Scalars['String']>;
 };
 
 export type CreateUserPayload = {

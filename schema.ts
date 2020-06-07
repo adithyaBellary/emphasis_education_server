@@ -88,32 +88,67 @@ const typeDefs = gql`
     userType: Permission!
     _id: String!
     chatIDs: [String]!
+    # making this a nullable field for now
+    classes: [Class]
     groupID: String!
+  }
+
+  # need to look over which fields are required
+  # letf a lot of them to be nullable because at creation we will not know these details
+  type Class {
+    # seems like a good idea?
+    _id: String
+    # display name
+    name: String
+    # who is taking this class
+    userID: String
+    # who is teaching this class (probs will only be on)
+    tutorID: String
+    # where are we keeping these messages
+    chatID: String
+  }
+
+  type ClassName {
+    name: String!
   }
 
   type CreateUserPayload {
     success: Boolean
   }
 
+  type addClassPayload {
+    res: Boolean!
+    message: String!
+  }
+
+  type searchClassesPayload {
+    classes: [String]!
+  }
+
+  type deleteClassPayload {
+    res: Boolean!
+    message: String!
+  }
+
   type Query {
     getMessages(chatID: String, init: Int!): [MessageType]
     getFamily(groupID: String!): [UserInfoType]
     searchUsers(searchTerm: String!): [UserInfoType]!
+    searchClasses(searchTerm: String!): searchClassesPayload!
   }
 
   type Mutation {
     login(email: String!, password: String!): LoginPayload
     sendMessage(messages: [MessageInput]): MessagePayload!
     createUser(users: [UserInputType]): CreateUserPayload
+    addClass(className: String!): addClassPayload!
+    deleteClass(className: String!): deleteClassPayload!
 
     # needs to be written
     # add chats to a student
     # change classes
     # change tutor
-    # add offered classes
     # change the members of the family
-    addClass(subject: String!): Boolean
-
   }
 
   type Subscription {
