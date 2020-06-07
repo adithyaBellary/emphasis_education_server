@@ -11,6 +11,9 @@ import {
   MessageInput,
   LoginPayload,
   MessageType,
+  SearchClassesPayload,
+  AddClassPayload,
+  DeleteClassPayload
 } from './types/schema-types';
 
 const MESSAGE_REF_BASE: string = 'Messages';
@@ -385,7 +388,8 @@ class FireBaseSVC {
             return c;
           }
         }).filter(c => !!c)
-        return { classes }
+        const returnVal: SearchClassesPayload = { classes }
+        return returnVal;
       })
   }
 
@@ -394,10 +398,12 @@ class FireBaseSVC {
     const allClasses = await this.searchClasses('');
     console.log('allclasses', allClasses);
     if (allClasses.classes.includes(className)) {
-      return { res: false, message: 'This class already exists'}
+      const returnVal: AddClassPayload = { res: false, message: 'This class already exists'}
+      return returnVal;
     }
     await this._refClasses().push(className)
-    return { res: true, message: 'N/A'};
+    const returnVal: AddClassPayload = { res: true, message: 'N/A'};
+    return returnVal;
   }
 
   async deleteClass(className: string) {
@@ -405,9 +411,11 @@ class FireBaseSVC {
     if (allClasses.classes.length) {
       // todo fix delete
       await this._refClasses().child(className).remove()
-      return { res: true, message: 'THIS DOES NOT WORK YET'}
+      const returnVal: DeleteClassPayload = { res: true, message: 'THIS DOES NOT WORK YET'}
+      return returnVal;
     } else {
-      return {res: false, message: 'THIS DOES NOT WORK YET'}
+      const returnVal: DeleteClassPayload = {res: false, message: 'THIS DOES NOT WORK YET'}
+      return returnVal;
     }
   }
 }
