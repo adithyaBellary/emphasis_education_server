@@ -89,19 +89,19 @@ const typeDefs = gql`
     _id: String!
     chatIDs: [String]!
     # making this a nullable field for now
-    classes: [Class]
+    classes: [Chat]
     groupID: String!
   }
 
   # need to look over which fields are required
   # letf a lot of them to be nullable because at creation we will not know these details
-  type Class {
+  type Chat {
     # seems like a good idea?
-    _id: String
+    # _id: String
     # display name
     className: String
     # who is taking this class
-    userID: [String]
+    userIDs: [String]
     # who is teaching this class (probs will only be on)
     tutorID: String
     # where are we keeping these messages

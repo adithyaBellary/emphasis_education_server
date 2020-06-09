@@ -95,15 +95,14 @@ export type UserInfoType = {
   userType: Permission;
   _id: Scalars['String'];
   chatIDs: Array<Maybe<Scalars['String']>>;
-  classes?: Maybe<Array<Maybe<Class>>>;
+  classes?: Maybe<Array<Maybe<Chat>>>;
   groupID: Scalars['String'];
 };
 
-export type Class = {
-  __typename?: 'Class';
-  _id?: Maybe<Scalars['String']>;
+export type Chat = {
+  __typename?: 'Chat';
   className?: Maybe<Scalars['String']>;
-  userID?: Maybe<Array<Maybe<Scalars['String']>>>;
+  userIDs?: Maybe<Array<Maybe<Scalars['String']>>>;
   tutorID?: Maybe<Scalars['String']>;
   chatID?: Maybe<Scalars['String']>;
 };

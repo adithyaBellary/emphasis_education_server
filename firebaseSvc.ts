@@ -13,7 +13,9 @@ import {
   MessageType,
   SearchClassesPayload,
   AddClassPayload,
-  DeleteClassPayload
+  DeleteClassPayload,
+  CreateChatPayload,
+  Chat
 } from './types/schema-types';
 import { genID } from './helper';
 
@@ -175,8 +177,8 @@ class FireBaseSVC {
     return firebase.database().ref(`${CLASS_REF_BASE}`);
   }
 
-  _refChats() {
-    return firebase.database().ref(`${CHAT_REF_BASE}`);
+  _refChats(chatID: string) {
+    return firebase.database().ref(`${CHAT_REF_BASE}/${chatID}`);
   }
 
   async pushUser(name, email, userType, phoneNumber, hash, groupID) {
@@ -434,21 +436,43 @@ class FireBaseSVC {
     }
   }
 
-  // genID() {
-  //   return Math.round(Math.random() * 1000000);
-  // }
-
   async createChat(className: string, tutorID: string, userIDs: string[]) {
     // generate chatID / class ID
     // let us make these two ^ the same
-    const ID: string = genID();
+    const chatID: string = genID();
     // add ID to the tutor
-    await this._refUserID(tutorID).update({
-      name: "new new name",
-      newField: 'new fieldddd'
-    })
+    const newChat: Chat = {
+      className,
+      userIDs,
+      tutorID,
+      chatID
+    }
 
-    return { res: true}
+    let classes = await this._refUserID(tutorID).once('value').then(snap => {
+      const val = snap.val()
+      return val.classes
+    })
+    console.log('classes:', classes)
+    console.log('bewchat:', newChat)
+    if (!classes) {
+      this._refUserID(tutorID).update({ classes: [{...newChat}]})
+    } else {
+      this._refUserID(tutorID).update({ classes: [...classes, newChat]})
+    }
+
+    // userIDs.forEach(async u => {
+    //   const chats = await this._refUserID(u).once('value').then(snap => {
+    //     const val = snap.val();
+    //     return val.chatIDs
+    //   })
+    //   console.log('chats', chats)
+    //   this._refUserID(u).update({ classes: [...classes, className]})
+    // })
+    // userIDs.forEach(async u => firebase.database().ref(`${User_REF_BASE}/${u}/chatIDs`).update())
+
+    this._refChats(chatID).update(newChat)
+    const returnVal: CreateChatPayload = { res: true }
+    return returnVal
     // add ID to the users
 
   }
