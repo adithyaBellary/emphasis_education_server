@@ -99,9 +99,9 @@ const typeDefs = gql`
     # seems like a good idea?
     _id: String
     # display name
-    name: String
+    className: String
     # who is taking this class
-    userID: String
+    userID: [String]
     # who is teaching this class (probs will only be on)
     tutorID: String
     # where are we keeping these messages
@@ -130,6 +130,10 @@ const typeDefs = gql`
     message: String!
   }
 
+  type createChatPayload {
+    res: Boolean!
+  }
+
   type Query {
     getMessages(chatID: String, init: Int!): [MessageType]
     getFamily(groupID: String!): [UserInfoType]
@@ -143,6 +147,8 @@ const typeDefs = gql`
     createUser(users: [UserInputType]): CreateUserPayload
     addClass(className: String!): addClassPayload!
     deleteClass(className: String!): deleteClassPayload!
+
+    createChat(className: String!, tutorID: String!, userIDs: [String!]!): createChatPayload!
 
     # needs to be written
     # add chats to a student

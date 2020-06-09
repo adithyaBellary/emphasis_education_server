@@ -15,12 +15,14 @@ import {
   AddClassPayload,
   DeleteClassPayload
 } from './types/schema-types';
+import { genID } from './helper';
 
 const MESSAGE_REF_BASE: string = 'Messages';
 const User_REF_BASE: string = 'Users';
 const NUM_MESSAGES_BASE: string = 'NumberOfMessages';
 const FAMILY_REF_BASE: string = 'Family';
 const CLASS_REF_BASE: string = 'Classes';
+const CHAT_REF_BASE: string = 'Chats';
 
 class FireBaseSVC {
   constructor() {
@@ -173,6 +175,10 @@ class FireBaseSVC {
     return firebase.database().ref(`${CLASS_REF_BASE}`);
   }
 
+  _refChats() {
+    return firebase.database().ref(`${CHAT_REF_BASE}`);
+  }
+
   async pushUser(name, email, userType, phoneNumber, hash, groupID) {
     const testChatIds: Array<string> = ['test', 'test2'];
     const user_and_id: UserInfoType = {
@@ -186,7 +192,9 @@ class FireBaseSVC {
       classes: [],
       groupID
     }
-    await this._refUserID(hash).push(user_and_id);
+    // await this._refUserID(hash).push(user_and_id);
+    // await this._refFamily(groupID).push(user_and_id)
+    await this._refUserID(hash).update(user_and_id);
     await this._refFamily(groupID).push(user_and_id)
   }
 
@@ -334,8 +342,10 @@ class FireBaseSVC {
     const user: UserInfoType = await firebase.database().ref(`Users/${hashedEmail}`).once('value')
       .then(snap => {
         const val = snap.val()
-        const key = Object.keys(val)[0];
-        return val[key]
+        // console.log('val', val)
+        return val
+        // const key = Object.keys(val)[0];
+        // return val[key]
       })
     return user;
   }
@@ -356,22 +366,25 @@ class FireBaseSVC {
     return await this._refUsers().once('value')
       .then((snap) => {
         const val = snap.val();
+        // console.log('val in search', val)
         const keys = Object.keys(val);
         const Users = keys.map((k, index) => {
           const u = val[k];
+          // console.log('user', Object.keys(u))
           const _user = u[Object.keys(u)[0]]
           let flag = false;
           relevantFields.forEach((_field) => {
-            let field = _user[_field];
+            let field = u[_field];
+            // console.log('field', field)
             if (_field === 'email') { field = field.split('@')[0] }
             if (field.toLowerCase().includes(searchTerm.toLowerCase())) {
               flag = true;
               return;
             }
           })
-          if (flag) { return _user }
+          if (flag) { return u }
         }).filter(user => !!user)
-
+        console.log('returned Users', Users)
         return Users;
       })
   }
@@ -401,7 +414,7 @@ class FireBaseSVC {
       const returnVal: AddClassPayload = { res: false, message: 'This class already exists'}
       return returnVal;
     }
-    await this._refClasses().push(className)
+    await this._refClasses().update(className)
     const returnVal: AddClassPayload = { res: true, message: 'N/A'};
     return returnVal;
   }
@@ -417,6 +430,25 @@ class FireBaseSVC {
       const returnVal: DeleteClassPayload = {res: false, message: 'THIS DOES NOT WORK YET'}
       return returnVal;
     }
+  }
+
+  // genID() {
+  //   return Math.round(Math.random() * 1000000);
+  // }
+
+  async createChat(className: string, tutorID: string, userIDs: string[]) {
+    // generate chatID / class ID
+    // let us make these two ^ the same
+    const ID: string = genID();
+    // add ID to the tutor
+    await this._refUserID(tutorID).update({
+      name: "new new name",
+      newField: 'new fieldddd'
+    })
+
+    return { res: true}
+    // add ID to the users
+
   }
 }
 

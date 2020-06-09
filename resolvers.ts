@@ -58,6 +58,9 @@ const resolvers = {
     },
     deleteClass: async (_, { className }, { dataSources }) => {
       return await dataSources.f.deleteClass(className);
+    },
+    createChat: async (_, { className, tutorID, userIDs }, { dataSources }) => {
+      return await dataSources.f.createChat(className, tutorID, userIDs)
     }
   },
 
