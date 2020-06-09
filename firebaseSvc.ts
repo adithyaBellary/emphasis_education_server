@@ -393,10 +393,12 @@ class FireBaseSVC {
     return await this._refClasses().once('value')
       .then(snap => {
         const val = snap.val();
+        console.log('val in search classes', val)
         if (!val) { return { classes: []}}
         const keys = Object.keys(val);
         const classes = keys.map(k => {
           const c = val[k]
+          console.log('c')
           if (c.toLocaleLowerCase().includes(searchTerm.toLowerCase())) {
             return c;
           }
@@ -414,7 +416,7 @@ class FireBaseSVC {
       const returnVal: AddClassPayload = { res: false, message: 'This class already exists'}
       return returnVal;
     }
-    await this._refClasses().update(className)
+    await this._refClasses().push(className)
     const returnVal: AddClassPayload = { res: true, message: 'N/A'};
     return returnVal;
   }
