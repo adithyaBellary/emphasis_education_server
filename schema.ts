@@ -90,7 +90,7 @@ const typeDefs = gql`
     _id: String!
     chatIDs: [String]!
     # making this a nullable field for now
-    classes: [Chat]
+    classes: [Chat]!
     groupID: String!
   }
 

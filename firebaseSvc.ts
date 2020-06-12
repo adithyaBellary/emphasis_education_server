@@ -464,11 +464,11 @@ class FireBaseSVC {
     if (!classes) {
       await this._refUserID(tutorID).update({ classes: [{...newChat}]})
       const fam = await this.getFamily(tutor.groupID);
-      fam.foreach(async f => await this._refUserID(f._id).update({ classes: [{...newChat}]}));
+      fam.forEach(async f => await this._refUserID(f._id).update({ classes: [{...newChat}]}));
     } else {
       await this._refUserID(tutorID).update({ classes: [...classes, newChat]})
       const fam = await this.getFamily(tutor.groupID);
-      fam.foreach(async f => await this._refUserID(f._id).update({ classes: [...classes, newChat]}))
+      fam.forEach(async f => await this._refUserID(f._id).update({ classes: [...classes, newChat]}))
     }
     // we also need to add this class to t
 
