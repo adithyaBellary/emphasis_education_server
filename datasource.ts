@@ -53,8 +53,8 @@ class dataSource extends RESTDataSource {
     return await firebaseSvc.deleteClass(className)
   }
 
-  async createChat(className: string, tutorID: string, userIDs: string[]) {
-    return await firebaseSvc.createChat(className, tutorID, userIDs);
+  async createChat(className: string, tutorEmail: string, userEmails: string[]) {
+    return await firebaseSvc.createChat(className, tutorEmail, userEmails);
   }
 }
 

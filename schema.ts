@@ -66,6 +66,7 @@ const typeDefs = gql`
     groupID: String!
     _id: String!
     chatIDs: [String]!
+    classes: [Chat]
   }
 
   input UserInputType {
@@ -101,9 +102,9 @@ const typeDefs = gql`
     # display name
     className: String
     # who is taking this class
-    userIDs: [String]
+    userEmails: [String]
     # who is teaching this class (probs will only be on)
-    tutorID: String
+    tutorEmail: String
     # where are we keeping these messages
     chatID: String
   }
@@ -148,7 +149,7 @@ const typeDefs = gql`
     addClass(className: String!): addClassPayload!
     deleteClass(className: String!): deleteClassPayload!
 
-    createChat(className: String!, tutorID: String!, userIDs: [String!]!): createChatPayload!
+    createChat(className: String!, tutorEmail: String!, userEmails: [String!]!): createChatPayload!
 
     # needs to be written
     # add chats to a student

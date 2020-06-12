@@ -15,7 +15,7 @@ import {
   AddClassPayload,
   DeleteClassPayload,
   CreateChatPayload,
-  Chat
+  Chat,
 } from './types/schema-types';
 import { genID } from './helper';
 
@@ -47,6 +47,7 @@ class FireBaseSVC {
     );
     const loggedInUser: UserInfoType = await this.getUser(user.email);
     const {__typename, ...rest} = loggedInUser;
+    console.log('logged inuser ', loggedInUser)
     const payload: LoginPayload = { res, ...rest };
 
     return payload;
@@ -360,6 +361,7 @@ class FireBaseSVC {
         return keys.map(key => val[key])
       })
   }
+
   async searchUsers(searchTerm: string) {
 
     const relevantFields = [ 'email', 'name', 'phoneNumber', 'userType' ];
@@ -436,38 +438,48 @@ class FireBaseSVC {
     }
   }
 
-  async createChat(className: string, tutorID: string, userIDs: string[]) {
+  async createChat(className: string, tutorEmail: string, userEmails: string[]) {
     // generate chatID / class ID
     // let us make these two ^ the same
     const chatID: string = genID();
+    const tutorID: string = MD5(tutorEmail).toString()
+    const userIDs: string[] = userEmails.map(e => MD5(e).toString());
     // add ID to the tutor
     const newChat: Chat = {
       className,
-      userIDs,
-      tutorID,
+      userEmails,
+      tutorEmail,
       chatID
     }
 
-    let classes = await this._refUserID(tutorID).once('value').then(snap => {
+    let tutor: UserInfoType = await this._refUserID(tutorID).once('value').then(snap => {
       const val = snap.val()
-      return val.classes
+      return val
     })
+    console.log('tutor', tutor)
+    let classes = tutor.classes;
     console.log('classes:', classes)
     console.log('bewchat:', newChat)
+    // tutors will not have any families
     if (!classes) {
-      this._refUserID(tutorID).update({ classes: [{...newChat}]})
+      await this._refUserID(tutorID).update({ classes: [{...newChat}]})
+      const fam = await this.getFamily(tutor.groupID);
+      fam.foreach(async f => await this._refUserID(f._id).update({ classes: [{...newChat}]}));
     } else {
-      this._refUserID(tutorID).update({ classes: [...classes, newChat]})
+      await this._refUserID(tutorID).update({ classes: [...classes, newChat]})
+      const fam = await this.getFamily(tutor.groupID);
+      fam.foreach(async f => await this._refUserID(f._id).update({ classes: [...classes, newChat]}))
     }
+    // we also need to add this class to t
 
-    // userIDs.forEach(async u => {
-    //   const chats = await this._refUserID(u).once('value').then(snap => {
-    //     const val = snap.val();
-    //     return val.chatIDs
-    //   })
-    //   console.log('chats', chats)
-    //   this._refUserID(u).update({ classes: [...classes, className]})
-    // })
+    userIDs.forEach(async u => {
+      const _u = await this._refUserID(u).once('value').then(snap => {
+        const val = snap.val();
+        return val
+      })
+      console.log('chats', _u.chats)
+      this._refUserID(u).update({ classes: [...classes, className]})
+    })
     // userIDs.forEach(async u => firebase.database().ref(`${User_REF_BASE}/${u}/chatIDs`).update())
 
     this._refChats(chatID).update(newChat)

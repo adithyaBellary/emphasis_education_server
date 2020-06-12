@@ -77,6 +77,7 @@ export type LoginPayload = {
   groupID: Scalars['String'];
   _id: Scalars['String'];
   chatIDs: Array<Maybe<Scalars['String']>>;
+  classes?: Maybe<Array<Maybe<Chat>>>;
 };
 
 export type UserInputType = {
@@ -102,8 +103,8 @@ export type UserInfoType = {
 export type Chat = {
   __typename?: 'Chat';
   className?: Maybe<Scalars['String']>;
-  userIDs?: Maybe<Array<Maybe<Scalars['String']>>>;
-  tutorID?: Maybe<Scalars['String']>;
+  userEmails?: Maybe<Array<Maybe<Scalars['String']>>>;
+  tutorEmail?: Maybe<Scalars['String']>;
   chatID?: Maybe<Scalars['String']>;
 };
 
