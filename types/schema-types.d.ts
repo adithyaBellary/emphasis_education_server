@@ -96,7 +96,7 @@ export type UserInfoType = {
   userType: Permission;
   _id: Scalars['String'];
   chatIDs: Array<Maybe<Scalars['String']>>;
-  classes?: Maybe<Array<Maybe<Chat>>>;
+  classes: Array<Maybe<Chat>>;
   groupID: Scalars['String'];
 };
 
@@ -208,8 +208,8 @@ export type MutationDeleteClassArgs = {
 
 export type MutationCreateChatArgs = {
   className: Scalars['String'];
-  tutorID: Scalars['String'];
-  userIDs: Array<Scalars['String']>;
+  tutorEmail: Scalars['String'];
+  userEmails: Array<Scalars['String']>;
 };
 
 export type Subscription = {
