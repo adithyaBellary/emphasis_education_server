@@ -17,7 +17,7 @@ import {
   CreateChatPayload,
   Chat,
 } from './types/schema-types';
-import { genID } from './helper';
+import { genID, getHash } from './helper';
 
 const MESSAGE_REF_BASE: string = 'Messages';
 const User_REF_BASE: string = 'Users';
@@ -158,6 +158,7 @@ class FireBaseSVC {
     return firebase.database().ref(`${MESSAGE_REF_BASE}/${chatPath}`);
   }
 
+  // this will take in the userID (hashed email)
   _refUserID(ID: string) {
     return firebase.database().ref(`${User_REF_BASE}/${ID}`);
   }
@@ -341,7 +342,7 @@ class FireBaseSVC {
 
   // lets pass in the email and then hash it here
   async getUser(email: string) {
-    const hashedEmail = MD5(email).toString();
+    const hashedEmail = getHash(email);
     const user: UserInfoType = await firebase.database().ref(`Users/${hashedEmail}`).once('value')
       .then(snap => {
         const val = snap.val()
@@ -438,14 +439,18 @@ class FireBaseSVC {
     }
   }
 
-  async createChat(className: string, tutorEmail: string, userEmails: string[]) {
+  async createChat(displayName: string, className: string, tutorEmail: string, userEmails: string[]) {
     // generate chatID / class ID
     // let us make these two ^ the same
     const chatID: string = genID();
-    const tutorID: string = MD5(tutorEmail).toString()
-    const userIDs: string[] = userEmails.map(e => MD5(e).toString());
+    const tutorID: string = getHash(tutorEmail);
+    const users: UserInfoType[] = await Promise.all(userEmails.map(async email => {
+      const u = await this.getUser(email)
+      return u;
+    }));
     // add ID to the tutor
     const newChat: Chat = {
+      displayName,
       className,
       userEmails,
       tutorEmail,
@@ -458,12 +463,14 @@ class FireBaseSVC {
     })
     console.log('tutor', tutor)
     let classes = tutor.classes;
-    console.log('classes:', classes)
-    console.log('bewchat:', newChat)
+    // console.log('classes:', classes)
+    // console.log('bewchat:', newChat)
     // tutors will not have any families
     if (!classes) {
       await this._refUserID(tutorID).update({ classes: [{...newChat}]})
       const fam = await this.getFamily(tutor.groupID);
+      // console.log('tutor fam', fam);
+      console.log('tutor fam', fam)
       fam.forEach(async f => await this._refUserID(f._id).update({ classes: [{...newChat}]}));
     } else {
       await this._refUserID(tutorID).update({ classes: [...classes, newChat]})
@@ -472,15 +479,28 @@ class FireBaseSVC {
     }
     // we also need to add this class to t
 
-    userIDs.forEach(async u => {
-      const _u = await this._refUserID(u).once('value').then(snap => {
-        const val = snap.val();
-        return val
-      })
-      console.log('chats', _u.chats)
-      this._refUserID(u).update({ classes: [...classes, className]})
+    users.forEach(async _user => {
+      // const _u: UserInfoType = await this._refUserID(u).once('value').then(snap => {
+      //   const val = snap.val();
+      //   return val
+      // })
+      // console.log('user: ', _u);
+      // console.log('chats', _u.classes)
+      classes = _user.classes;
+      if (!classes) {
+        await this._refUserID(_user._id).update({ classes: [{...newChat}]});
+        // update the family user object
+        const fam: UserInfoType[] = await this.getFamily(_user.groupID);
+        // only add this class to this user in the family, not all the users in that family
+        fam.forEach(async f => {
+          if (f._id === _user._id) {
+            // means that we have found this user in the family ref
+            await this._refUserID(f._id).update({ classes: [{...newChat}] });
+          }
+        })
+      }
+      return true;
     })
-    // userIDs.forEach(async u => firebase.database().ref(`${User_REF_BASE}/${u}/chatIDs`).update())
 
     this._refChats(chatID).update(newChat)
     const returnVal: CreateChatPayload = { res: true }

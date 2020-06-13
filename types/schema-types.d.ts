@@ -102,6 +102,7 @@ export type UserInfoType = {
 
 export type Chat = {
   __typename?: 'Chat';
+  displayName: Scalars['String'];
   className?: Maybe<Scalars['String']>;
   userEmails?: Maybe<Array<Maybe<Scalars['String']>>>;
   tutorEmail?: Maybe<Scalars['String']>;
@@ -207,6 +208,7 @@ export type MutationDeleteClassArgs = {
 
 
 export type MutationCreateChatArgs = {
+  displayName: Scalars['String'];
   className: Scalars['String'];
   tutorEmail: Scalars['String'];
   userEmails: Array<Scalars['String']>;

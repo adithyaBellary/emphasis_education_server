@@ -100,6 +100,8 @@ const typeDefs = gql`
     # seems like a good idea?
     # _id: String
     # display name
+    displayName: String!
+    # class name
     className: String
     # who is taking this class
     userEmails: [String]
@@ -149,7 +151,7 @@ const typeDefs = gql`
     addClass(className: String!): addClassPayload!
     deleteClass(className: String!): deleteClassPayload!
 
-    createChat(className: String!, tutorEmail: String!, userEmails: [String!]!): createChatPayload!
+    createChat(displayName: String! className: String!, tutorEmail: String!, userEmails: [String!]!): createChatPayload!
 
     # needs to be written
     # add chats to a student
