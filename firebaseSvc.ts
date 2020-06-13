@@ -173,6 +173,10 @@ class FireBaseSVC {
     return firebase.database().ref(`${FAMILY_REF_BASE}/${groupID}`);
   }
 
+  _refFamilySpecific(groupID: string, ind: string) {
+    return firebase.database().ref(`${FAMILY_REF_BASE}/${groupID}/user/${ind}`)
+  }
+
   _refClasses() {
     return firebase.database().ref(`${CLASS_REF_BASE}`);
   }
@@ -361,12 +365,12 @@ class FireBaseSVC {
   }
 
   async getFamily(groupID: string) {
-    return await this._refFamily(groupID).once('value')
+    const res: UserInfoType[] = await this._refFamily(groupID).once('value')
       .then((snap) => {
         const val = snap.val();
-        const keys = Object.keys(val);
-        return keys.map(key => val[key])
+        return val.user
       })
+    return res;
   }
 
   async searchUsers(searchTerm: string) {
@@ -409,7 +413,6 @@ class FireBaseSVC {
         const keys = Object.keys(val);
         const classes = keys.map(k => {
           const c = val[k]
-          console.log('c')
           if (c.toLocaleLowerCase().includes(searchTerm.toLowerCase())) {
             return c;
           }
@@ -473,13 +476,41 @@ class FireBaseSVC {
     if (!classes) {
       await this._refUserID(tutorID).update({ classes: [{...newChat}]})
       const fam = await this.getFamily(tutor.groupID);
-      // console.log('tutor fam', fam);
       console.log('tutor fam', fam)
-      fam.forEach(async f => await this._refUserID(f._id).update({ classes: [{...newChat}]}));
+      // fam.forEach(async f => await this._refUserID(f._id).update({ classes: [{...newChat}]}));
+      // const _runAsync = async () => {
+      //   await asyncForEach(fam, async (_famMember) => {
+      //     await this._refUserID(_famMember._id).update({ classes: [{...newChat}]})
+      //   })
+      // }
+      let ind = null;
+
+      await this._refFamily(tutor.groupID).once('value').then(snap => {
+        const val = snap.val();
+        console.log('new val', val.user);
+        val.user.forEach((_v, _ind) => {
+          if (_v._id === tutorID) {
+            // update the value now
+            // _v.update({ classes: [{...newChat}]})
+            ind = _ind
+          }
+        })
+      })
+      console.log('index:', ind)
+      await this._refFamilySpecific(tutor.groupID, ind).update({ classes: [{...newChat}]})
+      console.log('done updating the tutor')
+
+      // _runAsync();
     } else {
       await this._refUserID(tutorID).update({ classes: [...classes, newChat]})
       const fam = await this.getFamily(tutor.groupID);
-      fam.forEach(async f => await this._refUserID(f._id).update({ classes: [...classes, newChat]}))
+      // fam.forEach(async f => await this._refUserID(f._id).update({ classes: [...classes, newChat]}))
+      // const _runAsync = async () => {
+      //   await asyncForEach(fam, async (_famMember) => {
+      //     await this._refUserID(_famMember._id).update({ classes: [...classes, newChat]})
+      //   })
+      // }
+      // _runAsync();
     }
     // we also need to add this class to t
 
@@ -488,17 +519,41 @@ class FireBaseSVC {
       if (!classes) {
         await this._refUserID(_user._id).update({ classes: [{...newChat}]});
         // update the family user object
-        const fam: UserInfoType[] = await this.getFamily(_user.groupID);
-        // only add this class to this user in the family, not all the users in that family
-        fam.forEach(async f => {
-          if (f._id === _user._id) {
-            // means that we have found this user in the family ref
-            await this._refUserID(f._id).update({ classes: [{...newChat}] });
-          }
-        })
+        // const fam: UserInfoType[] = await this.getFamily(_user.groupID);
+        // // only add this class to this user in the family, not all the users in that family
+        // fam.forEach(async f => {
+        //   if (f._id === _user._id) {
+        //     // means that we have found this user in the family ref
+        //     await this._refUserID(f._id).update({ classes: [{...newChat}] });
+        //   }
+        // })
       }
       return true;
     })
+    // asyncForEach(users, async (_user) => {
+    //   classes = _user.classes;
+    //   if (!classes) {
+    //     await this._refUserID(_user._id).update({ classes: [{...newChat}]});
+    //     // ge the user object in the family location
+    //     const fam: UserInfoType[] = await this.getFamily(_user.groupID)
+    //     asyncForEach(fam, async (_famMember) => {
+    //       if (_famMember._id === _user._id) {
+    //         // if we have found the same user in the family
+    //         await this._refUserID(_famMember._id).update({ classes: [{...newChat}]})
+    //       }
+    //     })
+    //   } else {
+    //     await this._refUserID(_user._id).update({classes: [...classes, newChat]})
+    //     // update the same user in the family locatio
+    //     const fam: UserInfoType[] = await this.getFamily(_user.groupID);
+    //     // asyncForEach(fam, async (_famMember) => {
+    //     //   if (_famMember._id === _user._id) {
+    //     //     await this._refUserID()
+    //     //   }
+    //     // })
+    //   }
+    // })
+
 
     this._refChats(chatID).update(newChat)
     const returnVal: CreateChatPayload = { res: true }
