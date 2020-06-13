@@ -475,8 +475,6 @@ class FireBaseSVC {
     })
     console.log('tutor', tutor)
     let classes = tutor.classes;
-    // console.log('classes:', classes)
-    // console.log('bewchat:', newChat)
     // tutors will not have any families
     if (!classes) {
       await this._refUserID(tutorID).update({ classes: [{...newChat}]})
@@ -492,12 +490,6 @@ class FireBaseSVC {
     // we also need to add this class to t
 
     users.forEach(async _user => {
-      // const _u: UserInfoType = await this._refUserID(u).once('value').then(snap => {
-      //   const val = snap.val();
-      //   return val
-      // })
-      // console.log('user: ', _u);
-      // console.log('chats', _u.classes)
       classes = _user.classes;
       if (!classes) {
         await this._refUserID(_user._id).update({ classes: [{...newChat}]});

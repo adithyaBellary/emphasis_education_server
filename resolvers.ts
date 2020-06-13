@@ -39,18 +39,21 @@ const resolvers = {
       console.log('in resolver creating user', users);
       // set the groupID. should be the same for each user in the family
       const groupID: string = genID();
-      await asyncForEach(users, async ({email, password, name, userType, phoneNumber}: UserInputType) => {
-        const resp = await dataSources.f.createUser(email, password, name);
-        console.log('done w 1', email, resp)
-        const result = await dataSources.f.pushUser(
-          name,
-          email,
-          userType,
-          phoneNumber,
-          groupID
-        )
-        console.log('done w 2', email, result)
-      })
+      const _create = async () => {
+        await asyncForEach(users, async ({email, password, name, userType, phoneNumber}: UserInputType) => {
+          const resp = await dataSources.f.createUser(email, password, name);
+          console.log('done w 1', email, resp)
+          const result = await dataSources.f.pushUser(
+            name,
+            email,
+            userType,
+            phoneNumber,
+            groupID
+          )
+          console.log('done w 2', email, result)
+        })
+      }
+      await _create();
       return true;
     },
     addClass: async (_, { className }, { dataSources }) => {
