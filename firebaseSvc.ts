@@ -17,7 +17,7 @@ import {
   CreateChatPayload,
   Chat,
 } from './types/schema-types';
-import { genID, getHash } from './helper';
+import { genID, getHash, asyncForEach } from './helper';
 
 const MESSAGE_REF_BASE: string = 'Messages';
 const User_REF_BASE: string = 'Users';
@@ -128,19 +128,23 @@ class FireBaseSVC {
     })
   }
 
-  createUser = async (email: string, password: string, name: string) => {
-    firebase.auth()
-      .createUserWithEmailAndPassword(email, password)
-      .then(() => {
-        console.log('successfully created the user');
-        const newUser = firebase.auth().currentUser
-        newUser.updateProfile({ displayName: name})
-          .then(() => {
-            console.log('all done creating the user');
-          }), e => console.log('an error updating the display name');
-      }), e => {
-        console.log('there was an error creating the user', e);
+  async createUser (email: string, password: string, name: string) {
+    const _create = async () => {
+      await firebase.auth()
+        .createUserWithEmailAndPassword(email, password)
+        .then(() => {
+          console.log('successfully created the user');
+          const newUser = firebase.auth().currentUser
+          newUser.updateProfile({ displayName: name})
+            .then(() => {
+              console.log('all done creating the user');
+            }), e => console.log('an error updating the display name');
+        }), e => {
+          console.log('there was an error creating the user', e);
+        }
       }
+    const r = await _create();
+    return true;
   }
 
   // figure out this uuid business
@@ -196,10 +200,18 @@ class FireBaseSVC {
       classes: [],
       groupID
     }
-    // await this._refUserID(hash).push(user_and_id);
-    // await this._refFamily(groupID).push(user_and_id)
     await this._refUserID(hash).update(user_and_id);
-    await this._refFamily(groupID).push(user_and_id)
+    const curFam = await this._refFamily(groupID).once('value').then(snap => {
+      const val = snap.val();
+      return val;
+    })
+    console.log('current fam', curFam);
+    if (!curFam) {
+      await this._refFamily(groupID).update({ user: [{...user_and_id}]})
+    } else {
+      await this._refFamily(groupID).update({ user: [...curFam.user, user_and_id]})
+    }
+    return true;
   }
 
   // start at 0

@@ -23,14 +23,14 @@ class dataSource extends RESTDataSource {
     return await firebaseSvc.send(message)
   }
 
-  createUser(email: string, password: string, name: string) {
+  async createUser(email: string, password: string, name: string) {
     console.log('user in datasource being created', email, password, name)
-    firebaseSvc.createUser(email, password, name);
+    return await firebaseSvc.createUser(email, password, name);
   }
 
   async pushUser(name: string, email: string, userType: Permission, phoneNumber: string, groupID: string) {
     const hash: string = MD5(email).toString();
-    await firebaseSvc.pushUser(name, email, userType, phoneNumber, hash, groupID);
+    return await firebaseSvc.pushUser(name, email, userType, phoneNumber, hash, groupID);
   }
 
   async getFamily(groupID: string) {
