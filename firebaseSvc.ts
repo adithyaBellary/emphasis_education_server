@@ -129,21 +129,16 @@ class FireBaseSVC {
   }
 
   async createUser (email: string, password: string, name: string) {
-    await firebase.auth().createUserWithEmailAndPassword(email, password)
-    const newUser = firebase.auth().currentUser
-    await newUser.updateProfile( { displayName: name})
-    console.log('successfully did all the things w the user')
-
-    return true;
-  }
-
-  async _createUser (email: string, password: string, name: string) {
-    await firebase.auth().createUserWithEmailAndPassword(email, password)
-    const newUser = firebase.auth().currentUser
-    await newUser.updateProfile( { displayName: name})
-    console.log('successfully did all the things w the user')
-
-    return true;
+    try {
+      await firebase.auth().createUserWithEmailAndPassword(email, password)
+      const newUser = firebase.auth().currentUser
+      await newUser.updateProfile( { displayName: name})
+      console.log('successfully did all the things w the user')
+      return true;
+    } catch(e) {
+      console.log('there was an error creating the user')
+      return false;
+    }
   }
 
   // figure out this uuid business

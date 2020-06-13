@@ -1,7 +1,7 @@
 // fieldName: (parent, args, context, info) => data;
 import pubsub from './pubsub';
 import { MESSAGE_RECEIVED_EVENT } from './constants';
-import { UserInputType } from './types/schema-types';
+import { UserInputType, CreateUserPayload } from './types/schema-types';
 import { genID, asyncForEach } from './helper';
 
 const resolvers = {
@@ -39,7 +39,7 @@ const resolvers = {
       console.log('in resolver creating user', users);
       // set the groupID. should be the same for each user in the family
       const groupID: string = genID();
-      let response = false;
+      let response = true;
       const _create = async () => {
         await asyncForEach(users, async ({email, password, name, userType, phoneNumber}: UserInputType) => {
           const resp = await dataSources.f.createUser(email, password, name);
@@ -52,11 +52,12 @@ const resolvers = {
             groupID
           )
           console.log('done w 2', email, result)
+          response = resp && result;
         })
-        response = true;
       }
       await _create();
-      return { success: response };
+      const result: CreateUserPayload = { success: response };
+      return result;
     },
     addClass: async (_, { className }, { dataSources }) => {
       return await dataSources.f.addClass(className);
