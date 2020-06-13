@@ -35,7 +35,7 @@ const resolvers = {
       const res = await dataSources.f.sendMessages(messages);
       return res;
     },
-    createUser: async (_, {users}, { dataSources }) => {
+    createUser: (_, {users}, { dataSources }) => {
       console.log('in resolver creating user', users);
       // set the groupID. should be the same for each user in the family
       const groupID: string = genID();
@@ -52,9 +52,9 @@ const resolvers = {
           )
           console.log('done w 2', email, result)
         })
+        return true;
       }
-      await _create();
-      return true;
+      return _create();
     },
     addClass: async (_, { className }, { dataSources }) => {
       return await dataSources.f.addClass(className);

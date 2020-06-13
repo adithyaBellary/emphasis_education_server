@@ -129,21 +129,36 @@ class FireBaseSVC {
   }
 
   async createUser (email: string, password: string, name: string) {
-    const _create = async () => {
-      await firebase.auth()
-        .createUserWithEmailAndPassword(email, password)
-        .then(() => {
-          console.log('successfully created the user');
-          const newUser = firebase.auth().currentUser
-          newUser.updateProfile({ displayName: name})
-            .then(() => {
-              console.log('all done creating the user');
-            }), e => console.log('an error updating the display name');
-        }), e => {
-          console.log('there was an error creating the user', e);
-        }
-      }
-    const r = await _create();
+    // const _create = async () => {
+    //   await firebase.auth()
+    //     .createUserWithEmailAndPassword(email, password)
+    //     .then(() => {
+    //       console.log('successfully created the user');
+    //       const newUser = firebase.auth().currentUser
+    //       newUser.updateProfile({ displayName: name})
+    //         .then(() => {
+    //           console.log('all done creating the user');
+    //         }), e => console.log('an error updating the display name');
+    //     }), e => {
+    //       console.log('there was an error creating the user', e);
+    //     }
+    //     return true;
+    //   }
+    // return _create().then(val => val);
+    await firebase.auth().createUserWithEmailAndPassword(email, password)
+    const newUser = firebase.auth().currentUser
+    await newUser.updateProfile( { displayName: name})
+    console.log('successfully did all the things w the user')
+
+    return true;
+  }
+
+  async _createUser (email: string, password: string, name: string) {
+    await firebase.auth().createUserWithEmailAndPassword(email, password)
+    const newUser = firebase.auth().currentUser
+    await newUser.updateProfile( { displayName: name})
+    console.log('successfully did all the things w the user')
+
     return true;
   }
 
