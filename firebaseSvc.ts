@@ -473,44 +473,29 @@ class FireBaseSVC {
     console.log('tutor', tutor)
     let classes = tutor.classes;
     // tutors will not have any families
+    let ind = null;
+    await this._refFamily(tutor.groupID).once('value').then(snap => {
+      const val = snap.val();
+      console.log('new val', val.user);
+      val.user.forEach((_v, _ind) => {
+        if (_v._id === tutorID) {
+          ind = _ind
+        }
+      })
+    })
     if (!classes) {
       await this._refUserID(tutorID).update({ classes: [{...newChat}]})
-      const fam = await this.getFamily(tutor.groupID);
-      console.log('tutor fam', fam)
-      // fam.forEach(async f => await this._refUserID(f._id).update({ classes: [{...newChat}]}));
-      // const _runAsync = async () => {
-      //   await asyncForEach(fam, async (_famMember) => {
-      //     await this._refUserID(_famMember._id).update({ classes: [{...newChat}]})
-      //   })
-      // }
-      let ind = null;
+      // const fam = await this.getFamily(tutor.groupID);
+      // console.log('tutor fam', fam)
 
-      await this._refFamily(tutor.groupID).once('value').then(snap => {
-        const val = snap.val();
-        console.log('new val', val.user);
-        val.user.forEach((_v, _ind) => {
-          if (_v._id === tutorID) {
-            // update the value now
-            // _v.update({ classes: [{...newChat}]})
-            ind = _ind
-          }
-        })
-      })
       console.log('index:', ind)
       await this._refFamilySpecific(tutor.groupID, ind).update({ classes: [{...newChat}]})
       console.log('done updating the tutor')
 
-      // _runAsync();
     } else {
       await this._refUserID(tutorID).update({ classes: [...classes, newChat]})
-      const fam = await this.getFamily(tutor.groupID);
-      // fam.forEach(async f => await this._refUserID(f._id).update({ classes: [...classes, newChat]}))
-      // const _runAsync = async () => {
-      //   await asyncForEach(fam, async (_famMember) => {
-      //     await this._refUserID(_famMember._id).update({ classes: [...classes, newChat]})
-      //   })
-      // }
-      // _runAsync();
+      await this._refFamilySpecific(tutor.groupID, ind).update({ classes: [...classes, newChat] })
+      console.log('done updating the tutor')
     }
     // we also need to add this class to t
 
@@ -530,6 +515,34 @@ class FireBaseSVC {
       }
       return true;
     })
+
+    const _runAsync = async () => {
+      await asyncForEach(users, async (_user) => {
+        classes = _user.classes;
+        await this._refFamily(_user.groupID).once('value').then(snap => {
+          const val = snap.val();
+          val.user.forEach((_u, index) => {
+            if (_u._id === _user._id) {
+              ind = index
+            }
+          })
+        })
+
+        if (!classes) {
+          // update at the user location
+          await this._refUserID(_user._id).update({ classes: [{...newChat}]})
+          // update at the family location
+          await this._refFamilySpecific(_user.groupID, ind).update({ classes: [{...newChat}]})
+        } else {
+          await this._refUserID(_user._id).update({ classes: [...classes, newChat]})
+          await this._refFamilySpecific(_user.groupID, ind).update({ classes: [...classes, newChat]})
+        }
+        console.log('dont update the user')
+      })
+      console.log('done updating all the users')
+    }
+    _runAsync();
+
     // asyncForEach(users, async (_user) => {
     //   classes = _user.classes;
     //   if (!classes) {
