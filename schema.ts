@@ -66,6 +66,7 @@ const typeDefs = gql`
     groupID: String!
     _id: String!
     chatIDs: [String]!
+    classes: [Chat]
   }
 
   input UserInputType {
@@ -88,32 +89,75 @@ const typeDefs = gql`
     userType: Permission!
     _id: String!
     chatIDs: [String]!
+    # making this a nullable field for now
+    classes: [Chat]!
     groupID: String!
+  }
+
+  # need to look over which fields are required
+  # letf a lot of them to be nullable because at creation we will not know these details
+  type Chat {
+    # seems like a good idea?
+    # _id: String
+    # display name
+    displayName: String!
+    # class name
+    className: String
+    # who is taking this class
+    userEmails: [String]
+    # who is teaching this class (probs will only be on)
+    tutorEmail: String
+    # where are we keeping these messages
+    chatID: String
+  }
+
+  type ClassName {
+    name: String!
   }
 
   type CreateUserPayload {
     success: Boolean
   }
 
+  type addClassPayload {
+    res: Boolean!
+    message: String!
+  }
+
+  type searchClassesPayload {
+    classes: [String]!
+  }
+
+  type deleteClassPayload {
+    res: Boolean!
+    message: String!
+  }
+
+  type createChatPayload {
+    res: Boolean!
+  }
+
   type Query {
     getMessages(chatID: String, init: Int!): [MessageType]
     getFamily(groupID: String!): [UserInfoType]
     searchUsers(searchTerm: String!): [UserInfoType]!
+    searchClasses(searchTerm: String!): searchClassesPayload!
   }
 
   type Mutation {
     login(email: String!, password: String!): LoginPayload
     sendMessage(messages: [MessageInput]): MessagePayload!
     createUser(users: [UserInputType]): CreateUserPayload
+    addClass(className: String!): addClassPayload!
+    deleteClass(className: String!): deleteClassPayload!
+
+    createChat(displayName: String! className: String!, tutorEmail: String!, userEmails: [String!]!): createChatPayload!
 
     # needs to be written
     # add chats to a student
     # change classes
     # change tutor
-    # add offered classes
     # change the members of the family
-    addClass(subject: String!): Boolean
-
   }
 
   type Subscription {

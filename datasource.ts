@@ -23,14 +23,16 @@ class dataSource extends RESTDataSource {
     return await firebaseSvc.send(message)
   }
 
-  createUser(email: string, password: string, name: string) {
+  async createUser(email: string, password: string, name: string) {
     console.log('user in datasource being created', email, password, name)
-    firebaseSvc.createUser(email, password, name);
+    const res = await firebaseSvc.createUser(email, password, name);
+    console.log('response from user creation firebase', res)
+    return res;
   }
 
   async pushUser(name: string, email: string, userType: Permission, phoneNumber: string, groupID: string) {
     const hash: string = MD5(email).toString();
-    await firebaseSvc.pushUser(name, email, userType, phoneNumber, hash, groupID);
+    return await firebaseSvc.pushUser(name, email, userType, phoneNumber, hash, groupID);
   }
 
   async getFamily(groupID: string) {
@@ -39,6 +41,22 @@ class dataSource extends RESTDataSource {
 
   async searchUsers(searchTerm: string) {
     return await firebaseSvc.searchUsers(searchTerm);
+  }
+
+  async searchClasses(searchTerm: string) {
+    return await firebaseSvc.searchClasses(searchTerm)
+  }
+
+  async addClass(className: string) {
+    return await firebaseSvc.addClass(className)
+  }
+
+  async deleteClass(className: string) {
+    return await firebaseSvc.deleteClass(className)
+  }
+
+  async createChat(displayName, className: string, tutorEmail: string, userEmails: string[]) {
+    return await firebaseSvc.createChat(displayName, className, tutorEmail, userEmails);
   }
 }
 

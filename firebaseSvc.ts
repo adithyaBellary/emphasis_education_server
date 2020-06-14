@@ -11,13 +11,20 @@ import {
   MessageInput,
   LoginPayload,
   MessageType,
+  SearchClassesPayload,
+  AddClassPayload,
+  DeleteClassPayload,
+  CreateChatPayload,
+  Chat,
 } from './types/schema-types';
-import { EventEmitter } from 'events';
+import { genID, getHash, asyncForEach } from './helper';
 
 const MESSAGE_REF_BASE: string = 'Messages';
 const User_REF_BASE: string = 'Users';
 const NUM_MESSAGES_BASE: string = 'NumberOfMessages';
 const FAMILY_REF_BASE: string = 'Family';
+const CLASS_REF_BASE: string = 'Classes';
+const CHAT_REF_BASE: string = 'Chats';
 
 class FireBaseSVC {
   constructor() {
@@ -28,6 +35,8 @@ class FireBaseSVC {
 
   login = async (user: MutationLoginArgs) => {
     let res: boolean;
+    // here is where we would need to firebase.auth().setPersistence i think
+    // https://firebase.google.com/docs/auth/web/auth-state-persistence
     const output = await firebase.auth().signInWithEmailAndPassword(
       user.email,
       user.password
@@ -38,6 +47,7 @@ class FireBaseSVC {
     );
     const loggedInUser: UserInfoType = await this.getUser(user.email);
     const {__typename, ...rest} = loggedInUser;
+    console.log('logged inuser ', loggedInUser)
     const payload: LoginPayload = { res, ...rest };
 
     return payload;
@@ -118,19 +128,17 @@ class FireBaseSVC {
     })
   }
 
-  createUser = async (email: string, password: string, name: string) => {
-    firebase.auth()
-      .createUserWithEmailAndPassword(email, password)
-      .then(() => {
-        console.log('successfully created the user');
-        const newUser = firebase.auth().currentUser
-        newUser.updateProfile({ displayName: name})
-          .then(() => {
-            console.log('all done creating the user');
-          }), e => console.log('an error updating the display name');
-      }), e => {
-        console.log('there was an error creating the user', e);
-      }
+  async createUser (email: string, password: string, name: string) {
+    try {
+      await firebase.auth().createUserWithEmailAndPassword(email, password)
+      const newUser = firebase.auth().currentUser
+      await newUser.updateProfile( { displayName: name})
+      console.log('successfully did all the things w the user')
+      return true;
+    } catch(e) {
+      console.log('there was an error creating the user')
+      return false;
+    }
   }
 
   // figure out this uuid business
@@ -148,6 +156,7 @@ class FireBaseSVC {
     return firebase.database().ref(`${MESSAGE_REF_BASE}/${chatPath}`);
   }
 
+  // this will take in the userID (hashed email)
   _refUserID(ID: string) {
     return firebase.database().ref(`${User_REF_BASE}/${ID}`);
   }
@@ -164,6 +173,18 @@ class FireBaseSVC {
     return firebase.database().ref(`${FAMILY_REF_BASE}/${groupID}`);
   }
 
+  _refFamilySpecific(groupID: string, ind: string) {
+    return firebase.database().ref(`${FAMILY_REF_BASE}/${groupID}/user/${ind}`)
+  }
+
+  _refClasses() {
+    return firebase.database().ref(`${CLASS_REF_BASE}`);
+  }
+
+  _refChats(chatID: string) {
+    return firebase.database().ref(`${CHAT_REF_BASE}/${chatID}`);
+  }
+
   async pushUser(name, email, userType, phoneNumber, hash, groupID) {
     const testChatIds: Array<string> = ['test', 'test2'];
     const user_and_id: UserInfoType = {
@@ -173,10 +194,22 @@ class FireBaseSVC {
       _id: hash,
       userType: userType,
       chatIDs: testChatIds,
+      // we do not know what classes this user will be a part of so let us just let them be empty
+      classes: [],
       groupID
     }
-    await this._refUserID(hash).push(user_and_id);
-    await this._refFamily(groupID).push(user_and_id)
+    await this._refUserID(hash).update(user_and_id);
+    const curFam = await this._refFamily(groupID).once('value').then(snap => {
+      const val = snap.val();
+      return val;
+    })
+    console.log('current fam', curFam);
+    if (!curFam) {
+      await this._refFamily(groupID).update({ user: [{...user_and_id}]})
+    } else {
+      await this._refFamily(groupID).update({ user: [...curFam.user, user_and_id]})
+    }
+    return true;
   }
 
   // start at 0
@@ -319,24 +352,27 @@ class FireBaseSVC {
 
   // lets pass in the email and then hash it here
   async getUser(email: string) {
-    const hashedEmail = MD5(email).toString();
+    const hashedEmail = getHash(email);
     const user: UserInfoType = await firebase.database().ref(`Users/${hashedEmail}`).once('value')
       .then(snap => {
         const val = snap.val()
-        const key = Object.keys(val)[0];
-        return val[key]
+        // console.log('val', val)
+        return val
+        // const key = Object.keys(val)[0];
+        // return val[key]
       })
     return user;
   }
 
   async getFamily(groupID: string) {
-    return await this._refFamily(groupID).once('value')
+    const res: UserInfoType[] = await this._refFamily(groupID).once('value')
       .then((snap) => {
         const val = snap.val();
-        const keys = Object.keys(val);
-        return keys.map(key => val[key])
+        return val.user
       })
+    return res;
   }
+
   async searchUsers(searchTerm: string) {
 
     const relevantFields = [ 'email', 'name', 'phoneNumber', 'userType' ];
@@ -345,24 +381,152 @@ class FireBaseSVC {
     return await this._refUsers().once('value')
       .then((snap) => {
         const val = snap.val();
+        // console.log('val in search', val)
         const keys = Object.keys(val);
         const Users = keys.map((k, index) => {
           const u = val[k];
+          // console.log('user', Object.keys(u))
           const _user = u[Object.keys(u)[0]]
           let flag = false;
           relevantFields.forEach((_field) => {
-            let field = _user[_field];
+            let field = u[_field];
+            // console.log('field', field)
             if (_field === 'email') { field = field.split('@')[0] }
-            if (field.toLowerCase().includes(searchTerm.toLocaleLowerCase())) {
+            if (field.toLowerCase().includes(searchTerm.toLowerCase())) {
               flag = true;
               return;
             }
           })
-          if (flag) { return _user }
+          if (flag) { return u }
         }).filter(user => !!user)
-
+        console.log('returned Users', Users)
         return Users;
       })
+  }
+
+  async searchClasses(searchTerm: string) {
+    return await this._refClasses().once('value')
+      .then(snap => {
+        const val = snap.val();
+        console.log('val in search classes', val)
+        if (!val) { return { classes: []}}
+        const keys = Object.keys(val);
+        const classes = keys.map(k => {
+          const c = val[k]
+          if (c.toLocaleLowerCase().includes(searchTerm.toLowerCase())) {
+            return c;
+          }
+        }).filter(c => !!c)
+        const returnVal: SearchClassesPayload = { classes }
+        return returnVal;
+      })
+  }
+
+  async addClass(className: string) {
+    // check to see if we have already added this class
+    const allClasses = await this.searchClasses('');
+    console.log('allclasses', allClasses);
+    if (allClasses.classes.includes(className)) {
+      const returnVal: AddClassPayload = { res: false, message: 'This class already exists'}
+      return returnVal;
+    }
+    await this._refClasses().push(className)
+    const returnVal: AddClassPayload = { res: true, message: 'N/A'};
+    return returnVal;
+  }
+
+  async deleteClass(className: string) {
+    const allClasses = await this.searchClasses(className);
+    if (allClasses.classes.length) {
+      // todo fix delete
+      await this._refClasses().child(className).remove()
+      const returnVal: DeleteClassPayload = { res: true, message: 'THIS DOES NOT WORK YET'}
+      return returnVal;
+    } else {
+      const returnVal: DeleteClassPayload = {res: false, message: 'THIS DOES NOT WORK YET'}
+      return returnVal;
+    }
+  }
+
+  async createChat(displayName: string, className: string, tutorEmail: string, userEmails: string[]) {
+    // generate chatID / class ID
+    // let us make these two ^ the same
+    const chatID: string = genID();
+    const tutorID: string = getHash(tutorEmail);
+    const users: UserInfoType[] = await Promise.all(userEmails.map(async email => {
+      const u = await this.getUser(email)
+      return u;
+    }));
+    // add ID to the tutor
+    const newChat: Chat = {
+      displayName,
+      className,
+      userEmails,
+      tutorEmail,
+      chatID
+    }
+
+    let tutor: UserInfoType = await this._refUserID(tutorID).once('value').then(snap => {
+      const val = snap.val()
+      return val
+    })
+    console.log('tutor', tutor)
+    let classes = tutor.classes;
+    // tutors will not have any families
+    let ind = null;
+    await this._refFamily(tutor.groupID).once('value').then(snap => {
+      const val = snap.val();
+      console.log('new val', val.user);
+      val.user.forEach((_v, _ind) => {
+        if (_v._id === tutorID) {
+          ind = _ind
+        }
+      })
+    })
+    if (!classes) {
+      await this._refUserID(tutorID).update({ classes: [{...newChat}]})
+
+      console.log('index:', ind)
+      await this._refFamilySpecific(tutor.groupID, ind).update({ classes: [{...newChat}]})
+      console.log('done updating the tutor')
+
+    } else {
+      await this._refUserID(tutorID).update({ classes: [...classes, newChat]})
+      await this._refFamilySpecific(tutor.groupID, ind).update({ classes: [...classes, newChat] })
+      console.log('done updating the tutor')
+    }
+
+    const _runAsync = async () => {
+      await asyncForEach(users, async (_user) => {
+        classes = _user.classes;
+        await this._refFamily(_user.groupID).once('value').then(snap => {
+          const val = snap.val();
+          val.user.forEach((_u, index) => {
+            if (_u._id === _user._id) {
+              ind = index
+            }
+          })
+        })
+
+        if (!classes) {
+          // update at the user location
+          await this._refUserID(_user._id).update({ classes: [{...newChat}]})
+          // update at the family location
+          await this._refFamilySpecific(_user.groupID, ind).update({ classes: [{...newChat}]})
+        } else {
+          await this._refUserID(_user._id).update({ classes: [...classes, newChat]})
+          await this._refFamilySpecific(_user.groupID, ind).update({ classes: [...classes, newChat]})
+        }
+        console.log('dont update the user')
+      })
+      console.log('done updating all the users')
+    }
+    _runAsync();
+
+    this._refChats(chatID).update(newChat)
+    const returnVal: CreateChatPayload = { res: true }
+    return returnVal
+
   }
 }
 

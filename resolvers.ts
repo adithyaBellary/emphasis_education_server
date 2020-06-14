@@ -1,8 +1,8 @@
 // fieldName: (parent, args, context, info) => data;
 import pubsub from './pubsub';
 import { MESSAGE_RECEIVED_EVENT } from './constants';
-import { UserInputType } from './types/schema-types';
-import { genID } from './helper';
+import { UserInputType, CreateUserPayload } from './types/schema-types';
+import { genID, asyncForEach } from './helper';
 
 const resolvers = {
   Query: {
@@ -15,6 +15,9 @@ const resolvers = {
     },
     searchUsers: async (_, { searchTerm }, { dataSources}) => {
       return await dataSources.f.searchUsers(searchTerm)
+    },
+    searchClasses: async (_, { searchTerm }, { dataSources }) => {
+      return await dataSources.f.searchClasses(searchTerm)
     }
   },
 
@@ -32,23 +35,38 @@ const resolvers = {
       const res = await dataSources.f.sendMessages(messages);
       return res;
     },
-    createUser: (_, {users}, { dataSources }) => {
+    createUser: async (_, {users}, { dataSources }) => {
       console.log('in resolver creating user', users);
       // set the groupID. should be the same for each user in the family
       const groupID: string = genID();
-      users.forEach(async ({email, password, name, userType, phoneNumber}: UserInputType) => {
-        // this adds the user to the firebase list of users
-        await dataSources.f.createUser(email, password, name);
-        // this adds user to the db
-        await dataSources.f.pushUser(
-          name,
-          email,
-          userType,
-          phoneNumber,
-          groupID
-        );
-      });
-      return true;
+      let response = true;
+      const _create = async () => {
+        await asyncForEach(users, async ({email, password, name, userType, phoneNumber}: UserInputType) => {
+          const resp = await dataSources.f.createUser(email, password, name);
+          console.log('done w 1', email, resp)
+          const result = await dataSources.f.pushUser(
+            name,
+            email,
+            userType,
+            phoneNumber,
+            groupID
+          )
+          console.log('done w 2', email, result)
+          response = resp && result;
+        })
+      }
+      await _create();
+      const result: CreateUserPayload = { success: response };
+      return result;
+    },
+    addClass: async (_, { className }, { dataSources }) => {
+      return await dataSources.f.addClass(className);
+    },
+    deleteClass: async (_, { className }, { dataSources }) => {
+      return await dataSources.f.deleteClass(className);
+    },
+    createChat: async (_, { displayName, className, tutorEmail, userEmails }, { dataSources }) => {
+      return await dataSources.f.createChat(displayName, className, tutorEmail, userEmails)
     }
   },
 

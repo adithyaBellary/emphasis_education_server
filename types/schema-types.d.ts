@@ -77,6 +77,7 @@ export type LoginPayload = {
   groupID: Scalars['String'];
   _id: Scalars['String'];
   chatIDs: Array<Maybe<Scalars['String']>>;
+  classes?: Maybe<Array<Maybe<Chat>>>;
 };
 
 export type UserInputType = {
@@ -95,7 +96,22 @@ export type UserInfoType = {
   userType: Permission;
   _id: Scalars['String'];
   chatIDs: Array<Maybe<Scalars['String']>>;
+  classes: Array<Maybe<Chat>>;
   groupID: Scalars['String'];
+};
+
+export type Chat = {
+  __typename?: 'Chat';
+  displayName: Scalars['String'];
+  className?: Maybe<Scalars['String']>;
+  userEmails?: Maybe<Array<Maybe<Scalars['String']>>>;
+  tutorEmail?: Maybe<Scalars['String']>;
+  chatID?: Maybe<Scalars['String']>;
+};
+
+export type ClassName = {
+  __typename?: 'ClassName';
+  name: Scalars['String'];
 };
 
 export type CreateUserPayload = {
@@ -103,11 +119,34 @@ export type CreateUserPayload = {
   success?: Maybe<Scalars['Boolean']>;
 };
 
+export type AddClassPayload = {
+  __typename?: 'addClassPayload';
+  res: Scalars['Boolean'];
+  message: Scalars['String'];
+};
+
+export type SearchClassesPayload = {
+  __typename?: 'searchClassesPayload';
+  classes: Array<Maybe<Scalars['String']>>;
+};
+
+export type DeleteClassPayload = {
+  __typename?: 'deleteClassPayload';
+  res: Scalars['Boolean'];
+  message: Scalars['String'];
+};
+
+export type CreateChatPayload = {
+  __typename?: 'createChatPayload';
+  res: Scalars['Boolean'];
+};
+
 export type Query = {
   __typename?: 'Query';
   getMessages?: Maybe<Array<Maybe<MessageType>>>;
   getFamily?: Maybe<Array<Maybe<UserInfoType>>>;
   searchUsers: Array<Maybe<UserInfoType>>;
+  searchClasses: SearchClassesPayload;
 };
 
 
@@ -126,12 +165,19 @@ export type QuerySearchUsersArgs = {
   searchTerm: Scalars['String'];
 };
 
+
+export type QuerySearchClassesArgs = {
+  searchTerm: Scalars['String'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   login?: Maybe<LoginPayload>;
   sendMessage: MessagePayload;
   createUser?: Maybe<CreateUserPayload>;
-  addClass?: Maybe<Scalars['Boolean']>;
+  addClass: AddClassPayload;
+  deleteClass: DeleteClassPayload;
+  createChat: CreateChatPayload;
 };
 
 
@@ -152,7 +198,20 @@ export type MutationCreateUserArgs = {
 
 
 export type MutationAddClassArgs = {
-  subject: Scalars['String'];
+  className: Scalars['String'];
+};
+
+
+export type MutationDeleteClassArgs = {
+  className: Scalars['String'];
+};
+
+
+export type MutationCreateChatArgs = {
+  displayName: Scalars['String'];
+  className: Scalars['String'];
+  tutorEmail: Scalars['String'];
+  userEmails: Array<Scalars['String']>;
 };
 
 export type Subscription = {
