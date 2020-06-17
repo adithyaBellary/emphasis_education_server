@@ -53,15 +53,16 @@ const typeDefs = gql`
   type LoginPayload {
     res: Boolean!
     # basically UserInfoType from here down
-    name: String!
-    email: String!
-    phoneNumber: String!
-    userType: Permission!
-    groupID: String!
-    _id: String!
-    chatIDs: [String]!
-    classes: [Chat]
-    gender: String!
+    # name: String!
+    # email: String!
+    # phoneNumber: String!
+    # userType: Permission!
+    # groupID: String!
+    # _id: String!
+    # chatIDs: [String]!
+    # classes: [Chat]
+    # gender: String!
+    user: UserInfoType
   }
 
   input UserInputType {
@@ -86,7 +87,7 @@ const typeDefs = gql`
     _id: String!
     chatIDs: [String]!
     # making this a nullable field for now
-    classes: [Chat]!
+    classes: [Chat]
     groupID: String!
     gender: String!
   }

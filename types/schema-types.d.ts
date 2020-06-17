@@ -62,15 +62,7 @@ export enum Classes {
 export type LoginPayload = {
   __typename?: 'LoginPayload';
   res: Scalars['Boolean'];
-  name: Scalars['String'];
-  email: Scalars['String'];
-  phoneNumber: Scalars['String'];
-  userType: Permission;
-  groupID: Scalars['String'];
-  _id: Scalars['String'];
-  chatIDs: Array<Maybe<Scalars['String']>>;
-  classes?: Maybe<Array<Maybe<Chat>>>;
-  gender: Scalars['String'];
+  user?: Maybe<UserInfoType>;
 };
 
 export type UserInputType = {
@@ -136,6 +128,11 @@ export type CreateChatPayload = {
   res: Scalars['Boolean'];
 };
 
+export type LogoutPayload = {
+  __typename?: 'logoutPayload';
+  success: Scalars['Boolean'];
+};
+
 export type Query = {
   __typename?: 'Query';
   getMessages?: Maybe<Array<Maybe<MessageType>>>;
@@ -173,6 +170,7 @@ export type Mutation = {
   addClass: AddClassPayload;
   deleteClass: DeleteClassPayload;
   createChat: CreateChatPayload;
+  logout: LogoutPayload;
 };
 
 
