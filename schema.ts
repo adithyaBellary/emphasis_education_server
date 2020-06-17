@@ -35,17 +35,11 @@ const typeDefs = gql`
     user: MessageUser!
   }
 
-  # lets make this similar to UserInfoType
-  type TestUser {
-    _id: String!
-    email: String!
-    password: String!
-    userType: Permission!
-    chatIDs: [String]!
-  }
+
 
   enum Permission {
     Student
+    Parent
     Tutor
     Admin
   }
@@ -67,6 +61,7 @@ const typeDefs = gql`
     _id: String!
     chatIDs: [String]!
     classes: [Chat]
+    gender: String!
   }
 
   input UserInputType {
@@ -75,6 +70,7 @@ const typeDefs = gql`
     password: String!
     userType: Permission!
     phoneNumber: String!
+    gender: String!
   }
 
   # maybe we can add an optional info field too
@@ -92,6 +88,7 @@ const typeDefs = gql`
     # making this a nullable field for now
     classes: [Chat]!
     groupID: String!
+    gender: String!
   }
 
   # need to look over which fields are required
@@ -116,7 +113,7 @@ const typeDefs = gql`
   }
 
   type CreateUserPayload {
-    success: Boolean
+    success: Boolean!
   }
 
   type addClassPayload {
@@ -137,6 +134,10 @@ const typeDefs = gql`
     res: Boolean!
   }
 
+  type logoutPayload {
+    success: Boolean!
+  }
+
   type Query {
     getMessages(chatID: String, init: Int!): [MessageType]
     getFamily(groupID: String!): [UserInfoType]
@@ -152,6 +153,7 @@ const typeDefs = gql`
     deleteClass(className: String!): deleteClassPayload!
 
     createChat(displayName: String! className: String!, tutorEmail: String!, userEmails: [String!]!): createChatPayload!
+    logout: logoutPayload!
 
     # needs to be written
     # add chats to a student

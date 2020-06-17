@@ -120,12 +120,15 @@ class FireBaseSVC {
   //   }
   // }
 
-  onLogout = () => {
-    firebase.auth().signOut().then(() => {
-      console.log('sign out is successful')
-    }).catch((e) => {
-      console.log('an error happened when signing out')
-    })
+
+  async logout () {
+    try {
+      await firebase.auth().signOut();
+      return {success: true};
+    } catch(e) {
+      return {success: false};
+      console.log('there was an error logging out')
+    }
   }
 
   async createUser (email: string, password: string, name: string) {
@@ -185,7 +188,7 @@ class FireBaseSVC {
     return firebase.database().ref(`${CHAT_REF_BASE}/${chatID}`);
   }
 
-  async pushUser(name, email, userType, phoneNumber, hash, groupID) {
+  async pushUser(name, email, userType, phoneNumber, hash, groupID, gender) {
     const testChatIds: Array<string> = ['test', 'test2'];
     const user_and_id: UserInfoType = {
       name,
@@ -196,7 +199,8 @@ class FireBaseSVC {
       chatIDs: testChatIds,
       // we do not know what classes this user will be a part of so let us just let them be empty
       classes: [],
-      groupID
+      groupID,
+      gender
     }
     await this._refUserID(hash).update(user_and_id);
     const curFam = await this._refFamily(groupID).once('value').then(snap => {
