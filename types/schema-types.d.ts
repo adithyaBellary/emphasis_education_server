@@ -46,17 +46,9 @@ export type MessageType = {
   user: MessageUser;
 };
 
-export type TestUser = {
-  __typename?: 'TestUser';
-  _id: Scalars['String'];
-  email: Scalars['String'];
-  password: Scalars['String'];
-  userType: Permission;
-  chatIDs: Array<Maybe<Scalars['String']>>;
-};
-
 export enum Permission {
   Student = 'Student',
+  Parent = 'Parent',
   Tutor = 'Tutor',
   Admin = 'Admin'
 }
@@ -70,14 +62,7 @@ export enum Classes {
 export type LoginPayload = {
   __typename?: 'LoginPayload';
   res: Scalars['Boolean'];
-  name: Scalars['String'];
-  email: Scalars['String'];
-  phoneNumber: Scalars['String'];
-  userType: Permission;
-  groupID: Scalars['String'];
-  _id: Scalars['String'];
-  chatIDs: Array<Maybe<Scalars['String']>>;
-  classes?: Maybe<Array<Maybe<Chat>>>;
+  user?: Maybe<UserInfoType>;
 };
 
 export type UserInputType = {
@@ -86,6 +71,7 @@ export type UserInputType = {
   password: Scalars['String'];
   userType: Permission;
   phoneNumber: Scalars['String'];
+  gender: Scalars['String'];
 };
 
 export type UserInfoType = {
@@ -98,6 +84,7 @@ export type UserInfoType = {
   chatIDs: Array<Maybe<Scalars['String']>>;
   classes: Array<Maybe<Chat>>;
   groupID: Scalars['String'];
+  gender: Scalars['String'];
 };
 
 export type Chat = {
@@ -116,7 +103,7 @@ export type ClassName = {
 
 export type CreateUserPayload = {
   __typename?: 'CreateUserPayload';
-  success?: Maybe<Scalars['Boolean']>;
+  success: Scalars['Boolean'];
 };
 
 export type AddClassPayload = {
@@ -139,6 +126,11 @@ export type DeleteClassPayload = {
 export type CreateChatPayload = {
   __typename?: 'createChatPayload';
   res: Scalars['Boolean'];
+};
+
+export type LogoutPayload = {
+  __typename?: 'logoutPayload';
+  success: Scalars['Boolean'];
 };
 
 export type Query = {
@@ -178,6 +170,7 @@ export type Mutation = {
   addClass: AddClassPayload;
   deleteClass: DeleteClassPayload;
   createChat: CreateChatPayload;
+  logout: LogoutPayload;
 };
 
 

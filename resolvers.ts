@@ -18,6 +18,9 @@ const resolvers = {
     },
     searchClasses: async (_, { searchTerm }, { dataSources }) => {
       return await dataSources.f.searchClasses(searchTerm)
+    },
+    checkLoggedIn: (_, __, { dataSources }) => {
+      return dataSources.f.checkLoggedIn();
     }
   },
 
@@ -41,7 +44,7 @@ const resolvers = {
       const groupID: string = genID();
       let response = true;
       const _create = async () => {
-        await asyncForEach(users, async ({email, password, name, userType, phoneNumber}: UserInputType) => {
+        await asyncForEach(users, async ({email, password, name, userType, phoneNumber, gender}: UserInputType) => {
           const resp = await dataSources.f.createUser(email, password, name);
           console.log('done w 1', email, resp)
           const result = await dataSources.f.pushUser(
@@ -49,7 +52,8 @@ const resolvers = {
             email,
             userType,
             phoneNumber,
-            groupID
+            groupID,
+            gender
           )
           console.log('done w 2', email, result)
           response = resp && result;
@@ -67,6 +71,9 @@ const resolvers = {
     },
     createChat: async (_, { displayName, className, tutorEmail, userEmails }, { dataSources }) => {
       return await dataSources.f.createChat(displayName, className, tutorEmail, userEmails)
+    },
+    logout: (_, {}, { dataSources }) => {
+      return dataSources.f.logout();
     }
   },
 

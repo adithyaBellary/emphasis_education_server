@@ -30,9 +30,9 @@ class dataSource extends RESTDataSource {
     return res;
   }
 
-  async pushUser(name: string, email: string, userType: Permission, phoneNumber: string, groupID: string) {
+  async pushUser(name: string, email: string, userType: Permission, phoneNumber: string, groupID: string, gender: string) {
     const hash: string = MD5(email).toString();
-    return await firebaseSvc.pushUser(name, email, userType, phoneNumber, hash, groupID);
+    return await firebaseSvc.pushUser(name, email, userType, phoneNumber, hash, groupID, gender);
   }
 
   async getFamily(groupID: string) {
@@ -57,6 +57,14 @@ class dataSource extends RESTDataSource {
 
   async createChat(displayName, className: string, tutorEmail: string, userEmails: string[]) {
     return await firebaseSvc.createChat(displayName, className, tutorEmail, userEmails);
+  }
+
+  logout() {
+    return firebaseSvc.logout();
+  }
+
+  checkLoggedIn() {
+    return firebaseSvc.checkLoggedIn();
   }
 }
 

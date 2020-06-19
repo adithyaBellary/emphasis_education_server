@@ -33,29 +33,46 @@ class FireBaseSVC {
     this.test_listen();
   }
 
-  login = async (user: MutationLoginArgs) => {
+  async login (user: MutationLoginArgs) {
     let res: boolean;
+    let payload: LoginPayload;
     // here is where we would need to firebase.auth().setPersistence i think
     // https://firebase.google.com/docs/auth/web/auth-state-persistence
-    const output = await firebase.auth().signInWithEmailAndPassword(
-      user.email,
-      user.password
-    )
-    .then(
-      () => res = true,
-      () => res = false
-    );
-    const loggedInUser: UserInfoType = await this.getUser(user.email);
-    const {__typename, ...rest} = loggedInUser;
-    console.log('logged inuser ', loggedInUser)
-    const payload: LoginPayload = { res, ...rest };
+    console.log(user)
+    try {
+      console.log('here')
+      await firebase.auth().signInWithEmailAndPassword(user.email, user.password)
+      const loggedInUser: UserInfoType = await this.getUser(user.email);
+      const {__typename, ...rest} = loggedInUser;
+      console.log('logged inuser ', loggedInUser)
+      res = true;
+      payload = { res, user: rest };
 
+    } catch(e) {
+      res = false;
+      payload = { res }
+    }
+    console.log('payload', payload)
     return payload;
   }
 
   // observeAuth = () => {
   //   firebase.auth().onAuthStateChanged(this.onAuthStateChanged);
   // }
+  async checkLoggedIn() {
+    let loggedIn;
+    await firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        console.log('logged in')
+        loggedIn = true;
+      } else {
+        console.log('not logged in')
+        loggedIn = false
+      }
+    })
+    console.log('loggedin', loggedIn)
+    return { loggedIn }
+  }
 
   // TODO figure out typing for all this
   // might need to combine this firebase.User and my own userType
@@ -120,12 +137,15 @@ class FireBaseSVC {
   //   }
   // }
 
-  onLogout = () => {
-    firebase.auth().signOut().then(() => {
-      console.log('sign out is successful')
-    }).catch((e) => {
-      console.log('an error happened when signing out')
-    })
+
+  async logout () {
+    try {
+      await firebase.auth().signOut();
+      return {success: true};
+    } catch(e) {
+      return {success: false};
+      console.log('there was an error logging out')
+    }
   }
 
   async createUser (email: string, password: string, name: string) {
@@ -185,7 +205,7 @@ class FireBaseSVC {
     return firebase.database().ref(`${CHAT_REF_BASE}/${chatID}`);
   }
 
-  async pushUser(name, email, userType, phoneNumber, hash, groupID) {
+  async pushUser(name, email, userType, phoneNumber, hash, groupID, gender) {
     const testChatIds: Array<string> = ['test', 'test2'];
     const user_and_id: UserInfoType = {
       name,
@@ -196,7 +216,8 @@ class FireBaseSVC {
       chatIDs: testChatIds,
       // we do not know what classes this user will be a part of so let us just let them be empty
       classes: [],
-      groupID
+      groupID,
+      gender
     }
     await this._refUserID(hash).update(user_and_id);
     const curFam = await this._refFamily(groupID).once('value').then(snap => {

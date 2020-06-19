@@ -35,17 +35,11 @@ const typeDefs = gql`
     user: MessageUser!
   }
 
-  # lets make this similar to UserInfoType
-  type TestUser {
-    _id: String!
-    email: String!
-    password: String!
-    userType: Permission!
-    chatIDs: [String]!
-  }
+
 
   enum Permission {
     Student
+    Parent
     Tutor
     Admin
   }
@@ -59,14 +53,16 @@ const typeDefs = gql`
   type LoginPayload {
     res: Boolean!
     # basically UserInfoType from here down
-    name: String!
-    email: String!
-    phoneNumber: String!
-    userType: Permission!
-    groupID: String!
-    _id: String!
-    chatIDs: [String]!
-    classes: [Chat]
+    # name: String!
+    # email: String!
+    # phoneNumber: String!
+    # userType: Permission!
+    # groupID: String!
+    # _id: String!
+    # chatIDs: [String]!
+    # classes: [Chat]
+    # gender: String!
+    user: UserInfoType
   }
 
   input UserInputType {
@@ -75,6 +71,7 @@ const typeDefs = gql`
     password: String!
     userType: Permission!
     phoneNumber: String!
+    gender: String!
   }
 
   # maybe we can add an optional info field too
@@ -90,8 +87,9 @@ const typeDefs = gql`
     _id: String!
     chatIDs: [String]!
     # making this a nullable field for now
-    classes: [Chat]!
+    classes: [Chat]
     groupID: String!
+    gender: String!
   }
 
   # need to look over which fields are required
@@ -116,7 +114,7 @@ const typeDefs = gql`
   }
 
   type CreateUserPayload {
-    success: Boolean
+    success: Boolean!
   }
 
   type addClassPayload {
@@ -137,11 +135,20 @@ const typeDefs = gql`
     res: Boolean!
   }
 
+  type logoutPayload {
+    success: Boolean!
+  }
+
+  type checkLoggedInPayload {
+    loggedIn: Boolean!
+  }
+
   type Query {
     getMessages(chatID: String, init: Int!): [MessageType]
     getFamily(groupID: String!): [UserInfoType]
     searchUsers(searchTerm: String!): [UserInfoType]!
     searchClasses(searchTerm: String!): searchClassesPayload!
+    checkLoggedIn: checkLoggedInPayload!
   }
 
   type Mutation {
@@ -152,6 +159,7 @@ const typeDefs = gql`
     deleteClass(className: String!): deleteClassPayload!
 
     createChat(displayName: String! className: String!, tutorEmail: String!, userEmails: [String!]!): createChatPayload!
+    logout: logoutPayload!
 
     # needs to be written
     # add chats to a student
