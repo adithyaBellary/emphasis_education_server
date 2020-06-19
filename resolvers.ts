@@ -18,6 +18,9 @@ const resolvers = {
     },
     searchClasses: async (_, { searchTerm }, { dataSources }) => {
       return await dataSources.f.searchClasses(searchTerm)
+    },
+    checkLoggedIn: (_, __, { dataSources }) => {
+      return dataSources.f.checkLoggedIn();
     }
   },
 

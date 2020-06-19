@@ -139,11 +139,16 @@ const typeDefs = gql`
     success: Boolean!
   }
 
+  type checkLoggedInPayload {
+    loggedIn: Boolean!
+  }
+
   type Query {
     getMessages(chatID: String, init: Int!): [MessageType]
     getFamily(groupID: String!): [UserInfoType]
     searchUsers(searchTerm: String!): [UserInfoType]!
     searchClasses(searchTerm: String!): searchClassesPayload!
+    checkLoggedIn: checkLoggedInPayload!
   }
 
   type Mutation {

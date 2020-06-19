@@ -40,6 +40,7 @@ class FireBaseSVC {
     // https://firebase.google.com/docs/auth/web/auth-state-persistence
     console.log(user)
     try {
+      console.log('here')
       await firebase.auth().signInWithEmailAndPassword(user.email, user.password)
       const loggedInUser: UserInfoType = await this.getUser(user.email);
       const {__typename, ...rest} = loggedInUser;
@@ -58,6 +59,20 @@ class FireBaseSVC {
   // observeAuth = () => {
   //   firebase.auth().onAuthStateChanged(this.onAuthStateChanged);
   // }
+  async checkLoggedIn() {
+    let loggedIn;
+    await firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        console.log('logged in')
+        loggedIn = true;
+      } else {
+        console.log('not logged in')
+        loggedIn = false
+      }
+    })
+    console.log('loggedin', loggedIn)
+    return { loggedIn }
+  }
 
   // TODO figure out typing for all this
   // might need to combine this firebase.User and my own userType

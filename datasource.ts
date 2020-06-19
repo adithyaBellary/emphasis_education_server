@@ -62,6 +62,10 @@ class dataSource extends RESTDataSource {
   logout() {
     return firebaseSvc.logout();
   }
+
+  checkLoggedIn() {
+    return firebaseSvc.checkLoggedIn();
+  }
 }
 
 export default dataSource;
