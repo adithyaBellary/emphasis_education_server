@@ -63,8 +63,10 @@ class dataSource extends RESTDataSource {
     return firebaseSvc.logout();
   }
 
-  checkLoggedIn() {
-    return firebaseSvc.checkLoggedIn();
+  async checkLoggedIn() {
+    const res = await firebaseSvc.checkLoggedIn();
+    console.log('res in data source', res)
+    return res
   }
 }
 

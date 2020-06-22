@@ -19,8 +19,8 @@ const resolvers = {
     searchClasses: async (_, { searchTerm }, { dataSources }) => {
       return await dataSources.f.searchClasses(searchTerm)
     },
-    checkLoggedIn: (_, __, { dataSources }) => {
-      return dataSources.f.checkLoggedIn();
+    checkLoggedIn: async (_, __, { dataSources }) => {
+      return await dataSources.f.checkLoggedIn();
     }
   },
 
@@ -70,6 +70,7 @@ const resolvers = {
       return await dataSources.f.deleteClass(className);
     },
     createChat: async (_, { displayName, className, tutorEmail, userEmails }, { dataSources }) => {
+      console.log('here')
       return await dataSources.f.createChat(displayName, className, tutorEmail, userEmails)
     },
     logout: (_, {}, { dataSources }) => {

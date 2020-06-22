@@ -82,7 +82,7 @@ export type UserInfoType = {
   userType: Permission;
   _id: Scalars['String'];
   chatIDs: Array<Maybe<Scalars['String']>>;
-  classes: Array<Maybe<Chat>>;
+  classes?: Maybe<Array<Maybe<Chat>>>;
   groupID: Scalars['String'];
   gender: Scalars['String'];
 };
@@ -133,12 +133,19 @@ export type LogoutPayload = {
   success: Scalars['Boolean'];
 };
 
+export type CheckLoggedInPayload = {
+  __typename?: 'checkLoggedInPayload';
+  loggedIn: Scalars['Boolean'];
+  user?: Maybe<UserInfoType>;
+};
+
 export type Query = {
   __typename?: 'Query';
   getMessages?: Maybe<Array<Maybe<MessageType>>>;
   getFamily?: Maybe<Array<Maybe<UserInfoType>>>;
   searchUsers: Array<Maybe<UserInfoType>>;
   searchClasses: SearchClassesPayload;
+  checkLoggedIn: CheckLoggedInPayload;
 };
 
 

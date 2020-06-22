@@ -16,6 +16,7 @@ import {
   DeleteClassPayload,
   CreateChatPayload,
   Chat,
+  CheckLoggedInPayload
 } from './types/schema-types';
 import { genID, getHash, asyncForEach } from './helper';
 
@@ -61,17 +62,30 @@ class FireBaseSVC {
   // }
   async checkLoggedIn() {
     let loggedIn;
-    await firebase.auth().onAuthStateChanged((user) => {
+    let loggedUser;
+    let userEmail;
+    await firebase.auth().onAuthStateChanged( async (user) => {
       if (user) {
-        console.log('logged in')
+        console.log('logged in user', user.email)
+        // let us return the loggin user as well
         loggedIn = true;
+        userEmail = user.email
+        // this.getUser(user.email).then(_user => loggedUser = _user)
+        console.log('logged user', loggedUser)
       } else {
         console.log('not logged in')
         loggedIn = false
       }
     })
-    console.log('loggedin', loggedIn)
-    return { loggedIn }
+    if(loggedIn) {
+      loggedUser = await this.getUser(userEmail)
+    }
+    const payload: CheckLoggedInPayload = {
+      loggedIn,
+      user: loggedUser
+    }
+    console.log('payload', payload)
+    return payload
   }
 
   // TODO figure out typing for all this

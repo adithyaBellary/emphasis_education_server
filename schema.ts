@@ -141,6 +141,8 @@ const typeDefs = gql`
 
   type checkLoggedInPayload {
     loggedIn: Boolean!
+    # this is going to be optional
+    user: UserInfoType
   }
 
   type Query {
