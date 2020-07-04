@@ -68,6 +68,12 @@ class dataSource extends RESTDataSource {
     console.log('res in data source', res)
     return res
   }
+
+  async getUser(userEmail: string) {
+    const res =  await firebaseSvc.getUser(userEmail);
+    // console.log('res', res);
+    return res;
+  }
 }
 
 export default dataSource;

@@ -150,7 +150,9 @@ const typeDefs = gql`
     getFamily(groupID: String!): [UserInfoType]
     searchUsers(searchTerm: String!): [UserInfoType]!
     searchClasses(searchTerm: String!): searchClassesPayload!
+    # remove this query
     checkLoggedIn: checkLoggedInPayload!
+    getUser(userEmail: String!): UserInfoType!
   }
 
   type Mutation {

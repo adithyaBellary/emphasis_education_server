@@ -60,6 +60,8 @@ class FireBaseSVC {
   // observeAuth = () => {
   //   firebase.auth().onAuthStateChanged(this.onAuthStateChanged);
   // }
+
+  // TOOD DELETE
   async checkLoggedIn() {
     let loggedIn;
     let loggedUser;
@@ -151,7 +153,7 @@ class FireBaseSVC {
   //   }
   // }
 
-
+  // TODO DELETE we are no longer able to
   async logout () {
     try {
       await firebase.auth().signOut();

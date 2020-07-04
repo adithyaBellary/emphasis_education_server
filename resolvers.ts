@@ -21,6 +21,11 @@ const resolvers = {
     },
     checkLoggedIn: async (_, __, { dataSources }) => {
       return await dataSources.f.checkLoggedIn();
+    },
+    getUser: async (_, { userEmail }, { dataSources }) => {
+      const res =  await dataSources.f.getUser(userEmail);
+      console.log('res in resolver', res)
+      return res;
     }
   },
 
