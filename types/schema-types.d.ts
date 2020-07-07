@@ -128,24 +128,13 @@ export type CreateChatPayload = {
   res: Scalars['Boolean'];
 };
 
-export type LogoutPayload = {
-  __typename?: 'logoutPayload';
-  success: Scalars['Boolean'];
-};
-
-export type CheckLoggedInPayload = {
-  __typename?: 'checkLoggedInPayload';
-  loggedIn: Scalars['Boolean'];
-  user?: Maybe<UserInfoType>;
-};
-
 export type Query = {
   __typename?: 'Query';
   getMessages?: Maybe<Array<Maybe<MessageType>>>;
   getFamily?: Maybe<Array<Maybe<UserInfoType>>>;
   searchUsers: Array<Maybe<UserInfoType>>;
   searchClasses: SearchClassesPayload;
-  checkLoggedIn: CheckLoggedInPayload;
+  getUser: UserInfoType;
 };
 
 
@@ -169,6 +158,11 @@ export type QuerySearchClassesArgs = {
   searchTerm: Scalars['String'];
 };
 
+
+export type QueryGetUserArgs = {
+  userEmail: Scalars['String'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   login?: Maybe<LoginPayload>;
@@ -177,7 +171,6 @@ export type Mutation = {
   addClass: AddClassPayload;
   deleteClass: DeleteClassPayload;
   createChat: CreateChatPayload;
-  logout: LogoutPayload;
 };
 
 

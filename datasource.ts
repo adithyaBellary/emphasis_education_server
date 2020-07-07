@@ -59,16 +59,6 @@ class dataSource extends RESTDataSource {
     return await firebaseSvc.createChat(displayName, className, tutorEmail, userEmails);
   }
 
-  logout() {
-    return firebaseSvc.logout();
-  }
-
-  async checkLoggedIn() {
-    const res = await firebaseSvc.checkLoggedIn();
-    console.log('res in data source', res)
-    return res
-  }
-
   async getUser(userEmail: string) {
     const res =  await firebaseSvc.getUser(userEmail);
     // console.log('res', res);

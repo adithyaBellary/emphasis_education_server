@@ -19,9 +19,6 @@ const resolvers = {
     searchClasses: async (_, { searchTerm }, { dataSources }) => {
       return await dataSources.f.searchClasses(searchTerm)
     },
-    checkLoggedIn: async (_, __, { dataSources }) => {
-      return await dataSources.f.checkLoggedIn();
-    },
     getUser: async (_, { userEmail }, { dataSources }) => {
       const res =  await dataSources.f.getUser(userEmail);
       console.log('res in resolver', res)
@@ -78,9 +75,6 @@ const resolvers = {
       console.log('here')
       return await dataSources.f.createChat(displayName, className, tutorEmail, userEmails)
     },
-    logout: (_, {}, { dataSources }) => {
-      return dataSources.f.logout();
-    }
   },
 
   Subscription: {

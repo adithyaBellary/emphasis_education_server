@@ -16,7 +16,6 @@ import {
   DeleteClassPayload,
   CreateChatPayload,
   Chat,
-  CheckLoggedInPayload
 } from './types/schema-types';
 import { genID, getHash, asyncForEach } from './helper';
 
@@ -55,39 +54,6 @@ class FireBaseSVC {
     }
     console.log('payload', payload)
     return payload;
-  }
-
-  // observeAuth = () => {
-  //   firebase.auth().onAuthStateChanged(this.onAuthStateChanged);
-  // }
-
-  // TOOD DELETE
-  async checkLoggedIn() {
-    let loggedIn;
-    let loggedUser;
-    let userEmail;
-    await firebase.auth().onAuthStateChanged( async (user) => {
-      if (user) {
-        console.log('logged in user', user.email)
-        // let us return the loggin user as well
-        loggedIn = true;
-        userEmail = user.email
-        // this.getUser(user.email).then(_user => loggedUser = _user)
-        console.log('logged user', loggedUser)
-      } else {
-        console.log('not logged in')
-        loggedIn = false
-      }
-    })
-    if(loggedIn) {
-      loggedUser = await this.getUser(userEmail)
-    }
-    const payload: CheckLoggedInPayload = {
-      loggedIn,
-      user: loggedUser
-    }
-    console.log('payload', payload)
-    return payload
   }
 
   // TODO figure out typing for all this
@@ -152,17 +118,6 @@ class FireBaseSVC {
   //     alert("Unable to update avatar. You must login first.");
   //   }
   // }
-
-  // TODO DELETE we are no longer able to
-  async logout () {
-    try {
-      await firebase.auth().signOut();
-      return {success: true};
-    } catch(e) {
-      return {success: false};
-      console.log('there was an error logging out')
-    }
-  }
 
   async createUser (email: string, password: string, name: string) {
     try {
@@ -561,6 +516,7 @@ class FireBaseSVC {
     _runAsync();
 
     this._refChats(chatID).update(newChat)
+    // lets also get the user in here too
     const returnVal: CreateChatPayload = { res: true }
     return returnVal
 
