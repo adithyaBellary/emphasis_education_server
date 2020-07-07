@@ -19,8 +19,10 @@ const resolvers = {
     searchClasses: async (_, { searchTerm }, { dataSources }) => {
       return await dataSources.f.searchClasses(searchTerm)
     },
-    checkLoggedIn: (_, __, { dataSources }) => {
-      return dataSources.f.checkLoggedIn();
+    getUser: async (_, { userEmail }, { dataSources }) => {
+      const res =  await dataSources.f.getUser(userEmail);
+      console.log('res in resolver', res)
+      return res;
     }
   },
 
@@ -70,11 +72,9 @@ const resolvers = {
       return await dataSources.f.deleteClass(className);
     },
     createChat: async (_, { displayName, className, tutorEmail, userEmails }, { dataSources }) => {
+      console.log('here')
       return await dataSources.f.createChat(displayName, className, tutorEmail, userEmails)
     },
-    logout: (_, {}, { dataSources }) => {
-      return dataSources.f.logout();
-    }
   },
 
   Subscription: {

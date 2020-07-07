@@ -56,24 +56,6 @@ class FireBaseSVC {
     return payload;
   }
 
-  // observeAuth = () => {
-  //   firebase.auth().onAuthStateChanged(this.onAuthStateChanged);
-  // }
-  async checkLoggedIn() {
-    let loggedIn;
-    await firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        console.log('logged in')
-        loggedIn = true;
-      } else {
-        console.log('not logged in')
-        loggedIn = false
-      }
-    })
-    console.log('loggedin', loggedIn)
-    return { loggedIn }
-  }
-
   // TODO figure out typing for all this
   // might need to combine this firebase.User and my own userType
   // onAuthStateChanged = (user) => {
@@ -136,17 +118,6 @@ class FireBaseSVC {
   //     alert("Unable to update avatar. You must login first.");
   //   }
   // }
-
-
-  async logout () {
-    try {
-      await firebase.auth().signOut();
-      return {success: true};
-    } catch(e) {
-      return {success: false};
-      console.log('there was an error logging out')
-    }
-  }
 
   async createUser (email: string, password: string, name: string) {
     try {
@@ -545,6 +516,7 @@ class FireBaseSVC {
     _runAsync();
 
     this._refChats(chatID).update(newChat)
+    // lets also get the user in here too
     const returnVal: CreateChatPayload = { res: true }
     return returnVal
 

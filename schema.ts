@@ -135,20 +135,12 @@ const typeDefs = gql`
     res: Boolean!
   }
 
-  type logoutPayload {
-    success: Boolean!
-  }
-
-  type checkLoggedInPayload {
-    loggedIn: Boolean!
-  }
-
   type Query {
     getMessages(chatID: String, init: Int!): [MessageType]
     getFamily(groupID: String!): [UserInfoType]
     searchUsers(searchTerm: String!): [UserInfoType]!
     searchClasses(searchTerm: String!): searchClassesPayload!
-    checkLoggedIn: checkLoggedInPayload!
+    getUser(userEmail: String!): UserInfoType!
   }
 
   type Mutation {
@@ -159,10 +151,8 @@ const typeDefs = gql`
     deleteClass(className: String!): deleteClassPayload!
 
     createChat(displayName: String! className: String!, tutorEmail: String!, userEmails: [String!]!): createChatPayload!
-    logout: logoutPayload!
 
     # needs to be written
-    # add chats to a student
     # change classes
     # change tutor
     # change the members of the family
