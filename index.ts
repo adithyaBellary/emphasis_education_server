@@ -6,6 +6,11 @@ import typeDefs from './schema';
 import resolvers from './resolvers';
 import dataSrc from './datasource';
 
+import {decode, encode} from 'base-64'
+
+// if (!global.btoa) {  global.btoa = encode }
+
+// if (!global.atob) { global.atob = decode }
 
 const server = new ApolloServer({
   typeDefs,

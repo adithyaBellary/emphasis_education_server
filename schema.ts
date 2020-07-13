@@ -7,6 +7,7 @@ const typeDefs = gql`
     text: String!
     user: MessageUserInput!
     chatID: String!
+    image: String
   }
   # this is made to work with the gifted chat user type that it is expecting
   input MessageUserInput {
@@ -20,6 +21,7 @@ const typeDefs = gql`
     MessageId: Int!
     createdAt: String!
     user: MessageUser!
+    image: String
   }
 
   type MessageUser {
@@ -33,9 +35,8 @@ const typeDefs = gql`
     text: String!
     createdAt: String!
     user: MessageUser!
+    image: String
   }
-
-
 
   enum Permission {
     Student
@@ -135,6 +136,10 @@ const typeDefs = gql`
     res: Boolean!
   }
 
+  type SendMessagePayload {
+    res: Boolean!
+  }
+
   type Query {
     getMessages(chatID: String, init: Int!): [MessageType]
     getFamily(groupID: String!): [UserInfoType]
@@ -145,7 +150,7 @@ const typeDefs = gql`
 
   type Mutation {
     login(email: String!, password: String!): LoginPayload
-    sendMessage(messages: [MessageInput]): MessagePayload!
+    sendMessage(messages: [MessageInput]): SendMessagePayload!
     createUser(users: [UserInputType]): CreateUserPayload
     addClass(className: String!): addClassPayload!
     deleteClass(className: String!): deleteClassPayload!
