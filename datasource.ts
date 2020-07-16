@@ -64,6 +64,14 @@ class dataSource extends RESTDataSource {
     // console.log('res', res);
     return res;
   }
+
+  async createCode(email: string) {
+    return await firebaseSvc.createCode(email);
+  }
+
+  async checkCode(email: string, code: string) {
+    return await firebaseSvc.checkCode(email, code)
+  }
 }
 
 export default dataSource;

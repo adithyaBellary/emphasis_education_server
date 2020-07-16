@@ -140,12 +140,21 @@ const typeDefs = gql`
     res: Boolean!
   }
 
+  # type createCodePayload {
+  #   res: Boolean!
+  # }
+
+  type genericResponse {
+    res: Boolean!
+  }
+
   type Query {
     getMessages(chatID: String, init: Int!): [MessageType]
     getFamily(groupID: String!): [UserInfoType]
     searchUsers(searchTerm: String!): [UserInfoType]!
     searchClasses(searchTerm: String!): searchClassesPayload!
     getUser(userEmail: String!): UserInfoType!
+    checkCode(email: String!, code: String!): genericResponse!
   }
 
   type Mutation {
@@ -156,6 +165,7 @@ const typeDefs = gql`
     deleteClass(className: String!): deleteClassPayload!
 
     createChat(displayName: String! className: String!, tutorEmail: String!, userEmails: [String!]!): createChatPayload!
+    createCode(email: String!): genericResponse!
 
     # needs to be written
     # change classes

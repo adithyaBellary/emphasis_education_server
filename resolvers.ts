@@ -23,6 +23,9 @@ const resolvers = {
       const res =  await dataSources.f.getUser(userEmail);
       console.log('res in resolver', res)
       return res;
+    },
+    checkCode: async (_, { email, code }, { dataSources }) => {
+      return await dataSources.f.checkCode(email, code);
     }
   },
 
@@ -75,6 +78,9 @@ const resolvers = {
       console.log('here')
       return await dataSources.f.createChat(displayName, className, tutorEmail, userEmails)
     },
+    createCode: async (_, { email }, { dataSources }) => {
+      return await dataSources.f.createCode(email);
+    }
   },
 
   Subscription: {

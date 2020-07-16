@@ -19,12 +19,16 @@ import {
 } from './types/schema-types';
 import { genID, getHash, asyncForEach } from './helper';
 
-const MESSAGE_REF_BASE: string = 'Messages';
-const User_REF_BASE: string = 'Users';
-const NUM_MESSAGES_BASE: string = 'NumberOfMessages';
-const FAMILY_REF_BASE: string = 'Family';
-const CLASS_REF_BASE: string = 'Classes';
-const CHAT_REF_BASE: string = 'Chats';
+import {
+  MESSAGE_REF_BASE,
+  User_REF_BASE,
+  NUM_MESSAGES_BASE,
+  FAMILY_REF_BASE,
+  CODES_REF_BASE,
+  CHAT_REF_BASE,
+  CLASS_REF_BASE,
+  CODE_LENGTH
+} from './constants';
 
 class FireBaseSVC {
   constructor() {
@@ -145,6 +149,10 @@ class FireBaseSVC {
 
   _refChats(chatID: string) {
     return firebase.database().ref(`${CHAT_REF_BASE}/${chatID}`);
+  }
+
+  _refCodes(hashedEmail: string) {
+    return firebase.database().ref(`${CODES_REF_BASE}/${hashedEmail}`);
   }
 
   async pushUser(name, email, userType, phoneNumber, hash, groupID, gender) {
@@ -483,7 +491,40 @@ class FireBaseSVC {
     this._refChats(chatID).update(newChat)
     const returnVal: CreateChatPayload = { res: true }
     return returnVal
+  }
 
+  async createCode(email: string) {
+    let res: boolean = true
+    const code: string = getHash(email.toUpperCase());
+    const codesRef = this._refCodes(code);
+    console.log('here', email)
+    const shortCode: string = code.toUpperCase().substring(0, CODE_LENGTH);
+    try {
+      await codesRef.set(shortCode);
+    } catch (e) {
+      console.log('didnt work:',  e)
+      res = false;
+    }
+    console.log('res', res)
+    return { res }
+  }
+
+  async checkCode(email: string, code: string) {
+    const hashedEmail = getHash(email.toUpperCase())
+    let res: boolean = true
+    await this._refCodes(hashedEmail).once('value').then(snap => {
+      const val: string = snap.val();
+      console.log('val', val)
+      if (!val) {
+        res = false
+        return ;
+      }
+
+      res = val.toUpperCase() === code.toUpperCase()
+    })
+    console.log('res,', res)
+
+    return { res }
   }
 }
 
