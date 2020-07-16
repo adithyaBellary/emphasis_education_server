@@ -15,6 +15,7 @@ export type MessageInput = {
   text: Scalars['String'];
   user: MessageUserInput;
   chatID: Scalars['String'];
+  image?: Maybe<Scalars['String']>;
 };
 
 export type MessageUserInput = {
@@ -29,6 +30,7 @@ export type MessagePayload = {
   MessageId: Scalars['Int'];
   createdAt: Scalars['String'];
   user: MessageUser;
+  image?: Maybe<Scalars['String']>;
 };
 
 export type MessageUser = {
@@ -44,6 +46,7 @@ export type MessageType = {
   text: Scalars['String'];
   createdAt: Scalars['String'];
   user: MessageUser;
+  image?: Maybe<Scalars['String']>;
 };
 
 export enum Permission {
@@ -128,6 +131,11 @@ export type CreateChatPayload = {
   res: Scalars['Boolean'];
 };
 
+export type SendMessagePayload = {
+  __typename?: 'SendMessagePayload';
+  res: Scalars['Boolean'];
+};
+
 export type Query = {
   __typename?: 'Query';
   getMessages?: Maybe<Array<Maybe<MessageType>>>;
@@ -166,7 +174,7 @@ export type QueryGetUserArgs = {
 export type Mutation = {
   __typename?: 'Mutation';
   login?: Maybe<LoginPayload>;
-  sendMessage: MessagePayload;
+  sendMessage: SendMessagePayload;
   createUser?: Maybe<CreateUserPayload>;
   addClass: AddClassPayload;
   deleteClass: DeleteClassPayload;

@@ -19,12 +19,16 @@ import {
 } from './types/schema-types';
 import { genID, getHash, asyncForEach } from './helper';
 
-const MESSAGE_REF_BASE: string = 'Messages';
-const User_REF_BASE: string = 'Users';
-const NUM_MESSAGES_BASE: string = 'NumberOfMessages';
-const FAMILY_REF_BASE: string = 'Family';
-const CLASS_REF_BASE: string = 'Classes';
-const CHAT_REF_BASE: string = 'Chats';
+import {
+  MESSAGE_REF_BASE,
+  User_REF_BASE,
+  NUM_MESSAGES_BASE,
+  FAMILY_REF_BASE,
+  CODES_REF_BASE,
+  CHAT_REF_BASE,
+  CLASS_REF_BASE,
+  CODE_LENGTH
+} from './constants';
 
 class FireBaseSVC {
   constructor() {
@@ -55,24 +59,6 @@ class FireBaseSVC {
     console.log('payload', payload)
     return payload;
   }
-
-  // TODO figure out typing for all this
-  // might need to combine this firebase.User and my own userType
-  // onAuthStateChanged = (user) => {
-  //   if ( !user ) {
-  //     try {
-  //       this.login(
-  //         user,
-  //         () => console.log('success'),
-  //         () => console.log('error')
-  //       );
-  //     } catch ({ message }) {
-  //       console.log('failed: ' + message);
-  //     }
-  //   } else {
-  //     console.log('reusing auth');
-  //   }
-  // }
 
   // upload user avatar functionality
   // uploadImage = async uri => {
@@ -132,17 +118,6 @@ class FireBaseSVC {
     }
   }
 
-  // figure out this uuid business
-  uid () {
-    const curUser = firebase.auth().currentUser;
-    if (!curUser) {
-      console.log('the current user is null');
-      return null;
-    } else {
-      return curUser.uid;
-    }
-  }
-
   _refMessage(chatPath: string) {
     return firebase.database().ref(`${MESSAGE_REF_BASE}/${chatPath}`);
   }
@@ -174,6 +149,10 @@ class FireBaseSVC {
 
   _refChats(chatID: string) {
     return firebase.database().ref(`${CHAT_REF_BASE}/${chatID}`);
+  }
+
+  _refCodes(hashedEmail: string) {
+    return firebase.database().ref(`${CODES_REF_BASE}/${hashedEmail}`);
   }
 
   async pushUser(name, email, userType, phoneNumber, hash, groupID, gender) {
@@ -252,18 +231,19 @@ class FireBaseSVC {
   test_listen() {
     console.log('listener is on')
     this._refMessage('')
-    .on('child_changed', (snapshot) => {
-      const val = snapshot.val();
-      const key = Object.keys(val).slice(-1)[0]
-      pubsub.publish(MESSAGE_RECEIVED_EVENT, {
-        messageReceived: {
-          MessageId: val[key].messageID,
-          text: val[key].text,
-          createdAt: val[key].createdAt,
-          user: val[key].user
-        }
+      .on('child_changed', (snapshot) => {
+        const val = snapshot.val();
+        const key = Object.keys(val).slice(-1)[0]
+        pubsub.publish(MESSAGE_RECEIVED_EVENT, {
+          messageReceived: {
+            MessageId: val[key].messageID,
+            text: val[key].text,
+            createdAt: val[key].createdAt,
+            user: val[key].user,
+            image: val[key].image
+          }
+        })
       })
-    })
 
     // this is the listener for a new child (chat) being added
     this._refMessage('')
@@ -275,7 +255,8 @@ class FireBaseSVC {
             MessageId: snapVal[key].messageID,
             text: snapVal[key].text,
             createdAt: snapVal[key].createdAt,
-            user: snapVal[key].user
+            user: snapVal[key].user,
+            image: snapVal[key].image
           }
         })
       })
@@ -301,34 +282,30 @@ class FireBaseSVC {
   }
 
   send = async (messages: MessageInput[]) => {
-    // TODO refactor all this rip
-    let myText;
     let myMesID;
-    let myCreatedAt;
-    let myUser;
+    let res: Boolean = true;
     const oldMess: number = await this.getRecentId(messages[0].chatID);
     this.updateNumMessages(messages[0].chatID);
+
     messages.forEach(async (element: MessageInput) => {
-      const { text, user, chatID } = element;
+      const { text, user, chatID, image } = element;
       myMesID = oldMess;
       const message = {
         text,
         user,
         createdAt: moment().format(),
-        messageID: myMesID
+        messageID: myMesID,
+        image
       };
-      myText = text;
-      myCreatedAt = message.createdAt
-      myUser = user;
       const hashChatID: string = MD5(chatID).toString();
-      await this._refMessage(hashChatID).push(message);
+      try {
+        await this._refMessage(hashChatID).push(message);
+      } catch (e) {
+        console.log('sending message or image failed:', e)
+        res = false
+      }
     });
-    return {
-      text: myText,
-      MessageId: myMesID,
-      createdAt: myCreatedAt,
-      user: myUser
-    }
+    return { res }
   }
 
   refOff () {
@@ -353,6 +330,7 @@ class FireBaseSVC {
         // const key = Object.keys(val)[0];
         // return val[key]
       })
+    console.log('user: ', user)
     return user;
   }
 
@@ -373,16 +351,13 @@ class FireBaseSVC {
     return await this._refUsers().once('value')
       .then((snap) => {
         const val = snap.val();
-        // console.log('val in search', val)
         const keys = Object.keys(val);
         const Users = keys.map((k, index) => {
           const u = val[k];
-          // console.log('user', Object.keys(u))
           const _user = u[Object.keys(u)[0]]
           let flag = false;
           relevantFields.forEach((_field) => {
             let field = u[_field];
-            // console.log('field', field)
             if (_field === 'email') { field = field.split('@')[0] }
             if (field.toLowerCase().includes(searchTerm.toLowerCase())) {
               flag = true;
@@ -501,9 +476,7 @@ class FireBaseSVC {
         })
 
         if (!classes) {
-          // update at the user location
           await this._refUserID(_user._id).update({ classes: [{...newChat}]})
-          // update at the family location
           await this._refFamilySpecific(_user.groupID, ind).update({ classes: [{...newChat}]})
         } else {
           await this._refUserID(_user._id).update({ classes: [...classes, newChat]})
@@ -516,10 +489,42 @@ class FireBaseSVC {
     _runAsync();
 
     this._refChats(chatID).update(newChat)
-    // lets also get the user in here too
     const returnVal: CreateChatPayload = { res: true }
     return returnVal
+  }
 
+  async createCode(email: string) {
+    let res: boolean = true
+    const code: string = getHash(email.toUpperCase());
+    const codesRef = this._refCodes(code);
+    console.log('here', email)
+    const shortCode: string = code.toUpperCase().substring(0, CODE_LENGTH);
+    try {
+      await codesRef.set(shortCode);
+    } catch (e) {
+      console.log('didnt work:',  e)
+      res = false;
+    }
+    console.log('res', res)
+    return { res }
+  }
+
+  async checkCode(email: string, code: string) {
+    const hashedEmail = getHash(email.toUpperCase())
+    let res: boolean = true
+    await this._refCodes(hashedEmail).once('value').then(snap => {
+      const val: string = snap.val();
+      console.log('val', val)
+      if (!val) {
+        res = false
+        return ;
+      }
+
+      res = val.toUpperCase() === code.toUpperCase()
+    })
+    console.log('res,', res)
+
+    return { res }
   }
 }
 

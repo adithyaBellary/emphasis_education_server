@@ -6,7 +6,6 @@ import typeDefs from './schema';
 import resolvers from './resolvers';
 import dataSrc from './datasource';
 
-
 const server = new ApolloServer({
   typeDefs,
   resolvers,

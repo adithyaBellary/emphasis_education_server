@@ -3,7 +3,9 @@
     "target": "es2016",
     "lib": [
       "esnext.asynciterable",
-      "ES2018.Promise"
+      "ES2018.Promise",
+      "es2016",
+      "dom"
     ],
     "esModuleInterop": true /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */
 
