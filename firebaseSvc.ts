@@ -16,6 +16,7 @@ import {
   DeleteClassPayload,
   CreateChatPayload,
   Chat,
+  UserInfoTypeInput
 } from './types/schema-types';
 import { genID, getHash, asyncForEach } from './helper';
 
@@ -40,23 +41,16 @@ class FireBaseSVC {
   async login (user: MutationLoginArgs) {
     let res: boolean;
     let payload: LoginPayload;
-    // here is where we would need to firebase.auth().setPersistence i think
-    // https://firebase.google.com/docs/auth/web/auth-state-persistence
-    console.log(user)
     try {
-      console.log('here')
       await firebase.auth().signInWithEmailAndPassword(user.email, user.password)
       const loggedInUser: UserInfoType = await this.getUser(user.email);
       const {__typename, ...rest} = loggedInUser;
-      console.log('logged inuser ', loggedInUser)
       res = true;
       payload = { res, user: rest };
-
-    } catch(e) {
+    } catch (e) {
       res = false;
       payload = { res }
     }
-    console.log('payload', payload)
     return payload;
   }
 
@@ -110,10 +104,8 @@ class FireBaseSVC {
       await firebase.auth().createUserWithEmailAndPassword(email, password)
       const newUser = firebase.auth().currentUser
       await newUser.updateProfile( { displayName: name})
-      console.log('successfully did all the things w the user')
       return true;
     } catch(e) {
-      console.log('there was an error creating the user')
       return false;
     }
   }
@@ -156,15 +148,14 @@ class FireBaseSVC {
   }
 
   async pushUser(name, email, userType, phoneNumber, hash, groupID, gender) {
-    const testChatIds: Array<string> = ['test', 'test2'];
     const user_and_id: UserInfoType = {
       name,
       email,
       phoneNumber,
       _id: hash,
       userType: userType,
-      chatIDs: testChatIds,
       // we do not know what classes this user will be a part of so let us just let them be empty
+      chatIDs: [],
       classes: [],
       groupID,
       gender
@@ -174,7 +165,6 @@ class FireBaseSVC {
       const val = snap.val();
       return val;
     })
-    console.log('current fam', curFam);
     if (!curFam) {
       await this._refFamily(groupID).update({ user: [{...user_and_id}]})
     } else {
@@ -312,25 +302,14 @@ class FireBaseSVC {
     this._refMessage('').off();
   }
 
-  async push_test(chatPath: string) {
-    await this._refMessage(chatPath).push({
-      name: 'name',
-      email: 'email'
-    })
-  }
-
   // lets pass in the email and then hash it here
   async getUser(email: string) {
     const hashedEmail = getHash(email);
-    const user: UserInfoType = await firebase.database().ref(`Users/${hashedEmail}`).once('value')
+    const user: UserInfoType = await this._refUserID(hashedEmail).once('value')
       .then(snap => {
         const val = snap.val()
-        // console.log('val', val)
         return val
-        // const key = Object.keys(val)[0];
-        // return val[key]
       })
-    console.log('user: ', user)
     return user;
   }
 
@@ -366,7 +345,6 @@ class FireBaseSVC {
           })
           if (flag) { return u }
         }).filter(user => !!user)
-        console.log('returned Users', Users)
         return Users;
       })
   }
@@ -375,7 +353,6 @@ class FireBaseSVC {
     return await this._refClasses().once('value')
       .then(snap => {
         const val = snap.val();
-        console.log('val in search classes', val)
         if (!val) { return { classes: []}}
         const keys = Object.keys(val);
         const classes = keys.map(k => {
@@ -392,7 +369,6 @@ class FireBaseSVC {
   async addClass(className: string) {
     // check to see if we have already added this class
     const allClasses = await this.searchClasses('');
-    console.log('allclasses', allClasses);
     if (allClasses.classes.includes(className)) {
       const returnVal: AddClassPayload = { res: false, message: 'This class already exists'}
       return returnVal;
@@ -437,13 +413,11 @@ class FireBaseSVC {
       const val = snap.val()
       return val
     })
-    console.log('tutor', tutor)
     let classes = tutor.classes;
     // tutors will not have any families
     let ind = null;
     await this._refFamily(tutor.groupID).once('value').then(snap => {
       const val = snap.val();
-      console.log('new val', val.user);
       val.user.forEach((_v, _ind) => {
         if (_v._id === tutorID) {
           ind = _ind
@@ -453,14 +427,11 @@ class FireBaseSVC {
     if (!classes) {
       await this._refUserID(tutorID).update({ classes: [{...newChat}]})
 
-      console.log('index:', ind)
       await this._refFamilySpecific(tutor.groupID, ind).update({ classes: [{...newChat}]})
-      console.log('done updating the tutor')
 
     } else {
       await this._refUserID(tutorID).update({ classes: [...classes, newChat]})
       await this._refFamilySpecific(tutor.groupID, ind).update({ classes: [...classes, newChat] })
-      console.log('done updating the tutor')
     }
 
     const _runAsync = async () => {
@@ -482,9 +453,7 @@ class FireBaseSVC {
           await this._refUserID(_user._id).update({ classes: [...classes, newChat]})
           await this._refFamilySpecific(_user.groupID, ind).update({ classes: [...classes, newChat]})
         }
-        console.log('dont update the user')
       })
-      console.log('done updating all the users')
     }
     _runAsync();
 
@@ -497,16 +466,13 @@ class FireBaseSVC {
     let res: boolean = true
     const code: string = getHash(email.toUpperCase());
     const codesRef = this._refCodes(code);
-    console.log('here', email)
     const shortCode: string = code.toUpperCase().substring(0, CODE_LENGTH);
     try {
       await codesRef.set(shortCode);
     } catch (e) {
-      console.log('didnt work:',  e)
       res = false;
     }
-    console.log('res', res)
-    return { res }
+    return { res, code: shortCode }
   }
 
   async checkCode(email: string, code: string) {
@@ -514,7 +480,6 @@ class FireBaseSVC {
     let res: boolean = true
     await this._refCodes(hashedEmail).once('value').then(snap => {
       const val: string = snap.val();
-      console.log('val', val)
       if (!val) {
         res = false
         return ;
@@ -522,9 +487,20 @@ class FireBaseSVC {
 
       res = val.toUpperCase() === code.toUpperCase()
     })
-    console.log('res,', res)
 
     return { res }
+  }
+
+  async updateUser(user: UserInfoTypeInput) {
+    console.log('user', user)
+    const userID = user._id;
+    const userEmail = user.email
+    const hashedEmail = getHash(userEmail);
+
+    await this._refUserID(hashedEmail).update({
+      ...user
+    })
+
   }
 }
 

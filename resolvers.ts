@@ -21,7 +21,6 @@ const resolvers = {
     },
     getUser: async (_, { userEmail }, { dataSources }) => {
       const res =  await dataSources.f.getUser(userEmail);
-      console.log('res in resolver', res)
       return res;
     },
     checkCode: async (_, { email, code }, { dataSources }) => {
@@ -44,14 +43,12 @@ const resolvers = {
       return res;
     },
     createUser: async (_, {users}, { dataSources }) => {
-      console.log('in resolver creating user', users);
       // set the groupID. should be the same for each user in the family
       const groupID: string = genID();
       let response = true;
       const _create = async () => {
         await asyncForEach(users, async ({email, password, name, userType, phoneNumber, gender}: UserInputType) => {
           const resp = await dataSources.f.createUser(email, password, name);
-          console.log('done w 1', email, resp)
           const result = await dataSources.f.pushUser(
             name,
             email,
@@ -60,7 +57,6 @@ const resolvers = {
             groupID,
             gender
           )
-          console.log('done w 2', email, result)
           response = resp && result;
         })
       }
@@ -75,11 +71,13 @@ const resolvers = {
       return await dataSources.f.deleteClass(className);
     },
     createChat: async (_, { displayName, className, tutorEmail, userEmails }, { dataSources }) => {
-      console.log('here')
       return await dataSources.f.createChat(displayName, className, tutorEmail, userEmails)
     },
     createCode: async (_, { email }, { dataSources }) => {
       return await dataSources.f.createCode(email);
+    },
+    updateUser: async(_, { user }, { dataSources }) => {
+      return await dataSources.f.updateUser(user)
     }
   },
 
