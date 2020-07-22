@@ -491,6 +491,7 @@ class FireBaseSVC {
     return { res }
   }
 
+  // unclear on the status of this one
   async updateUser(user: UserInfoTypeInput) {
     console.log('user', user)
     const userID = user._id;
@@ -500,7 +501,50 @@ class FireBaseSVC {
     await this._refUserID(hashedEmail).update({
       ...user
     })
+  }
 
+  async addFamilyMember(familyID: string, oldFamilyID: string, userEmails: string[]) {
+    // all we should need to do is change the groupID field of the users to the new familyID
+    let hashedEmail: string;
+    let res: boolean = true;
+    userEmails.forEach(async _user => {
+      try {
+        hashedEmail = getHash(_user)
+        await this._refUserID(hashedEmail).update({ groupID: familyID })
+        const newUser = await this._refUserID(hashedEmail).once('value').then(snap => snap.val())
+        // now this needs to go is the new family at /family
+
+        const curFam = await this._refFamily(familyID).once('value').then(snap => {
+          const val = snap.val();
+          return val;
+        })
+
+        await this._refFamily(familyID).update({ user: [...curFam.user, newUser]})
+
+        // and then delete the user from the old family location
+
+        // get the index value needed for the _refFamilySpeciifc ref
+        const ind = await this._refFamily(oldFamilyID).once('value').then(snap => {
+          const val = snap.val();
+          const user = val.user;
+          let ind;
+          user.forEach((_user, index) => {
+            if (_user._id === newUser._id) {
+              ind = index
+            }
+          })
+          return ind;
+        })
+        // need to get the index of the old user at the family ref
+        let oldUser = await this._refFamilySpecific(oldFamilyID, ind)
+        await oldUser.remove();
+      } catch (e) {
+        res = false
+        console.log('something went wrong with adding the family member')
+      }
+    })
+
+    return { res }
   }
 }
 

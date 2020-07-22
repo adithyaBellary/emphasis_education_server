@@ -78,6 +78,9 @@ const resolvers = {
     },
     updateUser: async(_, { user }, { dataSources }) => {
       return await dataSources.f.updateUser(user)
+    },
+    addFamilyMember: async(_, { familyID, oldFamilyID, userEmails }, { dataSources }) => {
+      return await dataSources.f.addFamilyMember(familyID, oldFamilyID, userEmails)
     }
   },
 

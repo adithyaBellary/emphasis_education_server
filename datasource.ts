@@ -70,8 +70,12 @@ class dataSource extends RESTDataSource {
     return await firebaseSvc.checkCode(email, code)
   }
 
-  async updateUser(user ) {
+  async updateUser(user) {
     return await firebaseSvc.updateUser(user);
+  }
+
+  async addFamilyMember(familyID, oldFamilyID, userEmails) {
+    return await firebaseSvc.addFamilyMember(familyID, oldFamilyID, userEmails)
   }
 }
 
