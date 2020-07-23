@@ -504,27 +504,16 @@ class FireBaseSVC {
   }
 
   // userEmails are to be added to the familyID
-  async addFamilyMember(familyID: string, oldFamilyID: string, userEmails: string[]) {
+  async addFamilyMember(familyID: string, userEmails: string[]) {
     // all we should need to do is change the groupID field of the users to the new familyID
     let hashedEmail: string;
     let res: boolean = true;
     userEmails.forEach(async _user => {
       try {
         hashedEmail = getHash(_user)
-        // console.log(getHash('test01@gmail.com'))
-        // console.log(getHash('test02@gmail.com'))
-        // console.log(getHash(_user))
-        // console.log('hashedEmail', hashedEmail, _user);
-        // if(_user === "test02@gmail.com") {
-        //   console.log('true')
-        // } else {
-        //   console.log('false', _user)
-        // }
         let user = await this._refUserID(hashedEmail).once('value').then(snap => snap.val())
         const oldGroupID = user.groupID;
         const oldID = user._id;
-        console.log('oldGroupID', oldGroupID);
-        console.log('oldID', oldID);
 
         // update the user in the db
         user.groupID = familyID;
@@ -546,15 +535,12 @@ class FireBaseSVC {
           const familyUsers = val.user;
           let _ind;
           familyUsers.forEach((_user, index) => {
-            console.log('user', _user)
-            console.log('index,', index)
             if (_user._id === oldID) {
               _ind = index
             }
           })
           return _ind;
         })
-        console.log('ind', ind)
 
         let oldUser = await this._refFamilySpecific(oldGroupID, ind)
         await oldUser.remove();

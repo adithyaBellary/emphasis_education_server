@@ -200,7 +200,7 @@ const typeDefs = gql`
     createCode(email: String!): createCodePayload!
 
     updateUser(user: UserInfoTypeInput!): genericResponse!
-    addFamilyMember(familyID: String!, oldFamilyID: String!, userEmails: [String!]!): genericResponse!
+    addFamilyMember(familyID: String!, userEmails: [String!]!): genericResponse!
 
     # needs to be written
     # change classes

@@ -166,12 +166,12 @@ export type SendMessagePayload = {
 export type CreateCodePayload = {
   __typename?: 'createCodePayload';
   res: Scalars['Boolean'];
+  code: Scalars['String'];
 };
 
 export type GenericResponse = {
   __typename?: 'genericResponse';
   res: Scalars['Boolean'];
-  code: Scalars['String'];
 };
 
 export type Query = {
@@ -226,6 +226,7 @@ export type Mutation = {
   createChat: CreateChatPayload;
   createCode: CreateCodePayload;
   updateUser: GenericResponse;
+  addFamilyMember: GenericResponse;
 };
 
 
@@ -270,6 +271,12 @@ export type MutationCreateCodeArgs = {
 
 export type MutationUpdateUserArgs = {
   user: UserInfoTypeInput;
+};
+
+
+export type MutationAddFamilyMemberArgs = {
+  familyID: Scalars['String'];
+  userEmails: Array<Scalars['String']>;
 };
 
 export type Subscription = {
