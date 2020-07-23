@@ -24,9 +24,7 @@ class dataSource extends RESTDataSource {
   }
 
   async createUser(email: string, password: string, name: string) {
-    console.log('user in datasource being created', email, password, name)
     const res = await firebaseSvc.createUser(email, password, name);
-    console.log('response from user creation firebase', res)
     return res;
   }
 
@@ -61,7 +59,6 @@ class dataSource extends RESTDataSource {
 
   async getUser(userEmail: string) {
     const res =  await firebaseSvc.getUser(userEmail);
-    // console.log('res', res);
     return res;
   }
 
@@ -71,6 +68,14 @@ class dataSource extends RESTDataSource {
 
   async checkCode(email: string, code: string) {
     return await firebaseSvc.checkCode(email, code)
+  }
+
+  async updateUser(user) {
+    return await firebaseSvc.updateUser(user);
+  }
+
+  async addFamilyMember(familyID, userEmails) {
+    return await firebaseSvc.addFamilyMember(familyID, userEmails)
   }
 }
 

@@ -75,6 +75,38 @@ const typeDefs = gql`
     gender: String!
   }
 
+  input ChatInput {
+    displayName: String!
+    # class name
+    className: String
+    # who is taking this class
+    userEmails: [String]
+    # who is teaching this class (probs will only be on)
+    tutorEmail: String
+    # where are we keeping these messages
+    chatID: String
+  }
+
+  input UserInfoTypeInput {
+    name: String!
+    email: String!
+    phoneNumber: String!
+    userType: Permission!
+    _id: String!
+    chatIDs: [String]
+    # making this a nullable field for now
+    classes: [ChatInput]
+    groupID: String!
+    gender: String!
+  }
+
+  # only students will have this
+  # dont really care about what the tutor and parent's birthdays are
+  type UserAdditionalInfo {
+    dob: String
+    year: Int
+    schoolName: String
+  }
   # maybe we can add an optional info field too
 
   # this type will be for what we want to query for when we represent data on the frontend
@@ -86,7 +118,7 @@ const typeDefs = gql`
     phoneNumber: String!
     userType: Permission!
     _id: String!
-    chatIDs: [String]!
+    chatIDs: [String]
     # making this a nullable field for now
     classes: [Chat]
     groupID: String!
@@ -140,9 +172,10 @@ const typeDefs = gql`
     res: Boolean!
   }
 
-  # type createCodePayload {
-  #   res: Boolean!
-  # }
+  type createCodePayload {
+    res: Boolean!
+    code: String!
+  }
 
   type genericResponse {
     res: Boolean!
@@ -163,9 +196,11 @@ const typeDefs = gql`
     createUser(users: [UserInputType]): CreateUserPayload
     addClass(className: String!): addClassPayload!
     deleteClass(className: String!): deleteClassPayload!
-
     createChat(displayName: String! className: String!, tutorEmail: String!, userEmails: [String!]!): createChatPayload!
-    createCode(email: String!): genericResponse!
+    createCode(email: String!): createCodePayload!
+
+    updateUser(user: UserInfoTypeInput!): genericResponse!
+    addFamilyMember(familyID: String!, userEmails: [String!]!): genericResponse!
 
     # needs to be written
     # change classes
