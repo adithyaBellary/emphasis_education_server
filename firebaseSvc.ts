@@ -100,11 +100,11 @@ class FireBaseSVC {
   //   }
   // }
 
-  async createUser (email: string, password: string, name: string) {
+  async createUser (email: string, password: string, firstName: string, lastName: string) {
     try {
       await firebase.auth().createUserWithEmailAndPassword(email, password)
       const newUser = firebase.auth().currentUser
-      await newUser.updateProfile( { displayName: name})
+      await newUser.updateProfile( { displayName: `${firstName} ${lastName}`})
       return true;
     } catch(e) {
       return false;
@@ -148,9 +148,10 @@ class FireBaseSVC {
     return firebase.database().ref(`${CODES_REF_BASE}/${hashedEmail}`);
   }
 
-  async pushUser(name, email, userType, phoneNumber, hash, groupID, gender) {
+  async pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, gender) {
     const user_and_id: UserInfoType = {
-      name,
+      firstName,
+      lastName,
       email,
       phoneNumber,
       _id: hash,
@@ -325,7 +326,7 @@ class FireBaseSVC {
 
   async searchUsers(searchTerm: string) {
 
-    const relevantFields = [ 'email', 'name', 'phoneNumber', 'userType' ];
+    const relevantFields = [ 'email', 'firstName', 'lastName', 'phoneNumber', 'userType' ];
 
     // this will be the ref for all the users
     return await this._refUsers().once('value')

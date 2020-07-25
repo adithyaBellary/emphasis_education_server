@@ -53,21 +53,13 @@ const typeDefs = gql`
 
   type LoginPayload {
     res: Boolean!
-    # basically UserInfoType from here down
-    # name: String!
-    # email: String!
-    # phoneNumber: String!
-    # userType: Permission!
-    # groupID: String!
-    # _id: String!
-    # chatIDs: [String]!
-    # classes: [Chat]
-    # gender: String!
     user: UserInfoType
   }
 
   input UserInputType {
-    name: String!
+    # name: String!
+    firstName: String!
+    lastName: String!
     email: String!
     password: String!
     userType: Permission!
@@ -75,6 +67,7 @@ const typeDefs = gql`
     gender: String!
   }
 
+  # descoped to v2
   input ChatInput {
     displayName: String!
     # class name
@@ -87,6 +80,7 @@ const typeDefs = gql`
     chatID: String
   }
 
+  # descoped to v2
   input UserInfoTypeInput {
     name: String!
     email: String!
@@ -113,7 +107,9 @@ const typeDefs = gql`
   # these are fields that will be written to the db
   # Backend analog IUser
   type UserInfoType {
-    name: String!
+    # name: String!
+    firstName: String!
+    lastName: String!
     email: String!
     phoneNumber: String!
     userType: Permission!
@@ -212,6 +208,7 @@ const typeDefs = gql`
     createChat(displayName: String! className: String!, tutorInfo: ChatUserInfoInput!, userInfo: [ChatUserInfoInput!]!): createChatPayload!
     createCode(email: String!): createCodePayload!
 
+    # this is descoped to v2
     updateUser(user: UserInfoTypeInput!): genericResponse!
     addFamilyMember(familyID: String!, userEmails: [String!]!): genericResponse!
 

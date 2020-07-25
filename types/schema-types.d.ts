@@ -69,7 +69,8 @@ export type LoginPayload = {
 };
 
 export type UserInputType = {
-  name: Scalars['String'];
+  firstName: Scalars['String'];
+  lastName: Scalars['String'];
   email: Scalars['String'];
   password: Scalars['String'];
   userType: Permission;
@@ -106,7 +107,8 @@ export type UserAdditionalInfo = {
 
 export type UserInfoType = {
   __typename?: 'UserInfoType';
-  name: Scalars['String'];
+  firstName: Scalars['String'];
+  lastName: Scalars['String'];
   email: Scalars['String'];
   phoneNumber: Scalars['String'];
   userType: Permission;
@@ -270,7 +272,7 @@ export type MutationDeleteClassArgs = {
 export type MutationCreateChatArgs = {
   displayName: Scalars['String'];
   className: Scalars['String'];
-  tutorEmail: Scalars['String'];
+  tutorInfo: ChatUserInfoInput;
   userInfo: Array<ChatUserInfoInput>;
 };
 
