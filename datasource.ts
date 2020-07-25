@@ -4,7 +4,11 @@ import { RESTDataSource } from 'apollo-datasource-rest';
 import { SHA256, MD5 } from "crypto-js"
 
 import { IMessage } from './types/IMessage';
-import { Permission, MessageInput } from './types/schema-types';
+import {
+  Permission,
+  MessageInput,
+  ChatUserInfo
+} from './types/schema-types';
 
 class dataSource extends RESTDataSource {
   constructor() {
@@ -53,8 +57,8 @@ class dataSource extends RESTDataSource {
     return await firebaseSvc.deleteClass(className)
   }
 
-  async createChat(displayName, className: string, tutorEmail: string, userInfo) {
-    return await firebaseSvc.createChat(displayName, className, tutorEmail, userInfo);
+  async createChat(displayName, className: string, tutorInfo: ChatUserInfo, userInfo: ChatUserInfo[]) {
+    return await firebaseSvc.createChat(displayName, className, tutorInfo, userInfo);
   }
 
   async getUser(userEmail: string) {

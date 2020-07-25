@@ -392,11 +392,11 @@ class FireBaseSVC {
     }
   }
 
-  async createChat(displayName: string, className: string, tutorEmail: string, userInfo: ChatUserInfo[]) {
+  async createChat(displayName: string, className: string, tutorInfo: ChatUserInfo, userInfo: ChatUserInfo[]) {
     // generate chatID / class ID
     // let us make these two ^ the same
     const chatID: string = genID();
-    const tutorID: string = getHash(tutorEmail);
+    const tutorID: string = getHash(tutorInfo.email);
     const users: UserInfoType[] = await Promise.all(userInfo.map(async _user => {
       const u = await this.getUser(_user.email)
       return u;
@@ -407,7 +407,8 @@ class FireBaseSVC {
       className,
       // userEmails,
       userInfo,
-      tutorEmail,
+      // tutorEmail,
+      tutorInfo,
       chatID
     }
 

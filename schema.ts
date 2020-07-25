@@ -149,7 +149,8 @@ const typeDefs = gql`
     # userEmails: [String]
     userInfo: [ChatUserInfo!]!
     # who is teaching this class (probs will only be on)
-    tutorEmail: String!
+    # tutorEmail: String!
+    tutorInfo: ChatUserInfo!
     # where are we keeping these messages
     chatID: String!
   }
@@ -208,7 +209,7 @@ const typeDefs = gql`
     createUser(users: [UserInputType]): CreateUserPayload
     addClass(className: String!): addClassPayload!
     deleteClass(className: String!): deleteClassPayload!
-    createChat(displayName: String! className: String!, tutorEmail: String!, userInfo: [ChatUserInfoInput!]!): createChatPayload!
+    createChat(displayName: String! className: String!, tutorInfo: ChatUserInfoInput!, userInfo: [ChatUserInfoInput!]!): createChatPayload!
     createCode(email: String!): createCodePayload!
 
     updateUser(user: UserInfoTypeInput!): genericResponse!

@@ -133,7 +133,7 @@ export type Chat = {
   displayName: Scalars['String'];
   className: Scalars['String'];
   userInfo: Array<ChatUserInfo>;
-  tutorEmail: Scalars['String'];
+  tutorInfo: ChatUserInfo;
   chatID: Scalars['String'];
 };
 
@@ -271,7 +271,7 @@ export type MutationCreateChatArgs = {
   displayName: Scalars['String'];
   className: Scalars['String'];
   tutorEmail: Scalars['String'];
-  userEmails: Array<Scalars['String']>;
+  userInfo: Array<ChatUserInfoInput>;
 };
 
 

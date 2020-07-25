@@ -70,8 +70,8 @@ const resolvers = {
     deleteClass: async (_, { className }, { dataSources }) => {
       return await dataSources.f.deleteClass(className);
     },
-    createChat: async (_, { displayName, className, tutorEmail, userInfo }, { dataSources }) => {
-      return await dataSources.f.createChat(displayName, className, tutorEmail, userInfo)
+    createChat: async (_, { displayName, className, tutorInfo, userInfo }, { dataSources }) => {
+      return await dataSources.f.createChat(displayName, className, tutorInfo, userInfo)
     },
     createCode: async (_, { email }, { dataSources }) => {
       return await dataSources.f.createCode(email);
