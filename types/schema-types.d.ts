@@ -117,13 +117,24 @@ export type UserInfoType = {
   gender: Scalars['String'];
 };
 
+export type ChatUserInfo = {
+  __typename?: 'ChatUserInfo';
+  name: Scalars['String'];
+  email: Scalars['String'];
+};
+
+export type ChatUserInfoInput = {
+  name: Scalars['String'];
+  email: Scalars['String'];
+};
+
 export type Chat = {
   __typename?: 'Chat';
   displayName: Scalars['String'];
-  className?: Maybe<Scalars['String']>;
-  userEmails?: Maybe<Array<Maybe<Scalars['String']>>>;
-  tutorEmail?: Maybe<Scalars['String']>;
-  chatID?: Maybe<Scalars['String']>;
+  className: Scalars['String'];
+  userInfo: Array<ChatUserInfo>;
+  tutorEmail: Scalars['String'];
+  chatID: Scalars['String'];
 };
 
 export type ClassName = {

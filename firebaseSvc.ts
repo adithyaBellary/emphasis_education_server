@@ -16,7 +16,8 @@ import {
   DeleteClassPayload,
   CreateChatPayload,
   Chat,
-  UserInfoTypeInput
+  UserInfoTypeInput,
+  ChatUserInfo
 } from './types/schema-types';
 import { genID, getHash, asyncForEach } from './helper';
 
@@ -374,7 +375,7 @@ class FireBaseSVC {
       return returnVal;
     }
     await this._refClasses().push(className)
-    const returnVal: AddClassPayload = { res: true, message: 'N/A'};
+    const returnVal: AddClassPayload = { res: true, message: 'Sucess'};
     return returnVal;
   }
 
@@ -391,20 +392,21 @@ class FireBaseSVC {
     }
   }
 
-  async createChat(displayName: string, className: string, tutorEmail: string, userEmails: string[]) {
+  async createChat(displayName: string, className: string, tutorEmail: string, userInfo: ChatUserInfo[]) {
     // generate chatID / class ID
     // let us make these two ^ the same
     const chatID: string = genID();
     const tutorID: string = getHash(tutorEmail);
-    const users: UserInfoType[] = await Promise.all(userEmails.map(async email => {
-      const u = await this.getUser(email)
+    const users: UserInfoType[] = await Promise.all(userInfo.map(async _user => {
+      const u = await this.getUser(_user.email)
       return u;
     }));
     // add ID to the tutor
     const newChat: Chat = {
       displayName,
       className,
-      userEmails,
+      // userEmails,
+      userInfo,
       tutorEmail,
       chatID
     }

@@ -125,6 +125,17 @@ const typeDefs = gql`
     gender: String!
   }
 
+  type ChatUserInfo {
+    name: String!
+    email: String!
+  }
+
+  # this will make it easier to add people
+  input ChatUserInfoInput {
+    name: String!
+    email: String!
+  }
+
   # need to look over which fields are required
   # letf a lot of them to be nullable because at creation we will not know these details
   type Chat {
@@ -133,13 +144,14 @@ const typeDefs = gql`
     # display name
     displayName: String!
     # class name
-    className: String
+    className: String!
     # who is taking this class
-    userEmails: [String]
+    # userEmails: [String]
+    userInfo: [ChatUserInfo!]!
     # who is teaching this class (probs will only be on)
-    tutorEmail: String
+    tutorEmail: String!
     # where are we keeping these messages
-    chatID: String
+    chatID: String!
   }
 
   type ClassName {
@@ -196,7 +208,7 @@ const typeDefs = gql`
     createUser(users: [UserInputType]): CreateUserPayload
     addClass(className: String!): addClassPayload!
     deleteClass(className: String!): deleteClassPayload!
-    createChat(displayName: String! className: String!, tutorEmail: String!, userEmails: [String!]!): createChatPayload!
+    createChat(displayName: String! className: String!, tutorEmail: String!, userInfo: [ChatUserInfoInput!]!): createChatPayload!
     createCode(email: String!): createCodePayload!
 
     updateUser(user: UserInfoTypeInput!): genericResponse!
@@ -205,7 +217,6 @@ const typeDefs = gql`
     # needs to be written
     # change classes
     # change tutor
-    # change the members of the family
   }
 
   type Subscription {
