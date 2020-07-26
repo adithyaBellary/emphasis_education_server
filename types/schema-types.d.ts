@@ -126,7 +126,8 @@ export type ChatUserInfo = {
 };
 
 export type ChatUserInfoInput = {
-  name: Scalars['String'];
+  firstName: Scalars['String'];
+  lastName: Scalars['String'];
   email: Scalars['String'];
 };
 

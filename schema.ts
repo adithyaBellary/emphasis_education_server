@@ -122,13 +122,15 @@ const typeDefs = gql`
   }
 
   type ChatUserInfo {
-    name: String!
+    firstName: String!
+    lastName: String!
     email: String!
   }
 
   # this will make it easier to add people
   input ChatUserInfoInput {
-    name: String!
+    firstName: String!
+    lastName: String!
     email: String!
   }
 
