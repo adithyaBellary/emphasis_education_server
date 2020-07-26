@@ -4,7 +4,11 @@ import { RESTDataSource } from 'apollo-datasource-rest';
 import { SHA256, MD5 } from "crypto-js"
 
 import { IMessage } from './types/IMessage';
-import { Permission, MessageInput } from './types/schema-types';
+import {
+  Permission,
+  MessageInput,
+  ChatUserInfo
+} from './types/schema-types';
 
 class dataSource extends RESTDataSource {
   constructor() {
@@ -23,14 +27,14 @@ class dataSource extends RESTDataSource {
     return await firebaseSvc.send(message)
   }
 
-  async createUser(email: string, password: string, name: string) {
-    const res = await firebaseSvc.createUser(email, password, name);
+  async createUser(email: string, password: string, firstName: string, lastName: string) {
+    const res = await firebaseSvc.createUser(email, password, firstName, lastName);
     return res;
   }
 
-  async pushUser(name: string, email: string, userType: Permission, phoneNumber: string, groupID: string, gender: string) {
+  async pushUser(firstName: string,lastName: string, email: string, userType: Permission, phoneNumber: string, groupID: string, gender: string) {
     const hash: string = MD5(email).toString();
-    return await firebaseSvc.pushUser(name, email, userType, phoneNumber, hash, groupID, gender);
+    return await firebaseSvc.pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, gender);
   }
 
   async getFamily(groupID: string) {
@@ -53,8 +57,8 @@ class dataSource extends RESTDataSource {
     return await firebaseSvc.deleteClass(className)
   }
 
-  async createChat(displayName, className: string, tutorEmail: string, userEmails: string[]) {
-    return await firebaseSvc.createChat(displayName, className, tutorEmail, userEmails);
+  async createChat(displayName, className: string, tutorInfo: ChatUserInfo, userInfo: ChatUserInfo[]) {
+    return await firebaseSvc.createChat(displayName, className, tutorInfo, userInfo);
   }
 
   async getUser(userEmail: string) {

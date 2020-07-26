@@ -53,21 +53,13 @@ const typeDefs = gql`
 
   type LoginPayload {
     res: Boolean!
-    # basically UserInfoType from here down
-    # name: String!
-    # email: String!
-    # phoneNumber: String!
-    # userType: Permission!
-    # groupID: String!
-    # _id: String!
-    # chatIDs: [String]!
-    # classes: [Chat]
-    # gender: String!
     user: UserInfoType
   }
 
   input UserInputType {
-    name: String!
+    # name: String!
+    firstName: String!
+    lastName: String!
     email: String!
     password: String!
     userType: Permission!
@@ -75,6 +67,7 @@ const typeDefs = gql`
     gender: String!
   }
 
+  # descoped to v2
   input ChatInput {
     displayName: String!
     # class name
@@ -87,6 +80,7 @@ const typeDefs = gql`
     chatID: String
   }
 
+  # descoped to v2
   input UserInfoTypeInput {
     name: String!
     email: String!
@@ -113,7 +107,9 @@ const typeDefs = gql`
   # these are fields that will be written to the db
   # Backend analog IUser
   type UserInfoType {
-    name: String!
+    # name: String!
+    firstName: String!
+    lastName: String!
     email: String!
     phoneNumber: String!
     userType: Permission!
@@ -125,6 +121,19 @@ const typeDefs = gql`
     gender: String!
   }
 
+  type ChatUserInfo {
+    firstName: String!
+    lastName: String!
+    email: String!
+  }
+
+  # this will make it easier to add people
+  input ChatUserInfoInput {
+    firstName: String!
+    lastName: String!
+    email: String!
+  }
+
   # need to look over which fields are required
   # letf a lot of them to be nullable because at creation we will not know these details
   type Chat {
@@ -133,13 +142,15 @@ const typeDefs = gql`
     # display name
     displayName: String!
     # class name
-    className: String
+    className: String!
     # who is taking this class
-    userEmails: [String]
+    # userEmails: [String]
+    userInfo: [ChatUserInfo!]!
     # who is teaching this class (probs will only be on)
-    tutorEmail: String
+    # tutorEmail: String!
+    tutorInfo: ChatUserInfo!
     # where are we keeping these messages
-    chatID: String
+    chatID: String!
   }
 
   type ClassName {
@@ -196,16 +207,16 @@ const typeDefs = gql`
     createUser(users: [UserInputType]): CreateUserPayload
     addClass(className: String!): addClassPayload!
     deleteClass(className: String!): deleteClassPayload!
-    createChat(displayName: String! className: String!, tutorEmail: String!, userEmails: [String!]!): createChatPayload!
+    createChat(displayName: String! className: String!, tutorInfo: ChatUserInfoInput!, userInfo: [ChatUserInfoInput!]!): createChatPayload!
     createCode(email: String!): createCodePayload!
 
+    # this is descoped to v2
     updateUser(user: UserInfoTypeInput!): genericResponse!
     addFamilyMember(familyID: String!, userEmails: [String!]!): genericResponse!
 
     # needs to be written
     # change classes
     # change tutor
-    # change the members of the family
   }
 
   type Subscription {

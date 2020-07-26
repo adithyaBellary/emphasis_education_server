@@ -47,10 +47,11 @@ const resolvers = {
       const groupID: string = genID();
       let response = true;
       const _create = async () => {
-        await asyncForEach(users, async ({email, password, name, userType, phoneNumber, gender}: UserInputType) => {
-          const resp = await dataSources.f.createUser(email, password, name);
+        await asyncForEach(users, async ({email, password, firstName, lastName, userType, phoneNumber, gender}: UserInputType) => {
+          const resp = await dataSources.f.createUser(email, password, firstName, lastName);
           const result = await dataSources.f.pushUser(
-            name,
+            firstName,
+            lastName,
             email,
             userType,
             phoneNumber,
@@ -70,8 +71,8 @@ const resolvers = {
     deleteClass: async (_, { className }, { dataSources }) => {
       return await dataSources.f.deleteClass(className);
     },
-    createChat: async (_, { displayName, className, tutorEmail, userEmails }, { dataSources }) => {
-      return await dataSources.f.createChat(displayName, className, tutorEmail, userEmails)
+    createChat: async (_, { displayName, className, tutorInfo, userInfo }, { dataSources }) => {
+      return await dataSources.f.createChat(displayName, className, tutorInfo, userInfo)
     },
     createCode: async (_, { email }, { dataSources }) => {
       return await dataSources.f.createCode(email);
