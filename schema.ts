@@ -209,14 +209,15 @@ const typeDefs = gql`
     deleteClass(className: String!): deleteClassPayload!
     createChat(displayName: String! className: String!, tutorInfo: ChatUserInfoInput!, userInfo: [ChatUserInfoInput!]!): createChatPayload!
     createCode(email: String!): createCodePayload!
+    addFamilyMember(familyID: String!, userEmails: [String!]!): genericResponse!
+    deleteChat(chatID: String!): genericResponse!
 
     # this is descoped to v2
     updateUser(user: UserInfoTypeInput!): genericResponse!
-    addFamilyMember(familyID: String!, userEmails: [String!]!): genericResponse!
+    # change tutor
 
     # needs to be written
     # change classes
-    # change tutor
   }
 
   type Subscription {

@@ -140,6 +140,10 @@ class FireBaseSVC {
     return firebase.database().ref(`${CLASS_REF_BASE}`);
   }
 
+  _refUserClassSpecific(userID: string, classIndex: number) {
+    return firebase.database().ref(`${User_REF_BASE}/${userID}/classes/${classIndex}`)
+  }
+
   _refChats(chatID: string) {
     return firebase.database().ref(`${CHAT_REF_BASE}/${chatID}`);
   }
@@ -406,9 +410,7 @@ class FireBaseSVC {
     const newChat: Chat = {
       displayName,
       className,
-      // userEmails,
       userInfo,
-      // tutorEmail,
       tutorInfo,
       chatID
     }
@@ -555,6 +557,34 @@ class FireBaseSVC {
     })
 
     return { res }
+  }
+
+  async deleteChat(chatID) {
+    // first delete the chat from the tutor and the users
+    const chat: Chat = await this._refChats(chatID).once('value').then(snap => {
+      const val = snap.val();
+      return val;
+    })
+
+    const tutorEmail = chat.tutorInfo.email
+    const hashedEmail = getHash(tutorEmail)
+    const tutor = await this._refUserID(hashedEmail).once('value').then(snap => {
+      const val = snap.val();
+      let ind = -1;
+      val.classes.forEach((_class: Chat, _ind) => {
+        if (_class.chatID === chatID) {
+          ind = _ind
+        }
+      })
+      return ind
+    }).then(async (val: number) => {
+      const classRef = await this._refUserClassSpecific(hashedEmail, val);
+      await classRef.remove();
+
+      return true;
+    })
+
+    console.log('final value', tutor)
   }
 }
 
