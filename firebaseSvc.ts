@@ -574,46 +574,38 @@ class FireBaseSVC {
         }
       })
 
-      // if (userType === 'User') {
-        // then we need to delete the class from the Fam ref as well.
-        // if this is the tutor, then we know it will not be in the Fam ref
+      const famInd = await this._refFamily(val.groupID).once('value').then(snap => {
+        const user = snap.val().user;
+        console.log('user: should be an array?', user)
+        let ind = -1;
+        user.forEach((_user, _ind) => {
+          if (_user._id === hashedEmail) {
+            ind = _ind
+          }
+        })
+        console.log('ind herereer', ind)
+        return ind
+      })
 
-        const famInd = await this._refFamily(val.groupID).once('value').then(snap => {
-          const user = snap.val().user;
-          console.log('user: should be an array?', user)
-          let ind = -1;
-          user.forEach((_user, _ind) => {
-            if (_user._id === hashedEmail) {
-              ind = _ind
-            }
-          })
-          console.log('ind herereer', ind)
-          return ind
+      const classInd = await this._refFamilySpecific(val.groupID, famInd.toString()).once('value').then(async snap => {
+        const val: UserInfoType = snap.val();
+        let ind = -1;
+        const classRef = val.classes.forEach((_class, _ind) => {
+          if (_class.chatID === chatID) {
+            ind = _ind
+          }
         })
 
-        const classInd = await this._refFamilySpecific(val.groupID, famInd.toString()).once('value').then(async snap => {
-          const val: UserInfoType = snap.val();
-          let ind = -1;
-          const classRef = val.classes.forEach((_class, _ind) => {
-            if (_class.chatID === chatID) {
-              ind = _ind
-            }
-          })
+        return ind;
+      })
 
-          return ind;
-        })
+      const classRef = await this._refFamilClassCpecific(val.groupID, famInd.toString(), classInd.toString());
+      await classRef.remove();
 
-        // need to create a separate ref for the specific class in the Family
-        const classRef = await this._refFamilClassCpecific(val.groupID, famInd.toString(), classInd.toString());
-        await classRef.remove();
-
-      // }
       return ind
     }).then(async (val: number) => {
       const classRef = await this._refUserClassSpecific(hashedEmail, val);
       await classRef.remove();
-
-      // if the user is not a tutor then we need to delete this class from the Family ref as well
 
       return true;
     })
@@ -632,7 +624,6 @@ class FireBaseSVC {
   }
 
   async deleteChat(chatID) {
-    // first delete the chat from the tutor and the users
     const chat: Chat = await this._refChats(chatID).once('value').then(snap => {
       const val = snap.val();
       return val;
@@ -651,7 +642,6 @@ class FireBaseSVC {
       )))
     ]
 
-    // console.log('hashedEmails', hashedEmails)
     const res = await this.deleteChatsFromUsers(hashedInfo, chatID);
 
     // // delete the chat object itself
