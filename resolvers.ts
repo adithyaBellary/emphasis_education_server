@@ -82,6 +82,9 @@ const resolvers = {
     },
     addFamilyMember: async(_, { familyID, userEmails }, { dataSources }) => {
       return await dataSources.f.addFamilyMember(familyID, userEmails)
+    },
+    deleteChat: async(_, { chatID }, { dataSources }) => {
+      return await dataSources.f.deleteChat(chatID);
     }
   },
 

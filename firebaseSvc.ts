@@ -17,7 +17,8 @@ import {
   CreateChatPayload,
   Chat,
   UserInfoTypeInput,
-  ChatUserInfo
+  ChatUserInfo,
+  Permission
 } from './types/schema-types';
 import { genID, getHash, asyncForEach } from './helper';
 
@@ -136,8 +137,16 @@ class FireBaseSVC {
     return firebase.database().ref(`${FAMILY_REF_BASE}/${groupID}/user/${ind}`)
   }
 
+  _refFamilClassCpecific(groupID: string, userInd: string, classInd: string) {
+    return firebase.database().ref(`${FAMILY_REF_BASE}/${groupID}/user/${userInd}/classes/${classInd}`)
+  }
+
   _refClasses() {
     return firebase.database().ref(`${CLASS_REF_BASE}`);
+  }
+
+  _refUserClassSpecific(userID: string, classIndex: number) {
+    return firebase.database().ref(`${User_REF_BASE}/${userID}/classes/${classIndex}`)
   }
 
   _refChats(chatID: string) {
@@ -406,9 +415,7 @@ class FireBaseSVC {
     const newChat: Chat = {
       displayName,
       className,
-      // userEmails,
       userInfo,
-      // tutorEmail,
       tutorInfo,
       chatID
     }
@@ -496,8 +503,8 @@ class FireBaseSVC {
   }
 
   // unclear on the status of this one
+  // DESCOPED to V@ or later
   async updateUser(user: UserInfoTypeInput) {
-    console.log('user', user)
     const userID = user._id;
     const userEmail = user.email
     const hashedEmail = getHash(userEmail);
@@ -555,6 +562,94 @@ class FireBaseSVC {
     })
 
     return { res }
+  }
+
+  async deleteChatFromUser(hashedEmail: string, userType: string, chatID: string) {
+    const res = await this._refUserID(hashedEmail).once('value').then(async snap => {
+      const val: UserInfoType = snap.val();
+      let ind = -1;
+      val.classes.forEach((_class: Chat, _ind) => {
+        if (_class.chatID === chatID) {
+          ind = _ind
+        }
+      })
+
+      const famInd = await this._refFamily(val.groupID).once('value').then(snap => {
+        const user = snap.val().user;
+        console.log('user: should be an array?', user)
+        let ind = -1;
+        user.forEach((_user, _ind) => {
+          if (_user._id === hashedEmail) {
+            ind = _ind
+          }
+        })
+        console.log('ind herereer', ind)
+        return ind
+      })
+
+      const classInd = await this._refFamilySpecific(val.groupID, famInd.toString()).once('value').then(async snap => {
+        const val: UserInfoType = snap.val();
+        let ind = -1;
+        const classRef = val.classes.forEach((_class, _ind) => {
+          if (_class.chatID === chatID) {
+            ind = _ind
+          }
+        })
+
+        return ind;
+      })
+
+      const classRef = await this._refFamilClassCpecific(val.groupID, famInd.toString(), classInd.toString());
+      await classRef.remove();
+
+      return ind
+    }).then(async (val: number) => {
+      const classRef = await this._refUserClassSpecific(hashedEmail, val);
+      await classRef.remove();
+
+      return true;
+    })
+
+    return res;
+  }
+
+  async deleteChatsFromUsers(hashedInfo: {email: string, userType: string}[], chatID: string) {
+    let res = true;
+    hashedInfo.forEach(async _info => {
+      const _res: boolean = await this.deleteChatFromUser(_info.email, _info.userType, chatID)
+      if(!_res) {
+        res = _res
+      }
+    })
+  }
+
+  async deleteChat(chatID) {
+    const chat: Chat = await this._refChats(chatID).once('value').then(snap => {
+      const val = snap.val();
+      return val;
+    })
+
+    const hashedInfo = [
+      {
+        email: getHash(chat.tutorInfo.email),
+        userType: 'Tutor'
+      },
+      ...(chat.userInfo.map(_user => (
+        {
+          email: getHash(_user.email),
+          userType: 'User'
+        }
+      )))
+    ]
+
+    const res = await this.deleteChatsFromUsers(hashedInfo, chatID);
+
+    // // delete the chat object itself
+    const chatRef = await this._refChats(chatID);
+    await chatRef.remove();
+
+    return { res: true }
+
   }
 }
 

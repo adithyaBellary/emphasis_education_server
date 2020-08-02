@@ -81,6 +81,10 @@ class dataSource extends RESTDataSource {
   async addFamilyMember(familyID, userEmails) {
     return await firebaseSvc.addFamilyMember(familyID, userEmails)
   }
+
+  async deleteChat(chatID: string) {
+    return await firebaseSvc.deleteChat(chatID);
+  }
 }
 
 export default dataSource;
