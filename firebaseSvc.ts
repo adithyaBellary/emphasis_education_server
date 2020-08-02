@@ -18,7 +18,8 @@ import {
   Chat,
   UserInfoTypeInput,
   ChatUserInfo,
-  Permission
+  Permission,
+  AdminChat
 } from './types/schema-types';
 import { genID, getHash, asyncForEach } from './helper';
 
@@ -108,6 +109,7 @@ class FireBaseSVC {
       await newUser.updateProfile( { displayName: `${firstName} ${lastName}`})
       return true;
     } catch(e) {
+      console.log('error creating user', e)
       return false;
     }
   }
@@ -158,6 +160,10 @@ class FireBaseSVC {
   }
 
   async pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, gender) {
+    // maybe create an admin chat option?
+    const adminChat: AdminChat = {
+      chatID: genID()
+    }
     const user_and_id: UserInfoType = {
       firstName,
       lastName,
@@ -169,7 +175,8 @@ class FireBaseSVC {
       chatIDs: [],
       classes: [],
       groupID,
-      gender
+      gender,
+      adminChat
     }
     await this._refUserID(hash).update(user_and_id);
     const curFam = await this._refFamily(groupID).once('value').then(snap => {
