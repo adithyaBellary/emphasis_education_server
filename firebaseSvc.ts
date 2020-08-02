@@ -648,6 +648,8 @@ class FireBaseSVC {
     const chatRef = await this._refChats(chatID);
     await chatRef.remove();
 
+    return { res: true }
+
   }
 }
 
