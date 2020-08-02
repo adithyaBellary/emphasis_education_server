@@ -58,6 +58,8 @@ const resolvers = {
             groupID,
             gender
           )
+          console.log('res', resp, result)
+
           response = resp && result;
         })
       }

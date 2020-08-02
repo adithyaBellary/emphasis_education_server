@@ -117,11 +117,13 @@ export type UserInfoType = {
   classes?: Maybe<Array<Maybe<Chat>>>;
   groupID: Scalars['String'];
   gender: Scalars['String'];
+  adminChat: AdminChat;
 };
 
 export type ChatUserInfo = {
   __typename?: 'ChatUserInfo';
-  name: Scalars['String'];
+  firstName: Scalars['String'];
+  lastName: Scalars['String'];
   email: Scalars['String'];
 };
 
@@ -137,6 +139,11 @@ export type Chat = {
   className: Scalars['String'];
   userInfo: Array<ChatUserInfo>;
   tutorInfo: ChatUserInfo;
+  chatID: Scalars['String'];
+};
+
+export type AdminChat = {
+  __typename?: 'AdminChat';
   chatID: Scalars['String'];
 };
 
@@ -239,8 +246,9 @@ export type Mutation = {
   deleteClass: DeleteClassPayload;
   createChat: CreateChatPayload;
   createCode: CreateCodePayload;
-  updateUser: GenericResponse;
   addFamilyMember: GenericResponse;
+  deleteChat: GenericResponse;
+  updateUser: GenericResponse;
 };
 
 
@@ -283,14 +291,19 @@ export type MutationCreateCodeArgs = {
 };
 
 
-export type MutationUpdateUserArgs = {
-  user: UserInfoTypeInput;
-};
-
-
 export type MutationAddFamilyMemberArgs = {
   familyID: Scalars['String'];
   userEmails: Array<Scalars['String']>;
+};
+
+
+export type MutationDeleteChatArgs = {
+  chatID: Scalars['String'];
+};
+
+
+export type MutationUpdateUserArgs = {
+  user: UserInfoTypeInput;
 };
 
 export type Subscription = {
