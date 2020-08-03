@@ -625,14 +625,12 @@ class FireBaseSVC {
 
       const famInd = await this._refFamily(val.groupID).once('value').then(snap => {
         const user = snap.val().user;
-        console.log('user: should be an array?', user)
         let ind = -1;
         user.forEach((_user, _ind) => {
           if (_user._id === hashedEmail) {
             ind = _ind
           }
         })
-        console.log('ind herereer', ind)
         return ind
       })
 
@@ -666,9 +664,7 @@ class FireBaseSVC {
     let res = true;
     hashedInfo.forEach(async _info => {
       const _res: boolean = await this.deleteChatFromUser(_info.email, _info.userType, chatID)
-      if(!_res) {
-        res = _res
-      }
+      res = res && _res;
     })
   }
 
@@ -687,6 +683,12 @@ class FireBaseSVC {
         {
           email: getHash(_user.email),
           userType: 'User'
+        }
+      ))),
+      ...(ADMIN_EMAILS.map(_email => (
+        {
+          email: getHash(_email),
+          userType: 'Admin'
         }
       )))
     ]
