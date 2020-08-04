@@ -9,3 +9,11 @@ export const FAMILY_REF_BASE: string = 'Family';
 export const CLASS_REF_BASE: string = 'Classes';
 export const CHAT_REF_BASE: string = 'Chats';
 export const CODES_REF_BASE: string = 'Codes';
+
+const SHWETA_EMAIL: string = 'admin01@gmail.com';
+const SAKTHI_EMAIL: string = 'admin02@gmail.com';
+
+export const ADMIN_EMAILS: string[] = [
+  SHWETA_EMAIL,
+  SAKTHI_EMAIL
+];

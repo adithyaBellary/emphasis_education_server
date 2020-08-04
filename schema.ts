@@ -119,7 +119,7 @@ const typeDefs = gql`
     classes: [Chat]
     groupID: String!
     gender: String!
-    adminChat: AdminChat!
+    adminChat: [AdminChat!]
   }
 
   type ChatUserInfo {
@@ -154,11 +154,18 @@ const typeDefs = gql`
     chatID: String!
   }
 
+  type AdminChatUser {
+    firstName: String!
+    lastName: String!
+    email: String!
+  }
+
   # this will serve as the chat with shweta and sakthi
   # only field we need is the chatID right?
   # mmembers are already decided: user, shweta, sakthi
   type AdminChat {
     chatID: String!
+    user: AdminChatUser!
   }
 
   type ClassName {

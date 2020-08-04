@@ -31,7 +31,8 @@ import {
   CODES_REF_BASE,
   CHAT_REF_BASE,
   CLASS_REF_BASE,
-  CODE_LENGTH
+  CODE_LENGTH,
+  ADMIN_EMAILS
 } from './constants';
 
 class FireBaseSVC {
@@ -160,10 +161,39 @@ class FireBaseSVC {
   }
 
   async pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, gender) {
-    // maybe create an admin chat option?
-    const adminChat: AdminChat = {
-      chatID: genID()
+    let adminChat: AdminChat[] = []
+    // we dont need to make a new admin chat for admins
+    if (userType !== 'Admin') {
+      adminChat = [{
+        chatID: genID(),
+        user: {
+         firstName,
+         lastName,
+         email
+        }
+      }]
+
+      ADMIN_EMAILS.forEach(async _email => {
+        const hashedEmail = getHash(_email)
+        const adminChats = await this._refUserID(hashedEmail).once('value').then(snap => {
+          const val: UserInfoType = snap.val();
+          const adminChats: AdminChat[] = val.adminChat;
+          return adminChats
+        })
+        // console.log('adminChats', adminChats)
+        // console.log('adminChat', adminChat)
+        if (!adminChats) {
+          await this._refUserID(hashedEmail).update({ adminChat: adminChat})
+        } else {
+          await this._refUserID(hashedEmail).update({ adminChat: [...adminChats, ...adminChat]})
+        }
+      })
     }
+
+
+    const newAdmin = await this.getUser(ADMIN_EMAILS[0])
+    console.log('the new admin', newAdmin);
+
     const user_and_id: UserInfoType = {
       firstName,
       lastName,
@@ -351,7 +381,7 @@ class FireBaseSVC {
         const keys = Object.keys(val);
         const Users = keys.map((k, index) => {
           const u = val[k];
-          const _user = u[Object.keys(u)[0]]
+          // const _user = u[Object.keys(u)[0]]
           let flag = false;
           relevantFields.forEach((_field) => {
             let field = u[_field];
@@ -362,7 +392,9 @@ class FireBaseSVC {
             }
           })
           if (flag) { return u }
-        }).filter(user => !!user)
+          // let us filter out the admins
+          // only the admins will be searching users and they wont really need to add themselves
+        }).filter(user => !!user).filter(user => user.userType !== 'Admin') //for some reason cannot user Permission.Admin here
         return Users;
       })
   }
@@ -414,10 +446,22 @@ class FireBaseSVC {
     // let us make these two ^ the same
     const chatID: string = genID();
     const tutorID: string = getHash(tutorInfo.email);
+    const adminUsers: UserInfoType[] = await Promise.all(ADMIN_EMAILS.map(async _email => {
+      return await this.getUser(_email)
+    }))
+    // console.log('admin users', adminUsers)
     const users: UserInfoType[] = await Promise.all(userInfo.map(async _user => {
       const u = await this.getUser(_user.email)
       return u;
     }));
+
+    const allUsers: UserInfoType[] = [
+      ...adminUsers,
+      ...users
+    ]
+    console.log('users', users)
+    console.log('admin users', adminUsers)
+    console.log('all users', allUsers)
     // add ID to the tutor
     const newChat: Chat = {
       displayName,
@@ -428,8 +472,7 @@ class FireBaseSVC {
     }
 
     let tutor: UserInfoType = await this._refUserID(tutorID).once('value').then(snap => {
-      const val = snap.val()
-      return val
+      return snap.val()
     })
     let classes = tutor.classes;
     // tutors will not have any families
@@ -444,16 +487,15 @@ class FireBaseSVC {
     })
     if (!classes) {
       await this._refUserID(tutorID).update({ classes: [{...newChat}]})
-
       await this._refFamilySpecific(tutor.groupID, ind).update({ classes: [{...newChat}]})
-
     } else {
       await this._refUserID(tutorID).update({ classes: [...classes, newChat]})
       await this._refFamilySpecific(tutor.groupID, ind).update({ classes: [...classes, newChat] })
     }
 
     const _runAsync = async () => {
-      await asyncForEach(users, async (_user) => {
+      await asyncForEach(allUsers, async (_user) => {
+        console.log('the _user', _user)
         classes = _user.classes;
         await this._refFamily(_user.groupID).once('value').then(snap => {
           const val = snap.val();
@@ -473,7 +515,7 @@ class FireBaseSVC {
         }
       })
     }
-    _runAsync();
+    await _runAsync();
 
     this._refChats(chatID).update(newChat)
     const returnVal: CreateChatPayload = { res: true }
@@ -583,14 +625,12 @@ class FireBaseSVC {
 
       const famInd = await this._refFamily(val.groupID).once('value').then(snap => {
         const user = snap.val().user;
-        console.log('user: should be an array?', user)
         let ind = -1;
         user.forEach((_user, _ind) => {
           if (_user._id === hashedEmail) {
             ind = _ind
           }
         })
-        console.log('ind herereer', ind)
         return ind
       })
 
@@ -624,9 +664,7 @@ class FireBaseSVC {
     let res = true;
     hashedInfo.forEach(async _info => {
       const _res: boolean = await this.deleteChatFromUser(_info.email, _info.userType, chatID)
-      if(!_res) {
-        res = _res
-      }
+      res = res && _res;
     })
   }
 
@@ -645,6 +683,12 @@ class FireBaseSVC {
         {
           email: getHash(_user.email),
           userType: 'User'
+        }
+      ))),
+      ...(ADMIN_EMAILS.map(_email => (
+        {
+          email: getHash(_email),
+          userType: 'Admin'
         }
       )))
     ]

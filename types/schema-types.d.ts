@@ -117,7 +117,7 @@ export type UserInfoType = {
   classes?: Maybe<Array<Maybe<Chat>>>;
   groupID: Scalars['String'];
   gender: Scalars['String'];
-  adminChat: AdminChat;
+  adminChat?: Maybe<Array<AdminChat>>;
 };
 
 export type ChatUserInfo = {
@@ -142,9 +142,17 @@ export type Chat = {
   chatID: Scalars['String'];
 };
 
+export type AdminChatUser = {
+  __typename?: 'AdminChatUser';
+  firstName: Scalars['String'];
+  lastName: Scalars['String'];
+  email: Scalars['String'];
+};
+
 export type AdminChat = {
   __typename?: 'AdminChat';
   chatID: Scalars['String'];
+  user: AdminChatUser;
 };
 
 export type ClassName = {
