@@ -76,6 +76,7 @@ export type UserInputType = {
   userType: Permission;
   phoneNumber: Scalars['String'];
   gender: Scalars['String'];
+  dob: Scalars['String'];
 };
 
 export type ChatInput = {
@@ -118,6 +119,7 @@ export type UserInfoType = {
   groupID: Scalars['String'];
   gender: Scalars['String'];
   adminChat?: Maybe<Array<AdminChat>>;
+  dob: Scalars['String'];
 };
 
 export type ChatUserInfo = {

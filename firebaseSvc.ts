@@ -160,7 +160,7 @@ class FireBaseSVC {
     return firebase.database().ref(`${CODES_REF_BASE}/${hashedEmail}`);
   }
 
-  async pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, gender) {
+  async pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, gender, dob) {
     let adminChat: AdminChat[] = []
     // we dont need to make a new admin chat for admins
     if (userType !== 'Admin') {
@@ -206,7 +206,8 @@ class FireBaseSVC {
       classes: [],
       groupID,
       gender,
-      adminChat
+      adminChat,
+      dob
     }
     await this._refUserID(hash).update(user_and_id);
     const curFam = await this._refFamily(groupID).once('value').then(snap => {

@@ -65,6 +65,7 @@ const typeDefs = gql`
     userType: Permission!
     phoneNumber: String!
     gender: String!
+    dob: String!
   }
 
   # descoped to v2
