@@ -107,7 +107,6 @@ const typeDefs = gql`
   # these are fields that will be written to the db
   # Backend analog IUser
   type UserInfoType {
-    # name: String!
     firstName: String!
     lastName: String!
     email: String!
@@ -120,6 +119,7 @@ const typeDefs = gql`
     groupID: String!
     gender: String!
     adminChat: [AdminChat!]
+    dob: String!
   }
 
   type ChatUserInfo {
