@@ -173,10 +173,6 @@ const typeDefs = gql`
     name: String!
   }
 
-  # type CreateUserPayload {
-  #   success: Boolean!
-  # }
-
   type addClassPayload {
     res: Boolean!
     message: String!
@@ -189,10 +185,6 @@ const typeDefs = gql`
   type deleteClassPayload {
     res: Boolean!
     message: String!
-  }
-
-  type createChatPayload {
-    res: Boolean!
   }
 
   type SendMessagePayload {
@@ -225,7 +217,7 @@ const typeDefs = gql`
     createUser(users: [UserInputType]): genericResponse!
     addClass(className: String!): addClassPayload!
     deleteClass(className: String!): deleteClassPayload!
-    createChat(displayName: String! className: String!, tutorInfo: ChatUserInfoInput!, userInfo: [ChatUserInfoInput!]!): createChatPayload!
+    createChat(displayName: String! className: String!, tutorInfo: ChatUserInfoInput!, userInfo: [ChatUserInfoInput!]!): genericResponse!
     createCode(email: String!): createCodePayload!
     addFamilyMember(familyID: String!, userEmails: [String!]!): genericResponse!
     deleteChat(chatID: String!): genericResponse!

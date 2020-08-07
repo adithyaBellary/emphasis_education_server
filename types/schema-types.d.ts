@@ -179,11 +179,6 @@ export type DeleteClassPayload = {
   message: Scalars['String'];
 };
 
-export type CreateChatPayload = {
-  __typename?: 'createChatPayload';
-  res: Scalars['Boolean'];
-};
-
 export type SendMessagePayload = {
   __typename?: 'SendMessagePayload';
   res: Scalars['Boolean'];
@@ -250,7 +245,7 @@ export type Mutation = {
   createUser: GenericResponse;
   addClass: AddClassPayload;
   deleteClass: DeleteClassPayload;
-  createChat: CreateChatPayload;
+  createChat: GenericResponse;
   createCode: CreateCodePayload;
   addFamilyMember: GenericResponse;
   deleteChat: GenericResponse;

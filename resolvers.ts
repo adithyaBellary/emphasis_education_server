@@ -53,7 +53,6 @@ const resolvers = {
           try {
             const resp = await dataSources.f.createUser(email, password, firstName, lastName);
             if (!resp) {
-              console.log('catching')
               badEmails.push(email)
               throw new Error;
             }
