@@ -180,8 +180,6 @@ class FireBaseSVC {
           const adminChats: AdminChat[] = val.adminChat;
           return adminChats
         })
-        // console.log('adminChats', adminChats)
-        // console.log('adminChat', adminChat)
         if (!adminChats) {
           await this._refUserID(hashedEmail).update({ adminChat: adminChat})
         } else {
@@ -191,8 +189,8 @@ class FireBaseSVC {
     }
 
 
-    const newAdmin = await this.getUser(ADMIN_EMAILS[0])
-    console.log('the new admin', newAdmin);
+    // const newAdmin = await this.getUser(ADMIN_EMAILS[0])
+    // console.log('the new admin', newAdmin);
 
     const user_and_id: UserInfoType = {
       firstName,
