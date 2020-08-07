@@ -173,10 +173,6 @@ const typeDefs = gql`
     name: String!
   }
 
-  type CreateUserPayload {
-    success: Boolean!
-  }
-
   type addClassPayload {
     res: Boolean!
     message: String!
@@ -191,10 +187,6 @@ const typeDefs = gql`
     message: String!
   }
 
-  type createChatPayload {
-    res: Boolean!
-  }
-
   type SendMessagePayload {
     res: Boolean!
   }
@@ -206,6 +198,8 @@ const typeDefs = gql`
 
   type genericResponse {
     res: Boolean!
+    # not required
+    message: String
   }
 
   type Query {
@@ -220,10 +214,10 @@ const typeDefs = gql`
   type Mutation {
     login(email: String!, password: String!): LoginPayload
     sendMessage(messages: [MessageInput]): SendMessagePayload!
-    createUser(users: [UserInputType]): CreateUserPayload
+    createUser(users: [UserInputType]): genericResponse!
     addClass(className: String!): addClassPayload!
     deleteClass(className: String!): deleteClassPayload!
-    createChat(displayName: String! className: String!, tutorInfo: ChatUserInfoInput!, userInfo: [ChatUserInfoInput!]!): createChatPayload!
+    createChat(displayName: String! className: String!, tutorInfo: ChatUserInfoInput!, userInfo: [ChatUserInfoInput!]!): genericResponse!
     createCode(email: String!): createCodePayload!
     addFamilyMember(familyID: String!, userEmails: [String!]!): genericResponse!
     deleteChat(chatID: String!): genericResponse!

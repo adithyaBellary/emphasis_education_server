@@ -14,12 +14,12 @@ import {
   SearchClassesPayload,
   AddClassPayload,
   DeleteClassPayload,
-  CreateChatPayload,
   Chat,
   UserInfoTypeInput,
   ChatUserInfo,
   Permission,
-  AdminChat
+  AdminChat,
+  GenericResponse
 } from './types/schema-types';
 import { genID, getHash, asyncForEach } from './helper';
 
@@ -180,8 +180,6 @@ class FireBaseSVC {
           const adminChats: AdminChat[] = val.adminChat;
           return adminChats
         })
-        // console.log('adminChats', adminChats)
-        // console.log('adminChat', adminChat)
         if (!adminChats) {
           await this._refUserID(hashedEmail).update({ adminChat: adminChat})
         } else {
@@ -189,10 +187,6 @@ class FireBaseSVC {
         }
       })
     }
-
-
-    const newAdmin = await this.getUser(ADMIN_EMAILS[0])
-    console.log('the new admin', newAdmin);
 
     const user_and_id: UserInfoType = {
       firstName,
@@ -519,7 +513,7 @@ class FireBaseSVC {
     await _runAsync();
 
     this._refChats(chatID).update(newChat)
-    const returnVal: CreateChatPayload = { res: true }
+    const returnVal: GenericResponse = { res: true }
     return returnVal
   }
 

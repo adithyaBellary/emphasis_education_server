@@ -162,11 +162,6 @@ export type ClassName = {
   name: Scalars['String'];
 };
 
-export type CreateUserPayload = {
-  __typename?: 'CreateUserPayload';
-  success: Scalars['Boolean'];
-};
-
 export type AddClassPayload = {
   __typename?: 'addClassPayload';
   res: Scalars['Boolean'];
@@ -184,11 +179,6 @@ export type DeleteClassPayload = {
   message: Scalars['String'];
 };
 
-export type CreateChatPayload = {
-  __typename?: 'createChatPayload';
-  res: Scalars['Boolean'];
-};
-
 export type SendMessagePayload = {
   __typename?: 'SendMessagePayload';
   res: Scalars['Boolean'];
@@ -203,6 +193,7 @@ export type CreateCodePayload = {
 export type GenericResponse = {
   __typename?: 'genericResponse';
   res: Scalars['Boolean'];
+  message?: Maybe<Scalars['String']>;
 };
 
 export type Query = {
@@ -251,10 +242,10 @@ export type Mutation = {
   __typename?: 'Mutation';
   login?: Maybe<LoginPayload>;
   sendMessage: SendMessagePayload;
-  createUser?: Maybe<CreateUserPayload>;
+  createUser: GenericResponse;
   addClass: AddClassPayload;
   deleteClass: DeleteClassPayload;
-  createChat: CreateChatPayload;
+  createChat: GenericResponse;
   createCode: CreateCodePayload;
   addFamilyMember: GenericResponse;
   deleteChat: GenericResponse;

@@ -1,7 +1,7 @@
 // fieldName: (parent, args, context, info) => data;
 import pubsub from './pubsub';
 import { MESSAGE_RECEIVED_EVENT } from './constants';
-import { UserInputType, CreateUserPayload } from './types/schema-types';
+import { UserInputType, GenericResponse } from './types/schema-types';
 import { genID, asyncForEach } from './helper';
 
 const resolvers = {
@@ -46,24 +46,36 @@ const resolvers = {
       // set the groupID. should be the same for each user in the family
       const groupID: string = genID();
       let response = true;
+      let message: string;
+      const badEmails = [];
       const _create = async () => {
         await asyncForEach(users, async ({email, password, firstName, lastName, userType, phoneNumber, gender, dob}: UserInputType) => {
-          const resp = await dataSources.f.createUser(email, password, firstName, lastName);
-          const result = await dataSources.f.pushUser(
-            firstName,
-            lastName,
-            email,
-            userType,
-            phoneNumber,
-            groupID,
-            gender,
-            dob
-          )
-          response = resp && result;
+          try {
+            const resp = await dataSources.f.createUser(email, password, firstName, lastName);
+            if (!resp) {
+              badEmails.push(email)
+              throw new Error;
+            }
+            const result = await dataSources.f.pushUser(
+              firstName,
+              lastName,
+              email,
+              userType,
+              phoneNumber,
+              groupID,
+              gender,
+              dob
+            )
+          } catch (e) {
+            response = false
+            console.log('There was an error creating the user', e)
+          }
         })
       }
       await _create();
-      const result: CreateUserPayload = { success: response };
+      const badEmailsString = badEmails.join(', ')
+      if (!response) { message = `There was an issue with these emails: ${badEmailsString}`; }
+      const result: GenericResponse = { res: response, message };
       return result;
     },
     addClass: async (_, { className }, { dataSources }) => {
