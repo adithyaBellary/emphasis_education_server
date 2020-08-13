@@ -1,9 +1,11 @@
 import firebase from 'firebase';
 import moment from 'moment';
 import { MD5 } from "crypto-js"
+import nodemailer from 'nodemailer';
 
 import pubsub from './pubsub';
 import { firebaseConfig } from './config/firebase';
+import { REQUEST_EMAIL, REQUEST_EMAIL_PASSWORD} from './config/EmailInfo';
 import { MESSAGE_RECEIVED_EVENT, NUM_FETCH_MESSAGES } from './constants';
 import {
   UserInfoType,
@@ -32,7 +34,8 @@ import {
   CHAT_REF_BASE,
   CLASS_REF_BASE,
   CODE_LENGTH,
-  ADMIN_EMAILS
+  ADMIN_EMAILS,
+  ADMIN_EMAIL
 } from './constants';
 
 class FireBaseSVC {
@@ -695,6 +698,37 @@ class FireBaseSVC {
     await chatRef.remove();
 
     return { res: true }
+
+  }
+
+  async sendEmail(subject: string, body: string) {
+    let res = true;
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: REQUEST_EMAIL,
+        pass: REQUEST_EMAIL_PASSWORD
+      }
+    })
+
+    const mailInfo = {
+      from: REQUEST_EMAIL,
+      to: ADMIN_EMAIL,
+      subject,
+      html: `<p>${body}</p>`
+    }
+
+    transporter.sendMail(mailInfo, (err, info) => {
+      if (err) {
+        console.log('there was an error,', err)
+        res = false
+      }
+      if (info) { console.log('email sending was successful') }
+
+    })
+
+    return { res }
 
   }
 }

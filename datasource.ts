@@ -85,6 +85,10 @@ class dataSource extends RESTDataSource {
   async deleteChat(chatID: string) {
     return await firebaseSvc.deleteChat(chatID);
   }
+
+  async sendEmail(subject: string, body: string) {
+    return await firebaseSvc.sendEmail(subject, body)
+  }
 }
 
 export default dataSource;
