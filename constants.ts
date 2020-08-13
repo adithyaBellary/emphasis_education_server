@@ -17,3 +17,5 @@ export const ADMIN_EMAILS: string[] = [
   SHWETA_EMAIL,
   SAKTHI_EMAIL
 ];
+
+export const ADMIN_EMAIL = 'emphasis.education.il@gmail.com';

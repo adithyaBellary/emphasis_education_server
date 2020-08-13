@@ -98,6 +98,9 @@ const resolvers = {
     },
     deleteChat: async(_, { chatID }, { dataSources }) => {
       return await dataSources.f.deleteChat(chatID);
+    },
+    sendEmail: async(_, { subject, body }, { dataSources }) => {
+      return await dataSources.f.sendEmail(subject, body)
     }
   },
 
