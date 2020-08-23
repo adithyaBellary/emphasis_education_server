@@ -362,6 +362,10 @@ class FireBaseSVC {
         score: '850',
         time: '2:45'
       },
+      notification: {
+        title: 'Basic Notification',
+        body: 'this is the notification body'
+      },
       token: registrationToken
     };
     admin.messaging().send(message).then(res => {
