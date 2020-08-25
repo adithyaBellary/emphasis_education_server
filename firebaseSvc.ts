@@ -2,6 +2,7 @@ import firebase from 'firebase';
 import moment from 'moment';
 import { MD5 } from "crypto-js"
 import nodemailer from 'nodemailer';
+import * as admin from 'firebase-admin';
 
 import pubsub from './pubsub';
 import { firebaseConfig } from './config/firebase';
@@ -37,9 +38,14 @@ import {
   ADMIN_EMAILS,
   ADMIN_EMAIL
 } from './constants';
+const creds = require('./config/private-key.json')
 
 class FireBaseSVC {
   constructor() {
+    admin.initializeApp({
+      credential: admin.credential.cert(creds),
+      databaseURL: "https://emphasis-app-41390.firebaseio.com"
+    });
     firebase.initializeApp(firebaseConfig);
     console.log('we are initializing');
     this.test_listen();
@@ -341,6 +347,31 @@ class FireBaseSVC {
         res = false
       }
     });
+
+    // send push notification
+    // const registrationToken = 'eYNIYAUBSiWnTCRnnIDIr8:APA91bGHMFt7kN8nG8Xamw208rUjZd5qBdhCaoXZz-SOIxyKJvJ5zd6aP7slAyIMo50wMZE6LkRJ5rkKobbEALZPIuv96UpXFtkv0FeTGD6r86GdfFAixA6aIKNNz6LqE2yq2joDqrNY'
+    const message = {
+      // store the chat details in the data object
+      data: {
+        score: '850',
+        time: '2:45'
+      },
+      notification: {
+        title: 'Emphasis Education',
+        body: 'New Message'
+      },
+      // token: registrationToken,
+      // the chatID seems to be a good choice to send the message to
+      // with the topic, we no longer need to store the registration tokens
+      // the user needs to manually refresh their chats first, though, in order to actually start getting push notified
+      topic: messages[0].chatID
+    };
+    admin.messaging().send(message).then(res => {
+      console.log('it is a success sending the message', res)
+    }).catch(error => {
+      console.log('there was an error', error)
+    })
+
     return { res }
   }
 
@@ -350,6 +381,23 @@ class FireBaseSVC {
 
   // lets pass in the email and then hash it here
   async getUser(email: string) {
+    // const registrationToken = 'eYNIYAUBSiWnTCRnnIDIr8:APA91bGHMFt7kN8nG8Xamw208rUjZd5qBdhCaoXZz-SOIxyKJvJ5zd6aP7slAyIMo50wMZE6LkRJ5rkKobbEALZPIuv96UpXFtkv0FeTGD6r86GdfFAixA6aIKNNz6LqE2yq2joDqrNY'
+    // const message = {
+    //   data: {
+    //     score: '850',
+    //     time: '2:45'
+    //   },
+    //   notification: {
+    //     title: 'Basic Notification',
+    //     body: 'this is the notification body'
+    //   },
+    //   token: registrationToken
+    // };
+    // admin.messaging().send(message).then(res => {
+    //   console.log('it is a success sending the message', res)
+    // }).catch(error => {
+    //   console.log('there was an error', error)
+    // })
     const hashedEmail = getHash(email);
     const user: UserInfoType = await this._refUserID(hashedEmail).once('value')
       .then(snap => {
