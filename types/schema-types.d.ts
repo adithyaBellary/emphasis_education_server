@@ -21,7 +21,7 @@ export type MessageInput = {
 export type MessageUserInput = {
   name: Scalars['String'];
   email: Scalars['String'];
-  _id?: Maybe<Scalars['String']>;
+  _id: Scalars['String'];
 };
 
 export type MessagePayload = {
@@ -249,6 +249,7 @@ export type Mutation = {
   createCode: CreateCodePayload;
   addFamilyMember: GenericResponse;
   deleteChat: GenericResponse;
+  sendEmail: GenericResponse;
   updateUser: GenericResponse;
 };
 
@@ -300,6 +301,12 @@ export type MutationAddFamilyMemberArgs = {
 
 export type MutationDeleteChatArgs = {
   chatID: Scalars['String'];
+};
+
+
+export type MutationSendEmailArgs = {
+  subject: Scalars['String'];
+  body: Scalars['String'];
 };
 
 

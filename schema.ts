@@ -13,7 +13,7 @@ const typeDefs = gql`
   input MessageUserInput {
     name: String!
     email: String!
-    _id: String
+    _id: String!
   }
 
   type MessagePayload {
