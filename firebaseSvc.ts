@@ -381,23 +381,6 @@ class FireBaseSVC {
 
   // lets pass in the email and then hash it here
   async getUser(email: string) {
-    // const registrationToken = 'eYNIYAUBSiWnTCRnnIDIr8:APA91bGHMFt7kN8nG8Xamw208rUjZd5qBdhCaoXZz-SOIxyKJvJ5zd6aP7slAyIMo50wMZE6LkRJ5rkKobbEALZPIuv96UpXFtkv0FeTGD6r86GdfFAixA6aIKNNz6LqE2yq2joDqrNY'
-    // const message = {
-    //   data: {
-    //     score: '850',
-    //     time: '2:45'
-    //   },
-    //   notification: {
-    //     title: 'Basic Notification',
-    //     body: 'this is the notification body'
-    //   },
-    //   token: registrationToken
-    // };
-    // admin.messaging().send(message).then(res => {
-    //   console.log('it is a success sending the message', res)
-    // }).catch(error => {
-    //   console.log('there was an error', error)
-    // })
     const hashedEmail = getHash(email);
     const user: UserInfoType = await this._refUserID(hashedEmail).once('value')
       .then(snap => {
@@ -427,7 +410,6 @@ class FireBaseSVC {
         const keys = Object.keys(val);
         const Users = keys.map((k, index) => {
           const u = val[k];
-          // const _user = u[Object.keys(u)[0]]
           let flag = false;
           relevantFields.forEach((_field) => {
             let field = u[_field];
@@ -495,7 +477,6 @@ class FireBaseSVC {
     const adminUsers: UserInfoType[] = await Promise.all(ADMIN_EMAILS.map(async _email => {
       return await this.getUser(_email)
     }))
-    // console.log('admin users', adminUsers)
     const users: UserInfoType[] = await Promise.all(userInfo.map(async _user => {
       const u = await this.getUser(_user.email)
       return u;
@@ -508,7 +489,6 @@ class FireBaseSVC {
     console.log('users', users)
     console.log('admin users', adminUsers)
     console.log('all users', allUsers)
-    // add ID to the tutor
     const newChat: Chat = {
       displayName,
       className,
