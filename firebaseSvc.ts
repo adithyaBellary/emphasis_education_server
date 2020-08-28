@@ -759,6 +759,20 @@ class FireBaseSVC {
     return { res }
 
   }
+
+  async forgotPassword(email: string) {
+    let res = true;
+    // send the password email to the email send maybe
+    firebase.auth().sendPasswordResetEmail(email).then(() => {
+      console.log('we are successful sending the email')
+    })
+    .catch(e => {
+      console.log('welp, ', e)
+      res = false
+    })
+
+    return { res }
+  }
 }
 
 const firebaseSvc = new FireBaseSVC();
