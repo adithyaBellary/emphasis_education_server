@@ -5,7 +5,7 @@ import nodemailer from 'nodemailer';
 import * as admin from 'firebase-admin';
 
 import pubsub from './pubsub';
-import { firebaseConfig } from './config/firebase';
+import { firebaseConfig } from './config/firebaseConfig';
 import { REQUEST_EMAIL, REQUEST_EMAIL_PASSWORD} from './config/EmailInfo';
 import { MESSAGE_RECEIVED_EVENT, NUM_FETCH_MESSAGES } from './constants';
 import {
@@ -39,6 +39,7 @@ import {
   ADMIN_EMAIL
 } from './constants';
 const creds = require('./config/private-key.json')
+import { KEY } from './config/private-key';
 
 class FireBaseSVC {
   constructor() {
