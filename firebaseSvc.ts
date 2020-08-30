@@ -44,7 +44,7 @@ class FireBaseSVC {
   constructor() {
     admin.initializeApp({
       credential: admin.credential.cert(FIREBASE_ADMIN_CONFIG),
-      databaseURL: "https://emphasis-app-41390.firebaseio.com"
+      databaseURL: process.env.DATABASE_URL
     });
     firebase.initializeApp(firebaseConfig);
     console.log('we are initializing');
