@@ -38,13 +38,12 @@ import {
   ADMIN_EMAILS,
   ADMIN_EMAIL
 } from './constants';
-const creds = require('./config/private-key.json')
-import { KEY } from './config/private-key';
+import { FIREBASE_ADMIN_CONFIG } from './config/firebaseAdminConfig';
 
 class FireBaseSVC {
   constructor() {
     admin.initializeApp({
-      credential: admin.credential.cert(creds),
+      credential: admin.credential.cert(FIREBASE_ADMIN_CONFIG),
       databaseURL: "https://emphasis-app-41390.firebaseio.com"
     });
     firebase.initializeApp(firebaseConfig);
