@@ -5,7 +5,7 @@ import nodemailer from 'nodemailer';
 import * as admin from 'firebase-admin';
 
 import pubsub from './pubsub';
-import { firebaseConfig } from './config/firebase';
+import { firebaseConfig } from './config/firebaseConfig';
 import { REQUEST_EMAIL, REQUEST_EMAIL_PASSWORD} from './config/EmailInfo';
 import { MESSAGE_RECEIVED_EVENT, NUM_FETCH_MESSAGES } from './constants';
 import {
@@ -38,13 +38,13 @@ import {
   ADMIN_EMAILS,
   ADMIN_EMAIL
 } from './constants';
-const creds = require('./config/private-key.json')
+import { FIREBASE_ADMIN_CONFIG } from './config/firebaseAdminConfig';
 
 class FireBaseSVC {
   constructor() {
     admin.initializeApp({
-      credential: admin.credential.cert(creds),
-      databaseURL: "https://emphasis-app-41390.firebaseio.com"
+      credential: admin.credential.cert(FIREBASE_ADMIN_CONFIG),
+      databaseURL: process.env.DATABASE_URL
     });
     firebase.initializeApp(firebaseConfig);
     console.log('we are initializing');
