@@ -328,6 +328,7 @@ class FireBaseSVC {
     let res: Boolean = true;
     const oldMess: number = await this.getRecentId(messages[0].chatID);
     this.updateNumMessages(messages[0].chatID);
+    const _chatID = messages[0].chatID;
 
     messages.forEach(async (element: MessageInput) => {
       const { text, user, chatID, image } = element;
@@ -349,12 +350,10 @@ class FireBaseSVC {
     });
 
     // send push notification
-    // const registrationToken = 'eYNIYAUBSiWnTCRnnIDIr8:APA91bGHMFt7kN8nG8Xamw208rUjZd5qBdhCaoXZz-SOIxyKJvJ5zd6aP7slAyIMo50wMZE6LkRJ5rkKobbEALZPIuv96UpXFtkv0FeTGD6r86GdfFAixA6aIKNNz6LqE2yq2joDqrNY'
     const message = {
       // store the chat details in the data object
       data: {
-        score: '850',
-        time: '2:45'
+        chatID: _chatID
       },
       notification: {
         title: 'Emphasis Education',
@@ -578,7 +577,7 @@ class FireBaseSVC {
   }
 
   // unclear on the status of this one
-  // DESCOPED to V@ or later
+  // DESCOPED to V2 or later
   async updateUser(user: UserInfoTypeInput) {
     const userID = user._id;
     const userEmail = user.email
