@@ -10,9 +10,7 @@ export const CLASS_REF_BASE: string = 'Classes';
 export const CHAT_REF_BASE: string = 'Chats';
 export const CODES_REF_BASE: string = 'Codes';
 
-// const SHWETA_EMAIL: string = 'admin01@gmail.com';
 const SHWETA_EMAIL: string = process.env.SHWETA_EMAIL;
-// const SAKTHI_EMAIL: string = 'admin02@gmail.com';
 const SAKTHI_EMAIL: string = process.env.SAKTHI_EMAIL;
 
 export const ADMIN_EMAILS: string[] = [
@@ -20,5 +18,4 @@ export const ADMIN_EMAILS: string[] = [
   SAKTHI_EMAIL
 ];
 
-// export const ADMIN_EMAIL = 'emphasis.education.il@gmail.com';
 export const ADMIN_EMAIL = process.env.EMPHASIS_EDUCATION_EMAIL;
