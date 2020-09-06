@@ -40,6 +40,7 @@ import {
 } from './constants';
 import { FIREBASE_ADMIN_CONFIG } from './config/firebaseAdminConfig';
 
+const VALUE = 'value';
 class FireBaseSVC {
   constructor() {
     admin.initializeApp({
@@ -771,6 +772,24 @@ class FireBaseSVC {
     })
 
     return { res }
+  }
+
+  async addChatMember(email, chatID) {
+    // this._refChats(chatID)
+    const userInfo = await firebase.database().ref(`${CHAT_REF_BASE}/${chatID}/userInfo`).once(VALUE).then(snap => {
+      const val = snap.val()
+      return val;
+    })
+
+    console.log('userInfo', userInfo)
+
+    return { res: true }
+  }
+
+  async deleteChatMember(email, chatID) {
+
+    firebase.database().ref(`${CHAT_REF_BASE}/${chatID}/userInfo`).once(VALUE)
+    return { res: true }
   }
 }
 

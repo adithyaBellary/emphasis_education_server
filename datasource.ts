@@ -91,6 +91,10 @@ class dataSource extends RESTDataSource {
   async forgotPassword(email: string) {
     return await firebaseSvc.forgotPassword(email);
   }
+
+  async addChatMember(email: string, chatID: string) {
+    return await firebaseSvc.addChatMember(email, chatID)
+  }
 }
 
 export default dataSource;
