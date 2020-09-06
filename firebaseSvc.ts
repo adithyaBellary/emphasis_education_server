@@ -368,12 +368,10 @@ class FireBaseSVC {
           'apns-topic': 'org.reactjs.native.example.emphasis-education-app' // your app bundle identifier
         }
       },
-      // contentAvailable: true,
       notification: {
         title: 'Emphasis Education',
         body: 'New Message'
       },
-      // token: registrationToken,
       // the chatID seems to be a good choice to send the message to
       // with the topic, we no longer need to store the registration tokens
       // the user needs to manually refresh their chats first, though, in order to actually start getting push notified
