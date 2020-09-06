@@ -356,6 +356,19 @@ class FireBaseSVC {
       data: {
         chatID: _chatID
       },
+      apns: {
+        payload: {
+          aps: {
+            contentAvailable: true
+          }
+        },
+        headers: {
+          'apns-push-type': 'background',
+          'apns-priority': '10',
+          'apns-topic': 'org.reactjs.native.example.emphasis-education-app' // your app bundle identifier
+        }
+      },
+      // contentAvailable: true,
       notification: {
         title: 'Emphasis Education',
         body: 'New Message'
