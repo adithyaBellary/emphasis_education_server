@@ -1,9 +1,7 @@
-// import * as firebase from 'firebase';
 import firebaseSvc from './firebaseSvc';
 import { RESTDataSource } from 'apollo-datasource-rest';
-import { SHA256, MD5 } from "crypto-js"
+import { MD5 } from "crypto-js"
 
-import { IMessage } from './types/IMessage';
 import {
   Permission,
   MessageInput,
@@ -92,6 +90,10 @@ class dataSource extends RESTDataSource {
 
   async forgotPassword(email: string) {
     return await firebaseSvc.forgotPassword(email);
+  }
+
+  async addChatMember(email: string, chatID: string) {
+    return await firebaseSvc.addChatMember(email, chatID)
   }
 }
 

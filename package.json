@@ -30,7 +30,6 @@
   },
   "scripts": {
     "start": "nodemon --exec ts-node ./index.ts",
-    "test_push": "nodemon --exec ts-node ./test_db.ts",
     "generate": "graphql-codegen"
   }
 }

@@ -223,10 +223,11 @@ const typeDefs = gql`
     deleteChat(chatID: String!): genericResponse!
     sendEmail(subject: String!, body: String!): genericResponse!
     forgotPassword(email: String!): genericResponse!
+    addChatMember(email: String, chatID: String): genericResponse!
+    # deleteChatMember()
 
     # this is descoped to v2
     updateUser(user: UserInfoTypeInput!): genericResponse!
-    # change tutor
 
     # needs to be written
     # change classes

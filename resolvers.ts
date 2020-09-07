@@ -104,6 +104,9 @@ const resolvers = {
     },
     forgotPassword: async(_, { email }, { dataSources }) => {
       return await dataSources.f.forgotPassword(email);
+    },
+    addChatMember: async(_, { email, chatID}, { dataSources }) => {
+      return await dataSources.f.addChatMember(email, chatID);
     }
   },
 

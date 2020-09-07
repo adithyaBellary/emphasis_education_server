@@ -40,6 +40,7 @@ import {
 } from './constants';
 import { FIREBASE_ADMIN_CONFIG } from './config/firebaseAdminConfig';
 
+const VALUE = 'value';
 class FireBaseSVC {
   constructor() {
     admin.initializeApp({
@@ -328,6 +329,7 @@ class FireBaseSVC {
     let res: Boolean = true;
     const oldMess: number = await this.getRecentId(messages[0].chatID);
     this.updateNumMessages(messages[0].chatID);
+    const _chatID = messages[0].chatID;
 
     messages.forEach(async (element: MessageInput) => {
       const { text, user, chatID, image } = element;
@@ -349,18 +351,27 @@ class FireBaseSVC {
     });
 
     // send push notification
-    // const registrationToken = 'eYNIYAUBSiWnTCRnnIDIr8:APA91bGHMFt7kN8nG8Xamw208rUjZd5qBdhCaoXZz-SOIxyKJvJ5zd6aP7slAyIMo50wMZE6LkRJ5rkKobbEALZPIuv96UpXFtkv0FeTGD6r86GdfFAixA6aIKNNz6LqE2yq2joDqrNY'
     const message = {
       // store the chat details in the data object
       data: {
-        score: '850',
-        time: '2:45'
+        chatID: _chatID
+      },
+      apns: {
+        payload: {
+          aps: {
+            contentAvailable: true
+          }
+        },
+        headers: {
+          'apns-push-type': 'background',
+          'apns-priority': '10',
+          'apns-topic': 'org.reactjs.native.example.emphasis-education-app' // your app bundle identifier
+        }
       },
       notification: {
         title: 'Emphasis Education',
         body: 'New Message'
       },
-      // token: registrationToken,
       // the chatID seems to be a good choice to send the message to
       // with the topic, we no longer need to store the registration tokens
       // the user needs to manually refresh their chats first, though, in order to actually start getting push notified
@@ -578,7 +589,7 @@ class FireBaseSVC {
   }
 
   // unclear on the status of this one
-  // DESCOPED to V@ or later
+  // DESCOPED to V2 or later
   async updateUser(user: UserInfoTypeInput) {
     const userID = user._id;
     const userEmail = user.email
@@ -772,6 +783,24 @@ class FireBaseSVC {
     })
 
     return { res }
+  }
+
+  async addChatMember(email, chatID) {
+    // this._refChats(chatID)
+    const userInfo = await firebase.database().ref(`${CHAT_REF_BASE}/${chatID}/userInfo`).once(VALUE).then(snap => {
+      const val = snap.val()
+      return val;
+    })
+
+    console.log('userInfo', userInfo)
+
+    return { res: true }
+  }
+
+  async deleteChatMember(email, chatID) {
+
+    firebase.database().ref(`${CHAT_REF_BASE}/${chatID}/userInfo`).once(VALUE)
+    return { res: true }
   }
 }
 
