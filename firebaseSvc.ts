@@ -354,7 +354,8 @@ class FireBaseSVC {
     const message = {
       // store the chat details in the data object
       data: {
-        chatID: _chatID
+        chatID: _chatID,
+        content_available: '1'
       },
       apns: {
         payload: {
@@ -364,14 +365,12 @@ class FireBaseSVC {
         },
         headers: {
           'apns-push-type': 'background',
-          'apns-priority': '10',
-          'apns-topic': 'org.reactjs.native.example.emphasis-education-app' // your app bundle identifier
-        }
+          'apns-priority': '5',
+          'apns-topic': 'org.reactjs.native.example.emphasis-education-app', // your app bundle identifier
+          'content-available': '1'
+        },
       },
-      notification: {
-        title: 'Emphasis Education',
-        body: 'New Message'
-      },
+      // priority: "high",
       // the chatID seems to be a good choice to send the message to
       // with the topic, we no longer need to store the registration tokens
       // the user needs to manually refresh their chats first, though, in order to actually start getting push notified
