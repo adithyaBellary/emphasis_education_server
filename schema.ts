@@ -114,12 +114,13 @@ const typeDefs = gql`
     phoneNumber: String!
     userType: Permission!
     _id: String!
+    # TODO: take this field out. no longer needed
     chatIDs: [String]!
     # making this a nullable field for now
     classes: [Chat]!
     groupID: String!
     gender: String!
-    adminChat: [AdminChat!]
+    adminChat: [AdminChat!]!
     dob: String!
   }
 
