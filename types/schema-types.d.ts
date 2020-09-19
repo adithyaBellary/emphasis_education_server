@@ -93,8 +93,8 @@ export type UserInfoTypeInput = {
   phoneNumber: Scalars['String'];
   userType: Permission;
   _id: Scalars['String'];
-  chatIDs?: Maybe<Array<Maybe<Scalars['String']>>>;
-  classes?: Maybe<Array<Maybe<ChatInput>>>;
+  chatIDs: Array<Maybe<Scalars['String']>>;
+  classes: Array<Maybe<ChatInput>>;
   groupID: Scalars['String'];
   gender: Scalars['String'];
 };
@@ -250,6 +250,8 @@ export type Mutation = {
   addFamilyMember: GenericResponse;
   deleteChat: GenericResponse;
   sendEmail: GenericResponse;
+  forgotPassword: GenericResponse;
+  addChatMember: GenericResponse;
   updateUser: GenericResponse;
 };
 
@@ -307,6 +309,17 @@ export type MutationDeleteChatArgs = {
 export type MutationSendEmailArgs = {
   subject: Scalars['String'];
   body: Scalars['String'];
+};
+
+
+export type MutationForgotPasswordArgs = {
+  email: Scalars['String'];
+};
+
+
+export type MutationAddChatMemberArgs = {
+  email?: Maybe<Scalars['String']>;
+  chatID?: Maybe<Scalars['String']>;
 };
 
 

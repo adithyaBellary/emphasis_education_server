@@ -355,6 +355,8 @@ class FireBaseSVC {
       // store the chat details in the data object
       data: {
         chatID: _chatID,
+        message: 'a new chat in a message',
+        title: 'New Message',
         content_available: '1'
       },
       apns: {
