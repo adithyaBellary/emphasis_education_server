@@ -102,6 +102,9 @@ const resolvers = {
     sendEmail: async(_, { subject, body }, { dataSources }) => {
       return await dataSources.f.sendEmail(subject, body)
     },
+    sendBugEmail: async(_, { user, body }, { dataSources }) => {
+      return await dataSources.f.sendBugEmail(user, body)
+    },
     forgotPassword: async(_, { email }, { dataSources }) => {
       return await dataSources.f.forgotPassword(email);
     },

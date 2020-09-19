@@ -222,6 +222,7 @@ const typeDefs = gql`
     addFamilyMember(familyID: String!, userEmails: [String!]!): genericResponse!
     deleteChat(chatID: String!): genericResponse!
     sendEmail(subject: String!, body: String!): genericResponse!
+    sendBugEmail(user: String!, body: String!): genericResponse!
     forgotPassword(email: String!): genericResponse!
     addChatMember(email: String, chatID: String): genericResponse!
     # deleteChatMember()

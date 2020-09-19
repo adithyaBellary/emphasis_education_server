@@ -36,12 +36,17 @@ import {
   CLASS_REF_BASE,
   CODE_LENGTH,
   ADMIN_EMAILS,
-  ADMIN_EMAIL
+  ADMIN_EMAIL,
+  SERVICE_EMAIL
 } from './constants';
 import { FIREBASE_ADMIN_CONFIG } from './config/firebaseAdminConfig';
 
 const VALUE = 'value';
 class FireBaseSVC {
+
+  public state: { transporter: any } = {
+    transporter: null
+  }
   constructor() {
     admin.initializeApp({
       credential: admin.credential.cert(FIREBASE_ADMIN_CONFIG),
@@ -50,6 +55,15 @@ class FireBaseSVC {
     firebase.initializeApp(firebaseConfig);
     console.log('we are initializing');
     this.test_listen();
+    // create the email transporter
+    this.state.transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: REQUEST_EMAIL,
+        pass: REQUEST_EMAIL_PASSWORD
+      }
+    })
+
   }
 
   async login (user: MutationLoginArgs) {
@@ -744,14 +758,6 @@ class FireBaseSVC {
   async sendEmail(subject: string, body: string) {
     let res = true;
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: REQUEST_EMAIL,
-        pass: REQUEST_EMAIL_PASSWORD
-      }
-    })
-
     const mailInfo = {
       from: REQUEST_EMAIL,
       to: ADMIN_EMAIL,
@@ -759,7 +765,7 @@ class FireBaseSVC {
       html: `<p>${body}</p>`
     }
 
-    transporter.sendMail(mailInfo, (err, info) => {
+    this.state.transporter.sendMail(mailInfo, (err, info) => {
       if (err) {
         console.log('there was an error,', err)
         res = false
@@ -769,7 +775,28 @@ class FireBaseSVC {
     })
 
     return { res }
+  }
 
+  // this should be consolidated with the above
+  async sendBugEmail(user: string, body: string) {
+    let res = true;
+
+    const mailInfo = {
+      from: REQUEST_EMAIL,
+      to: SERVICE_EMAIL,
+      subject: `Bug / Feedback email from ${user}`,
+      html: `<p>${body}</p>`
+    }
+
+    this.state.transporter.sendMail(mailInfo, (err, info) => {
+      if (err) {
+        console.log('there was an error, ', err)
+        res = false
+      }
+      if (info) { console.log('email sending was successful') }
+    })
+
+    return { res }
   }
 
   async forgotPassword(email: string) {
