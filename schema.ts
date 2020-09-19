@@ -88,9 +88,9 @@ const typeDefs = gql`
     phoneNumber: String!
     userType: Permission!
     _id: String!
-    chatIDs: [String]!
+    chatIDs: [String]
     # making this a nullable field for now
-    classes: [ChatInput]!
+    classes: [ChatInput]
     groupID: String!
     gender: String!
   }
@@ -114,9 +114,9 @@ const typeDefs = gql`
     phoneNumber: String!
     userType: Permission!
     _id: String!
-    chatIDs: [String]
+    chatIDs: [String]!
     # making this a nullable field for now
-    classes: [Chat]
+    classes: [Chat]!
     groupID: String!
     gender: String!
     adminChat: [AdminChat!]
