@@ -831,13 +831,51 @@ class FireBaseSVC {
   }
 
   async addChatMember(email, chatID) {
-    // this._refChats(chatID)
     const userInfo = await firebase.database().ref(`${CHAT_REF_BASE}/${chatID}/userInfo`).once(VALUE).then(snap => {
       const val = snap.val()
       return val;
     })
 
-    console.log('userInfo', userInfo)
+    const user = await this.getUser(email);
+
+    const newUserInfo = [
+      ...userInfo,
+      {
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName
+      }
+    ]
+
+    await firebase.database().ref(`${CHAT_REF_BASE}/${chatID}`).update({ userInfo: newUserInfo})
+
+    // now add the class to the user object as well as the user object in the family ref
+    const oldClasses = user.classes;
+    const classBeingUpdated = await this._refChats(chatID).once(VALUE).then(snap => snap.val());
+    const newClasses: Chat[] = []
+    if (oldClasses) {
+      newClasses.push(...oldClasses)
+    }
+    newClasses.push(classBeingUpdated);
+    // console.log('new classes', newClasses)
+    const hashedEmail = getHash(email)
+    await this._refUserID(hashedEmail).update({ classes: newClasses})
+
+    // now update the same user in the family ref
+    const index = await this._refFamily(user.groupID).once(VALUE).then(snap => {
+      const val = snap.val()
+      const famUser = val.user;
+      let ind = 1;
+      famUser.forEach((_user, index) => {
+        if (_user._id === user._id) {
+          ind = index
+        }
+      })
+
+      return ind;
+    })
+
+    await this._refFamilySpecific(user.groupID, index.toString()).update({ classes: newClasses})
 
     return { res: true }
   }
