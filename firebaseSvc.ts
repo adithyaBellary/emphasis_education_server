@@ -622,7 +622,9 @@ class FireBaseSVC {
     // all we should need to do is change the groupID field of the users to the new familyID
     let hashedEmail: string;
     let res: boolean = true;
-    userEmails.forEach(async _user => {
+
+    await asyncForEach(userEmails, async _user => {
+      // console.log(_user)
       try {
         hashedEmail = getHash(_user)
         let user = await this._refUserID(hashedEmail).once('value').then(snap => snap.val())
