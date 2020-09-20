@@ -413,6 +413,7 @@ class FireBaseSVC {
         const val = snap.val()
         return val
       })
+    console.log('user, ', user)
     return user;
   }
 

@@ -117,7 +117,7 @@ const typeDefs = gql`
     # TODO: take this field out. no longer needed
     chatIDs: [String]!
     # making this a nullable field for now
-    classes: [Chat]!
+    classes: [Chat]
     groupID: String!
     gender: String!
     adminChat: [AdminChat!]!
