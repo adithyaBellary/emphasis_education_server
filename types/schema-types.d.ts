@@ -115,7 +115,7 @@ export type UserInfoType = {
   userType: Permission;
   _id: Scalars['String'];
   chatIDs: Array<Maybe<Scalars['String']>>;
-  classes?: Maybe<Array<Maybe<Chat>>>;
+  classes?: Maybe<Array<Chat>>;
   groupID: Scalars['String'];
   gender: Scalars['String'];
   adminChat: Array<AdminChat>;
