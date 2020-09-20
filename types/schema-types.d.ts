@@ -196,6 +196,12 @@ export type GenericResponse = {
   message?: Maybe<Scalars['String']>;
 };
 
+export type AddFamilyMemberPayload = {
+  __typename?: 'AddFamilyMemberPayload';
+  res: Scalars['Boolean'];
+  family: Array<UserInfoType>;
+};
+
 export type Query = {
   __typename?: 'Query';
   getMessages?: Maybe<Array<Maybe<MessageType>>>;
@@ -247,7 +253,7 @@ export type Mutation = {
   deleteClass: DeleteClassPayload;
   createChat: GenericResponse;
   createCode: CreateCodePayload;
-  addFamilyMember: GenericResponse;
+  addFamilyMember: AddFamilyMemberPayload;
   deleteChat: GenericResponse;
   sendEmail: GenericResponse;
   sendBugEmail: GenericResponse;

@@ -37,11 +37,12 @@ import {
   CODE_LENGTH,
   ADMIN_EMAILS,
   ADMIN_EMAIL,
-  SERVICE_EMAIL
+  SERVICE_EMAIL,
+  VALUE
 } from './constants';
 import { FIREBASE_ADMIN_CONFIG } from './config/firebaseAdminConfig';
 
-const VALUE = 'value';
+// const VALUE = 'value';
 class FireBaseSVC {
 
   public state: { transporter: any } = {
@@ -413,7 +414,7 @@ class FireBaseSVC {
         const val = snap.val()
         return val
       })
-    console.log('user, ', user)
+    // console.log('user, ', user)
     return user;
   }
 
@@ -639,7 +640,7 @@ class FireBaseSVC {
         })
 
         await this._refFamily(familyID).update({ user: [...curFam.user, user]})
-
+        console.log('what we are adding: ', { user: [...curFam.user, user]})
         // and then delete the user from the old family location
 
         // get the index value needed for the _refFamilySpeciifc ref
@@ -663,7 +664,20 @@ class FireBaseSVC {
       }
     })
 
-    return { res }
+    // we will need to return the family defined by 'familyID'
+    // as well as the old family of 'userEmails'?
+
+    const newFam = await this._refFamily(familyID)
+      .once(VALUE)
+      .then(snap => {
+        const val = snap.val();
+        return val;
+      })
+    console.log('new Fam', newFam)
+    return {
+      res,
+      family: newFam.user
+     }
   }
 
   async deleteChatFromUser(hashedEmail: string, userType: string, chatID: string) {
