@@ -88,6 +88,10 @@ class dataSource extends RESTDataSource {
     return await firebaseSvc.sendEmail(subject, body)
   }
 
+  async sendBugEmail(user: string, body: string) {
+    return await firebaseSvc.sendBugEmail(user, body)
+  }
+
   async forgotPassword(email: string) {
     return await firebaseSvc.forgotPassword(email);
   }

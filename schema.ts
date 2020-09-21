@@ -114,12 +114,13 @@ const typeDefs = gql`
     phoneNumber: String!
     userType: Permission!
     _id: String!
-    chatIDs: [String]
+    # TODO: take this field out. no longer needed
+    chatIDs: [String]!
     # making this a nullable field for now
-    classes: [Chat]
+    classes: [Chat!]
     groupID: String!
     gender: String!
-    adminChat: [AdminChat!]
+    adminChat: [AdminChat!]!
     dob: String!
   }
 
@@ -202,6 +203,13 @@ const typeDefs = gql`
     message: String
   }
 
+  # if we return the updated family member, then that 'should' update the UI for free
+  type AddFamilyMemberPayload {
+    res: Boolean!
+    # user: UserInfoType!
+    family: [UserInfoType!]!
+  }
+
   type Query {
     getMessages(chatID: String, init: Int!): [MessageType]
     getFamily(groupID: String!): [UserInfoType]
@@ -219,9 +227,11 @@ const typeDefs = gql`
     deleteClass(className: String!): deleteClassPayload!
     createChat(displayName: String! className: String!, tutorInfo: ChatUserInfoInput!, userInfo: [ChatUserInfoInput!]!): genericResponse!
     createCode(email: String!): createCodePayload!
-    addFamilyMember(familyID: String!, userEmails: [String!]!): genericResponse!
+    # addFamilyMember(familyID: String!, userEmails: [String!]!): genericResponse!
+    addFamilyMember(familyID: String!, userEmails: [String!]!): AddFamilyMemberPayload!
     deleteChat(chatID: String!): genericResponse!
     sendEmail(subject: String!, body: String!): genericResponse!
+    sendBugEmail(user: String!, body: String!): genericResponse!
     forgotPassword(email: String!): genericResponse!
     addChatMember(email: String, chatID: String): genericResponse!
     # deleteChatMember()

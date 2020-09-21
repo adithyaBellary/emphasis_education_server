@@ -19,3 +19,6 @@ export const ADMIN_EMAILS: string[] = [
 ];
 
 export const ADMIN_EMAIL = process.env.EMPHASIS_EDUCATION_EMAIL;
+export const SERVICE_EMAIL = process.env.SERVICE_EMAIL;
+
+export const VALUE = 'value';

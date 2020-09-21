@@ -114,11 +114,11 @@ export type UserInfoType = {
   phoneNumber: Scalars['String'];
   userType: Permission;
   _id: Scalars['String'];
-  chatIDs?: Maybe<Array<Maybe<Scalars['String']>>>;
-  classes?: Maybe<Array<Maybe<Chat>>>;
+  chatIDs: Array<Maybe<Scalars['String']>>;
+  classes?: Maybe<Array<Chat>>;
   groupID: Scalars['String'];
   gender: Scalars['String'];
-  adminChat?: Maybe<Array<AdminChat>>;
+  adminChat: Array<AdminChat>;
   dob: Scalars['String'];
 };
 
@@ -196,6 +196,12 @@ export type GenericResponse = {
   message?: Maybe<Scalars['String']>;
 };
 
+export type AddFamilyMemberPayload = {
+  __typename?: 'AddFamilyMemberPayload';
+  res: Scalars['Boolean'];
+  family: Array<UserInfoType>;
+};
+
 export type Query = {
   __typename?: 'Query';
   getMessages?: Maybe<Array<Maybe<MessageType>>>;
@@ -247,9 +253,12 @@ export type Mutation = {
   deleteClass: DeleteClassPayload;
   createChat: GenericResponse;
   createCode: CreateCodePayload;
-  addFamilyMember: GenericResponse;
+  addFamilyMember: AddFamilyMemberPayload;
   deleteChat: GenericResponse;
   sendEmail: GenericResponse;
+  sendBugEmail: GenericResponse;
+  forgotPassword: GenericResponse;
+  addChatMember: GenericResponse;
   updateUser: GenericResponse;
 };
 
@@ -307,6 +316,23 @@ export type MutationDeleteChatArgs = {
 export type MutationSendEmailArgs = {
   subject: Scalars['String'];
   body: Scalars['String'];
+};
+
+
+export type MutationSendBugEmailArgs = {
+  user: Scalars['String'];
+  body: Scalars['String'];
+};
+
+
+export type MutationForgotPasswordArgs = {
+  email: Scalars['String'];
+};
+
+
+export type MutationAddChatMemberArgs = {
+  email?: Maybe<Scalars['String']>;
+  chatID?: Maybe<Scalars['String']>;
 };
 
 
