@@ -831,10 +831,12 @@ class FireBaseSVC {
   }
 
   async addChatMember(email, chatID) {
-    const userInfo = await firebase.database().ref(`${CHAT_REF_BASE}/${chatID}/userInfo`).once(VALUE).then(snap => {
-      const val = snap.val()
-      return val;
-    })
+    const chatObject: Chat = await firebase.database().ref(`${CHAT_REF_BASE}/${chatID}`).once(VALUE).then(snap => snap.val())
+    const userInfo = chatObject.userInfo;
+    // const userInfo = await firebase.database().ref(`${CHAT_REF_BASE}/${chatID}/userInfo`).once(VALUE).then(snap => {
+    //   const val = snap.val()
+    //   return val;
+    // })
 
     const user = await this.getUser(email);
 
@@ -849,6 +851,134 @@ class FireBaseSVC {
 
     await firebase.database().ref(`${CHAT_REF_BASE}/${chatID}`).update({ userInfo: newUserInfo})
 
+    // what will need to be uopdated in the
+    // ADMINS
+    // TUTORS
+      // in their family locations as well. we we need this though??
+    // OTHER MEMBERS IN THIS CHAT (in userInfo)
+      // in their family locations as well
+    const updatedCHat = await this._refChats(chatID).once(VALUE).then(snap => {
+      const val = snap.val()
+      return val
+    })
+
+    await asyncForEach(ADMIN_EMAILS, async (_email) => {
+      // const adminUser = await this.getUser(_email);
+      const classIndex = await this._refUserID(getHash(_email)).once(VALUE).then(snap => {
+        const val = snap.val();
+        let ind = 0;
+        val.classes.forEach((_class, index) => {
+          console.log(_class)
+          if (_class.chatID === updatedCHat.chatID) {
+            ind = index
+          }
+        })
+        return ind;
+      })
+
+      console.log('index in async foreach', classIndex)
+      const oldClasses = await firebase.database().ref(`${User_REF_BASE}/${getHash(_email)}/classes`).once(VALUE).then(snap => {
+        const val = snap.val()
+        return val
+      })
+
+      const updateClasses = []
+      oldClasses.forEach((_oldClass, index) => {
+        if (index === classIndex) {
+          updateClasses.push(updatedCHat)
+        } else {
+          updateClasses.push(_oldClass)
+        }
+      })
+      console.log('updated classes', updateClasses)
+      await this._refUserID(getHash(_email)).update({ classes: updateClasses})
+    })
+
+    const tutorEmail = chatObject.tutorInfo.email;
+
+    await asyncForEach([tutorEmail], async _tutorEmail => {
+      const tutor = await this.getUser(_tutorEmail);
+      const classIndex = await this._refUserID(getHash(_tutorEmail)).once(VALUE).then(snap => {
+        const val = snap.val();
+        let ind = 0;
+        val.classes.forEach((_class, index) => {
+          if (_class.chatID === updatedCHat.chatID) {
+            ind = index
+          }
+        })
+        return ind;
+      })
+
+      const oldClasses = await firebase.database().ref(`${User_REF_BASE}/${getHash(_tutorEmail)}/classes`).once(VALUE).then(snap => {
+        const val = snap.val();
+        return val;
+      })
+
+      const updatedClasses = []
+      oldClasses.forEach((_oldClass, index) => {
+        if (index === classIndex) {
+          updatedClasses.push(updatedCHat)
+        } else {
+          updatedClasses.push(_oldClass)
+        }
+      })
+
+      await this._refUserID(getHash(_tutorEmail)).update({ classes: updatedClasses})
+
+      // add to the family ref because why not. tutors do not have families, so we know the index will just be 0
+
+      await this._refFamilySpecific(tutor.groupID, '0').update({ classes: updatedClasses})
+    })
+
+    const userEmails = userInfo.map(_user => _user.email)
+
+    // need to add to this user in the user ref, and at the family ref
+    await asyncForEach(userEmails, async _userMail => {
+      const user = await this.getUser(_userMail);
+      const classIndex = await this._refUserID(getHash(_userMail)).once(VALUE).then(snap => {
+        const val = snap.val();
+        let ind = 0;
+        val.classes.forEach((_class, index) => {
+          if (_class.chatID === updatedCHat.chatID) {
+            ind = index
+          }
+        })
+        return ind;
+      })
+
+      const oldClasses = await firebase.database().ref(`${User_REF_BASE}/${getHash(_userMail)}/classes`).once(VALUE).then(snap => {
+        const val = snap.val();
+        return val;
+      })
+
+      const updatedClasses = []
+      oldClasses.forEach((_oldClass, index) => {
+        if (index === classIndex) {
+          updatedClasses.push(updatedCHat)
+        } else {
+          updatedClasses.push(_oldClass)
+        }
+      })
+
+      await this._refUserID(getHash(_userMail)).update({ classes: updatedClasses})
+
+      // now update this user at the family ref
+
+      const famIndex = await this._refFamily(user.groupID).once(VALUE).then(snap => {
+        const val = snap.val();
+        let ind = 0;
+        val.user.forEach((_famMember, index) => {
+          if (_famMember._id === user._id) {
+            ind = index
+          }
+        })
+
+        return ind
+      })
+
+      await this._refFamilySpecific(user.groupID, famIndex.toString()).update({ classes: updatedClasses})
+    })
+
     // now add the class to the user object as well as the user object in the family ref
     const oldClasses = user.classes;
     const classBeingUpdated = await this._refChats(chatID).once(VALUE).then(snap => snap.val());
@@ -857,8 +987,8 @@ class FireBaseSVC {
       newClasses.push(...oldClasses)
     }
     newClasses.push(classBeingUpdated);
-    // console.log('new classes', newClasses)
     const hashedEmail = getHash(email)
+
     await this._refUserID(hashedEmail).update({ classes: newClasses})
 
     // now update the same user in the family ref
