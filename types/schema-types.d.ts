@@ -118,7 +118,7 @@ export type UserInfoType = {
   classes?: Maybe<Array<Chat>>;
   groupID: Scalars['String'];
   gender: Scalars['String'];
-  adminChat: Array<AdminChat>;
+  adminChat?: Maybe<Array<AdminChat>>;
   dob: Scalars['String'];
 };
 

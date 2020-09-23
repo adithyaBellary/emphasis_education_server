@@ -120,7 +120,7 @@ const typeDefs = gql`
     classes: [Chat!]
     groupID: String!
     gender: String!
-    adminChat: [AdminChat!]!
+    adminChat: [AdminChat!]
     dob: String!
   }
 
