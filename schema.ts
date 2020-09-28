@@ -119,6 +119,7 @@ const typeDefs = gql`
     # making this a nullable field for now
     classes: [Chat!]
     groupID: String!
+    # TOOD remove Gender
     gender: String!
     adminChat: [AdminChat!]
     dob: String!

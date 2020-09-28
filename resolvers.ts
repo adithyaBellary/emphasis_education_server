@@ -20,7 +20,8 @@ const resolvers = {
       return await dataSources.f.searchClasses(searchTerm)
     },
     getUser: async (_, { userEmail }, { dataSources }) => {
-      const res =  await dataSources.f.getUser(userEmail);
+      const lowerCaseEmail = userEmail.toLowerCase();
+      const res =  await dataSources.f.getUser(lowerCaseEmail);
       return res;
     },
     checkCode: async (_, { email, code }, { dataSources }) => {
