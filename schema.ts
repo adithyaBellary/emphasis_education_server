@@ -228,7 +228,6 @@ const typeDefs = gql`
     deleteClass(className: String!): deleteClassPayload!
     createChat(displayName: String! className: String!, tutorInfo: ChatUserInfoInput!, userInfo: [ChatUserInfoInput!]!): genericResponse!
     createCode(email: String!): createCodePayload!
-    # addFamilyMember(familyID: String!, userEmails: [String!]!): genericResponse!
     addFamilyMember(familyID: String!, userEmails: [String!]!): AddFamilyMemberPayload!
     deleteChat(chatID: String!): genericResponse!
     sendEmail(subject: String!, body: String!): genericResponse!
