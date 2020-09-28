@@ -41,8 +41,7 @@ class dataSource extends RESTDataSource {
     dob: string
   ) {
     const hash: string = MD5(email).toString();
-    const lowerCaseEmail = email.toLowerCase();
-    return await firebaseSvc.pushUser(firstName, lastName, lowerCaseEmail, userType, phoneNumber, hash, groupID, gender, dob);
+    return await firebaseSvc.pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, gender, dob);
   }
 
   async getFamily(groupID: string) {
