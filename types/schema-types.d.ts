@@ -75,7 +75,7 @@ export type UserInputType = {
   password: Scalars['String'];
   userType: Permission;
   phoneNumber: Scalars['String'];
-  gender: Scalars['String'];
+  gender?: Maybe<Scalars['String']>;
   dob: Scalars['String'];
 };
 

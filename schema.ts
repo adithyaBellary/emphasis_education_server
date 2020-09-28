@@ -64,7 +64,7 @@ const typeDefs = gql`
     password: String!
     userType: Permission!
     phoneNumber: String!
-    gender: String!
+    gender: String
     dob: String!
   }
 
