@@ -20,7 +20,8 @@ const resolvers = {
       return await dataSources.f.searchClasses(searchTerm)
     },
     getUser: async (_, { userEmail }, { dataSources }) => {
-      const res =  await dataSources.f.getUser(userEmail);
+      const lowerCaseEmail = userEmail.toLowerCase();
+      const res =  await dataSources.f.getUser(lowerCaseEmail);
       return res;
     },
     checkCode: async (_, { email, code }, { dataSources }) => {
@@ -30,9 +31,10 @@ const resolvers = {
 
   Mutation: {
     login: async (_, { email, password }, { dataSources }) => {
+      const lowerCaseEmail = email.toLowerCase();
       const response = await dataSources.f.login(
         {
-          email,
+          email: lowerCaseEmail,
           password
         },
       )
@@ -42,16 +44,17 @@ const resolvers = {
       const res = await dataSources.f.sendMessages(messages);
       return res;
     },
-    createUser: async (_, {users}, { dataSources }) => {
+    createUser: async (_, { users }, { dataSources }) => {
       // set the groupID. should be the same for each user in the family
       const groupID: string = genID();
       let response = true;
       let message: string;
       const badEmails = [];
       const _create = async () => {
-        await asyncForEach(users, async ({email, password, firstName, lastName, userType, phoneNumber, gender, dob}: UserInputType) => {
+        await asyncForEach(users, async ({ email, password, firstName, lastName, userType, phoneNumber, gender, dob }: UserInputType) => {
           try {
-            const resp = await dataSources.f.createUser(email, password, firstName, lastName);
+            const lowerCaseEmail = email.toLowerCase();
+            const resp = await dataSources.f.createUser(lowerCaseEmail, password, firstName, lastName);
             if (!resp) {
               badEmails.push(email)
               throw new Error;
@@ -59,7 +62,7 @@ const resolvers = {
             const result = await dataSources.f.pushUser(
               firstName,
               lastName,
-              email,
+              lowerCaseEmail,
               userType,
               phoneNumber,
               groupID,

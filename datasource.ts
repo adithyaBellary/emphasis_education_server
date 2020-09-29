@@ -30,7 +30,16 @@ class dataSource extends RESTDataSource {
     return res;
   }
 
-  async pushUser(firstName: string,lastName: string, email: string, userType: Permission, phoneNumber: string, groupID: string, gender: string, dob: string) {
+  async pushUser(
+    firstName: string,
+    lastName: string,
+    email: string,
+    userType: Permission,
+    phoneNumber: string,
+    groupID: string,
+    gender: string,
+    dob: string
+  ) {
     const hash: string = MD5(email).toString();
     return await firebaseSvc.pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, gender, dob);
   }

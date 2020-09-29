@@ -64,7 +64,7 @@ const typeDefs = gql`
     password: String!
     userType: Permission!
     phoneNumber: String!
-    gender: String!
+    gender: String
     dob: String!
   }
 
@@ -119,6 +119,7 @@ const typeDefs = gql`
     # making this a nullable field for now
     classes: [Chat!]
     groupID: String!
+    # TOOD remove Gender
     gender: String!
     adminChat: [AdminChat!]
     dob: String!
@@ -227,7 +228,6 @@ const typeDefs = gql`
     deleteClass(className: String!): deleteClassPayload!
     createChat(displayName: String! className: String!, tutorInfo: ChatUserInfoInput!, userInfo: [ChatUserInfoInput!]!): genericResponse!
     createCode(email: String!): createCodePayload!
-    # addFamilyMember(familyID: String!, userEmails: [String!]!): genericResponse!
     addFamilyMember(familyID: String!, userEmails: [String!]!): AddFamilyMemberPayload!
     deleteChat(chatID: String!): genericResponse!
     sendEmail(subject: String!, body: String!): genericResponse!

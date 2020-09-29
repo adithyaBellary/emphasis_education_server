@@ -70,6 +70,7 @@ class FireBaseSVC {
   async login (user: MutationLoginArgs) {
     let res: boolean;
     let payload: LoginPayload;
+    console.log(user)
     try {
       await firebase.auth().signInWithEmailAndPassword(user.email, user.password)
       const loggedInUser: UserInfoType = await this.getUser(user.email);
