@@ -346,6 +346,7 @@ class FireBaseSVC {
     const oldMess: number = await this.getRecentId(messages[0].chatID);
     this.updateNumMessages(messages[0].chatID);
     const _chatID = messages[0].chatID;
+    console.log('messages')
 
     messages.forEach(async (element: MessageInput) => {
       const { text, user, chatID, image } = element;
@@ -415,7 +416,6 @@ class FireBaseSVC {
         const val = snap.val()
         return val
       })
-    // console.log('user, ', user)
     return user;
   }
 
@@ -515,9 +515,9 @@ class FireBaseSVC {
       ...adminUsers,
       ...users
     ]
-    console.log('users', users)
-    console.log('admin users', adminUsers)
-    console.log('all users', allUsers)
+    // console.log('users', users)
+    // console.log('admin users', adminUsers)
+    // console.log('all users', allUsers)
     const newChat: Chat = {
       displayName,
       className,
@@ -550,7 +550,7 @@ class FireBaseSVC {
 
     const _runAsync = async () => {
       await asyncForEach(allUsers, async (_user) => {
-        console.log('the _user', _user)
+        // console.log('the _user', _user)
         classes = _user.classes;
         await this._refFamily(_user.groupID).once('value').then(snap => {
           const val = snap.val();
@@ -643,7 +643,7 @@ class FireBaseSVC {
         })
 
         await this._refFamily(familyID).update({ user: [...curFam.user, user]})
-        console.log('what we are adding: ', { user: [...curFam.user, user]})
+        // console.log('what we are adding: ', { user: [...curFam.user, user]})
         // and then delete the user from the old family location
 
         // get the index value needed for the _refFamilySpeciifc ref
@@ -663,7 +663,7 @@ class FireBaseSVC {
         await oldUser.remove();
       } catch (e) {
         res = false
-        console.log('something went wrong with adding the family member', e, res)
+        // console.log('something went wrong with adding the family member', e, res)
       }
     })
 
@@ -676,7 +676,7 @@ class FireBaseSVC {
         const val = snap.val();
         return val;
       })
-    console.log('new Fam', newFam)
+    // console.log('new Fam', newFam)
     return {
       res,
       family: newFam.user
