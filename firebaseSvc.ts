@@ -346,7 +346,7 @@ class FireBaseSVC {
     const oldMess: number = await this.getRecentId(messages[0].chatID);
     this.updateNumMessages(messages[0].chatID);
     const _chatID = messages[0].chatID;
-    console.log('messages')
+    console.log('messages', messages)
 
     messages.forEach(async (element: MessageInput) => {
       const { text, user, chatID, image } = element;
