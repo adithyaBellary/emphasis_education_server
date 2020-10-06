@@ -3,6 +3,7 @@ import moment from 'moment';
 import { MD5 } from "crypto-js"
 import nodemailer from 'nodemailer';
 import * as admin from 'firebase-admin';
+import * as Sentry from '@sentry/node';
 
 import pubsub from './pubsub';
 import { firebaseConfig } from './config/firebaseConfig';
@@ -70,7 +71,12 @@ class FireBaseSVC {
   async login (user: MutationLoginArgs) {
     let res: boolean;
     let payload: LoginPayload;
-    console.log(user)
+
+    const transaction = Sentry.startTransaction({
+      op: "test",
+      name: "My First Test Transaction",
+    });
+
     try {
       await firebase.auth().signInWithEmailAndPassword(user.email, user.password)
       const loggedInUser: UserInfoType = await this.getUser(user.email);
@@ -80,6 +86,13 @@ class FireBaseSVC {
     } catch (e) {
       res = false;
       payload = { res }
+
+
+      Sentry.captureException(new Error(e), {
+        user: {
+          email: user.email
+        }
+      })
     }
     return payload;
   }

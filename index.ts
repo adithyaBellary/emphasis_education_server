@@ -1,7 +1,7 @@
 import { ApolloServer } from 'apollo-server';
 import express from 'express';
 import * as dotenv from 'dotenv';
-import * as Sentry from "@sentry/browser";
+import * as Sentry from '@sentry/node';
 import { Integrations } from "@sentry/tracing";
 // import { ApolloServer } from 'apollo-server-express';
 dotenv.config();
@@ -21,9 +21,10 @@ const server = new ApolloServer({
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
-  release: "emphasis-education-server@" + process.env.npm_package_version, // To set your release version
-  integrations: [new Integrations.BrowserTracing()],
-  tracesSampleRate: 1.0, // We recommend adjusting this in production
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
 });
 
 // const app = express();
