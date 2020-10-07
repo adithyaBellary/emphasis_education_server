@@ -65,11 +65,22 @@ class FireBaseSVC {
         pass: REQUEST_EMAIL_PASSWORD
       }
     })
+  }
 
+  getLoginVal (email: string, password: string) {
+    return firebase.auth().signInWithEmailAndPassword(email, password)
+      .then(() => true)
+      .catch(e => {
+        Sentry.captureException(new Error(e), {
+          user: {
+            email
+          }
+        })
+        return false
+      })
   }
 
   async login (user: MutationLoginArgs) {
-    let res: boolean;
     let payload: LoginPayload;
 
     const transaction = Sentry.startTransaction({
@@ -77,23 +88,20 @@ class FireBaseSVC {
       name: "My First Test Transaction",
     });
 
-    try {
-      await firebase.auth().signInWithEmailAndPassword(user.email, user.password)
-      const loggedInUser: UserInfoType = await this.getUser(user.email);
-      const {__typename, ...rest} = loggedInUser;
-      res = true;
-      payload = { res, user: rest };
-    } catch (e) {
-      res = false;
-      payload = { res }
-
-
-      Sentry.captureException(new Error(e), {
-        user: {
-          email: user.email
-        }
-      })
+    const _loginVal: boolean = await this.getLoginVal(user.email, user.password)
+    if (_loginVal) {
+      const loggedInUser: UserInfoType = await this.getUser(user.email)
+      const {__typename, ...rest} = loggedInUser
+      payload = {
+        res: true,
+        user: rest
+      }
+    } else {
+      payload = {
+        res: false
+      }
     }
+
     return payload;
   }
 
