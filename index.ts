@@ -1,6 +1,8 @@
 import { ApolloServer } from 'apollo-server';
 import express from 'express';
 import * as dotenv from 'dotenv';
+import * as Sentry from '@sentry/node';
+import { Integrations } from "@sentry/tracing";
 // import { ApolloServer } from 'apollo-server-express';
 dotenv.config();
 
@@ -8,12 +10,21 @@ import typeDefs from './schema';
 import resolvers from './resolvers';
 import dataSrc from './datasource';
 
+
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   dataSources: () => ({
     f: new dataSrc()
   })
+});
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
 });
 
 // const app = express();

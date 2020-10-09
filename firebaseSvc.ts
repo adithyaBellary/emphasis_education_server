@@ -3,6 +3,7 @@ import moment from 'moment';
 import { MD5 } from "crypto-js"
 import nodemailer from 'nodemailer';
 import * as admin from 'firebase-admin';
+import * as Sentry from '@sentry/node';
 
 import pubsub from './pubsub';
 import { firebaseConfig } from './config/firebaseConfig';
@@ -64,23 +65,43 @@ class FireBaseSVC {
         pass: REQUEST_EMAIL_PASSWORD
       }
     })
+  }
 
+  getLoginVal (email: string, password: string) {
+    return firebase.auth().signInWithEmailAndPassword(email, password)
+      .then(() => true)
+      .catch(e => {
+        Sentry.captureException(new Error(e), {
+          user: {
+            email
+          }
+        })
+        return false
+      })
   }
 
   async login (user: MutationLoginArgs) {
-    let res: boolean;
     let payload: LoginPayload;
-    console.log(user)
-    try {
-      await firebase.auth().signInWithEmailAndPassword(user.email, user.password)
-      const loggedInUser: UserInfoType = await this.getUser(user.email);
-      const {__typename, ...rest} = loggedInUser;
-      res = true;
-      payload = { res, user: rest };
-    } catch (e) {
-      res = false;
-      payload = { res }
+
+    const transaction = Sentry.startTransaction({
+      op: "test",
+      name: "My First Test Transaction",
+    });
+
+    const _loginVal: boolean = await this.getLoginVal(user.email, user.password)
+    if (_loginVal) {
+      const loggedInUser: UserInfoType = await this.getUser(user.email)
+      const {__typename, ...rest} = loggedInUser
+      payload = {
+        res: true,
+        user: rest
+      }
+    } else {
+      payload = {
+        res: false
+      }
     }
+
     return payload;
   }
 
@@ -346,7 +367,7 @@ class FireBaseSVC {
     const oldMess: number = await this.getRecentId(messages[0].chatID);
     this.updateNumMessages(messages[0].chatID);
     const _chatID = messages[0].chatID;
-    console.log('messages')
+    console.log('messages', messages)
 
     messages.forEach(async (element: MessageInput) => {
       const { text, user, chatID, image } = element;
