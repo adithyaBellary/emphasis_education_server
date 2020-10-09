@@ -71,6 +71,7 @@ class FireBaseSVC {
     return firebase.auth().signInWithEmailAndPassword(email, password)
       .then(() => true)
       .catch(e => {
+        console.log('sent the bad login to sentry')
         Sentry.captureException(new Error(e), {
           user: {
             email
