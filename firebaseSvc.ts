@@ -301,10 +301,6 @@ class FireBaseSVC {
 
         // if not, then this is NOT the time to set that info in the db
 
-        // const result = await pointerRef.once(VALUE).then(snap => {
-        //   return snap.val();
-        // })
-
         if(chatPointer) {
           // delete the pointer ref to reset the chat pointers
           // if we preserved them, then if the user were to refresh early on, then they would be getting their
@@ -322,13 +318,6 @@ class FireBaseSVC {
       // if we are calling the refetch function with nothing more to refetch for,
       // return nothing and do nothing to the db
       if (numMessages <= NUM_FETCH_MESSAGES) { return [] }
-
-
-      // let res: number = await firebase.database()
-      //   .ref(pointerRefLocation)
-      //   .once(VALUE)
-      //   // val will be null when not set
-      //   .then(snap => snap.val())
 
       if (chatPointer > 0) { return [] }
 
