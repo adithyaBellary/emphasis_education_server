@@ -337,13 +337,15 @@ class FireBaseSVC {
 
       // get message marker from db
       let res: number = await firebase.database().ref(`${CHAT_POINTER_REF_BASE}/${chatID}/${userID}/pointer`).once(VALUE).then(snap => {
-        // val will be null when not defined
+        // val will be null when not set
         return snap.val();
       })
-      // this changes the element we store (which is a string) to a number bc we need to do things to it
-      res = +res
 
-      if (res) {
+      if (res > 0) {
+        return []
+      }
+      console.log('res', res)
+      if (res !== null) {
         // the refetch function has been called
         console.log('res', res)
         start = res;
@@ -357,10 +359,10 @@ class FireBaseSVC {
 
       const potentialEnd = start + NUM_FETCH_MESSAGES - 1
       end = potentialEnd > 0 ? 0 : potentialEnd
-      console.log('potentialEnc in the loop', start, NUM_FETCH_MESSAGES, start + NUM_FETCH_MESSAGES)
 
+      const nextStartPtr = end + 1;
       const pointerRef = firebase.database().ref(`${CHAT_POINTER_REF_BASE}/${chatID}/${userID}/pointer`)
-      await pointerRef.set(end.toString())
+      await pointerRef.set(nextStartPtr)
         .catch(e => {
           console.log('error setting chat pointer, ', e)
         })
