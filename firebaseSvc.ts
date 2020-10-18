@@ -315,17 +315,13 @@ class FireBaseSVC {
         })
 
         if(result) {
-          // if there is pointer info here, meaning that we have refetched for some info before
-          // let us return what we have refetched for before
-
-          // LET US NOT DO THAT ^^^^^
-          end = result
-        } else {
-          // we have not refetched yet
-
-          // add the -1 bc the startAt and endAt functions are inclusive
-          end = startIndex + NUM_FETCH_MESSAGES - 1
+          // delete the pointer ref to reset the chat pointers
+          // if we preserved them, then if the user were to refresh early on, then they would be getting their
+          // messages returned each time
+          await pointerRef.remove();
+          // end = result
         }
+        end = startIndex + NUM_FETCH_MESSAGES - 1
         start = startIndex
       }
     } else {
