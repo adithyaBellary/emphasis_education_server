@@ -6,8 +6,8 @@ import { genID, asyncForEach } from './helper';
 
 const resolvers = {
   Query: {
-    getMessages: async (_, { chatID, init }, { dataSources }) => {
-      const resp = await dataSources.f.getMessages(chatID, init);
+    getMessages: async (_, { chatID, userID, refresh }, { dataSources }) => {
+      const resp = await dataSources.f.getMessages(chatID, userID, refresh);
       return resp;
     },
     getFamily: async (_, { groupID }, { dataSources }) => {

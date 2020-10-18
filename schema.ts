@@ -191,6 +191,7 @@ const typeDefs = gql`
 
   type SendMessagePayload {
     res: Boolean!
+    # we should send info about the message to hopefully update the cache automatically instead of adding the -no-cache param
   }
 
   type createCodePayload {
@@ -212,7 +213,10 @@ const typeDefs = gql`
   }
 
   type Query {
-    getMessages(chatID: String, init: Int!): [MessageType]
+    # refresh needs to be optional because we need to differentiate between
+    # just opening the chat and pulling down to refresh
+    # we also want to know who is getting the messages
+    getMessages(chatID: String!, userID: String!, refresh: Boolean): [MessageType]
     getFamily(groupID: String!): [UserInfoType]
     searchUsers(searchTerm: String!): [UserInfoType]!
     searchClasses(searchTerm: String!): searchClassesPayload!
@@ -233,7 +237,7 @@ const typeDefs = gql`
     sendEmail(subject: String!, body: String!): genericResponse!
     sendBugEmail(user: String!, body: String!): genericResponse!
     forgotPassword(email: String!): genericResponse!
-    addChatMember(email: String, chatID: String): genericResponse!
+    addChatMember(email: String!, chatID: String!): genericResponse!
     # deleteChatMember()
 
     # this is descoped to v2

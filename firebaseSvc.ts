@@ -39,11 +39,12 @@ import {
   ADMIN_EMAILS,
   ADMIN_EMAIL,
   SERVICE_EMAIL,
-  VALUE
+  VALUE,
+  CHAT_POINTER_REF_BASE
 } from './constants';
 import { FIREBASE_ADMIN_CONFIG } from './config/firebaseAdminConfig';
+import { getHeapSnapshot } from 'v8';
 
-// const VALUE = 'value';
 class FireBaseSVC {
 
   public state: { transporter: any } = {
@@ -208,6 +209,10 @@ class FireBaseSVC {
     return firebase.database().ref(`${CODES_REF_BASE}/${hashedEmail}`);
   }
 
+  _refChatPointer() {
+    return firebase.database().ref(`${CHAT_POINTER_REF_BASE}`)
+  }
+
   async pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, gender, dob) {
     let adminChat: AdminChat[] = []
     // we dont need to make a new admin chat for admins
@@ -223,7 +228,7 @@ class FireBaseSVC {
 
       ADMIN_EMAILS.forEach(async _email => {
         const hashedEmail = getHash(_email)
-        const adminChats = await this._refUserID(hashedEmail).once('value').then(snap => {
+        const adminChats = await this._refUserID(hashedEmail).once(VALUE).then(snap => {
           const val: UserInfoType = snap.val();
           const adminChats: AdminChat[] = val.adminChat;
           return adminChats
@@ -252,7 +257,7 @@ class FireBaseSVC {
       dob
     }
     await this._refUserID(hash).update(user_and_id);
-    const curFam = await this._refFamily(groupID).once('value').then(snap => {
+    const curFam = await this._refFamily(groupID).once(VALUE).then(snap => {
       const val = snap.val();
       return val;
     })
@@ -265,22 +270,114 @@ class FireBaseSVC {
   }
 
   // start at 0
-  getMessages = async (chatID: string, init: number) => {
+  getMessages = async (chatID: string, userID: string, refresh: boolean | undefined) => {
+    // we will not be using the init param from the query. that will be
+    // taken out soon
+
+    // instead we will be storing those markers on the backend,
+    // because that should not be the client's responsibility
+
+    // what if we dont hash the chat
     const chatHash: string = MD5(chatID).toString();
     const numMessages: number = await this.getNumMessages(chatID);
-    if (numMessages === 0) { return [] }
-    // return the entire list of messages
-    if (numMessages > NUM_FETCH_MESSAGES) {}
-    const start: number = -1 * (numMessages - 1) + init;
-    if (start > 0) {return []}
-    const potentialEnd: number = start + NUM_FETCH_MESSAGES - 1;
-    const end: number = potentialEnd > 0 ? 0 : potentialEnd;
+    const startIndex: number = -1 * (numMessages -1 )
 
+    let start: number;
+    let end: number;
+
+    // need to know whether we are going to return just the new messages or
+    // the old emssages as well as the new messages
+
+    // we want ref structure to go like
+    // chatPointers
+    //   - chatID
+    //     - userEmail
+    //       - pointer: pointerVal
+
+    if (!refresh) {
+      // if we are just opening the chat and just getting the messages plainly
+
+      // we will also need to reset the refetch pointer
+
+      // get the marker from the db(if it exists) and then return the correct messages
+
+      if (numMessages < NUM_FETCH_MESSAGES) {
+        start = startIndex
+        end = 0;
+      } else {
+        // let us check to see if the user has already fetched any messages
+        // if they have let us return what they have refetched for before
+
+        // if not, then this is NOT the time to set that info in the db
+        const pointerRef = firebase.database().ref(`${CHAT_POINTER_REF_BASE}/${chatID}/${userID}/pointer`)
+        const result = await pointerRef.once(VALUE).then(snap => {
+          return snap.val();
+        })
+
+        if(result) {
+          // if there is pointer info here, meaning that we have refetched for some info before
+          // let us return what we have refetched for before
+
+          // LET US NOT DO THAT ^^^^^
+          end = result
+        } else {
+          // we have not refetched yet
+
+          // add the -1 bc the startAt and endAt functions are inclusive
+          end = startIndex + NUM_FETCH_MESSAGES - 1
+        }
+        start = startIndex
+      }
+    } else {
+      // what if we only update the chat pointer when we actually refetch something. in other words,
+      // when we call the refresh function and there doesnt end up being any new content to return,
+      // we do not write to the db yet
+
+      // if we are calling the refetch function with nothing more to refetch for,
+      // return nothing and do nothing to the db
+      if (numMessages <= NUM_FETCH_MESSAGES) {
+        return []
+      }
+
+      // get message marker from db
+      const res: number = await firebase.database().ref(`${CHAT_POINTER_REF_BASE}/${chatID}/${userID}/pointer`).once(VALUE).then(snap => {
+        // val will be null when not defined
+        return snap.val();
+      })
+
+      if (res) {
+        // the refetch function has been called
+        start = res + 1;
+
+        const potentialEnd: number = res - NUM_FETCH_MESSAGES;
+        end = potentialEnd < 0 ? 0 : potentialEnd;
+
+      } else {
+        // the refetch function has not been called before, so now we need to set the values in the db
+
+        // basically, here we want to return back NUM_REFETCH messages or
+        console.log('numMessages', numMessages)
+        console.log(startIndex)
+        console.log(NUM_FETCH_MESSAGES)
+        start = startIndex + NUM_FETCH_MESSAGES
+        end = start + NUM_FETCH_MESSAGES > 0 ? 0 : start + NUM_FETCH_MESSAGES
+
+        const pointerRef = firebase.database().ref(`${CHAT_POINTER_REF_BASE}/${chatID}/${userID}/pointer`)
+        await pointerRef.set(start.toString())
+          .catch(e => {
+            console.log('error setting chat pointer, ', e)
+          })
+      }
+    }
+
+    // basically just need to set the starting and ending pointers of the messages that we want to send
+    console.log('start', start)
+    console.log('end', end)
     return await this._refMessage(chatHash)
       .orderByChild('messageID')
       .startAt(start)
       .endAt(end)
-      .once('value')
+      .once(VALUE)
       .then(snap => {
         const val = snap.val();
         const key = Object.keys(val)
@@ -299,7 +396,7 @@ class FireBaseSVC {
     const chatHash: string = MD5(chatID).toString();
     return await this._refMessage(chatHash)
       .limitToLast(1)
-      .once('value')
+      .once(VALUE)
       .then(snap => {
         const val = snap.val();
         if (!val) { return 0 }
@@ -315,6 +412,7 @@ class FireBaseSVC {
       .on('child_changed', (snapshot) => {
         const val = snapshot.val();
         const key = Object.keys(val).slice(-1)[0]
+        // console.log('publishing!!!')
         pubsub.publish(MESSAGE_RECEIVED_EVENT, {
           messageReceived: {
             MessageId: val[key].messageID,
@@ -348,7 +446,7 @@ class FireBaseSVC {
   }
 
   getNumMessages = async (chatID: string) => {
-    return await this._refMessageNum(chatID).once('value')
+    return await this._refMessageNum(chatID).once(VALUE)
       .then((snap): number => {
         const val = snap.val();
         // if this is a new chat wont have any values yet
@@ -368,7 +466,7 @@ class FireBaseSVC {
     const oldMess: number = await this.getRecentId(messages[0].chatID);
     this.updateNumMessages(messages[0].chatID);
     const _chatID = messages[0].chatID;
-    console.log('messages', messages)
+    // console.log('messages', messages)
 
     messages.forEach(async (element: MessageInput) => {
       const { text, user, chatID, image } = element;
@@ -418,9 +516,10 @@ class FireBaseSVC {
       topic: messages[0].chatID
     };
     admin.messaging().send(message).then(res => {
-      console.log('it is a success sending the message', res)
+      // console.log('it is a success sending the message', res)
     }).catch(error => {
       console.log('there was an error', error)
+      // add sentry message or exception
     })
 
     return { res }
@@ -433,7 +532,7 @@ class FireBaseSVC {
   // lets pass in the email and then hash it here
   async getUser(email: string) {
     const hashedEmail = getHash(email);
-    const user: UserInfoType = await this._refUserID(hashedEmail).once('value')
+    const user: UserInfoType = await this._refUserID(hashedEmail).once(VALUE)
       .then(snap => {
         const val = snap.val()
         return val
@@ -442,7 +541,7 @@ class FireBaseSVC {
   }
 
   async getFamily(groupID: string) {
-    const res: UserInfoType[] = await this._refFamily(groupID).once('value')
+    const res: UserInfoType[] = await this._refFamily(groupID).once(VALUE)
       .then((snap) => {
         const val = snap.val();
         return val.user
@@ -455,7 +554,7 @@ class FireBaseSVC {
     const relevantFields = [ 'email', 'firstName', 'lastName', 'phoneNumber', 'userType' ];
 
     // this will be the ref for all the users
-    return await this._refUsers().once('value')
+    return await this._refUsers().once(VALUE)
       .then((snap) => {
         const val = snap.val();
         const keys = Object.keys(val);
@@ -479,7 +578,7 @@ class FireBaseSVC {
   }
 
   async searchClasses(searchTerm: string) {
-    return await this._refClasses().once('value')
+    return await this._refClasses().once(VALUE)
       .then(snap => {
         const val = snap.val();
         if (!val) { return { classes: []}}
@@ -548,13 +647,13 @@ class FireBaseSVC {
       chatID
     }
 
-    let tutor: UserInfoType = await this._refUserID(tutorID).once('value').then(snap => {
+    let tutor: UserInfoType = await this._refUserID(tutorID).once(VALUE).then(snap => {
       return snap.val()
     })
     let classes = tutor.classes;
     // tutors will not have any families
     let ind = null;
-    await this._refFamily(tutor.groupID).once('value').then(snap => {
+    await this._refFamily(tutor.groupID).once(VALUE).then(snap => {
       const val = snap.val();
       val.user.forEach((_v, _ind) => {
         if (_v._id === tutorID) {
@@ -574,7 +673,7 @@ class FireBaseSVC {
       await asyncForEach(allUsers, async (_user) => {
         // console.log('the _user', _user)
         classes = _user.classes;
-        await this._refFamily(_user.groupID).once('value').then(snap => {
+        await this._refFamily(_user.groupID).once(VALUE).then(snap => {
           const val = snap.val();
           val.user.forEach((_u, index) => {
             if (_u._id === _user._id) {
@@ -615,7 +714,7 @@ class FireBaseSVC {
   async checkCode(email: string, code: string) {
     const hashedEmail = getHash(email.toUpperCase())
     let res: boolean = true
-    await this._refCodes(hashedEmail).once('value').then(snap => {
+    await this._refCodes(hashedEmail).once(VALUE).then(snap => {
       const val: string = snap.val();
       if (!val) {
         res = false
@@ -650,7 +749,7 @@ class FireBaseSVC {
       // console.log(_user)
       try {
         hashedEmail = getHash(_user)
-        let user = await this._refUserID(hashedEmail).once('value').then(snap => snap.val())
+        let user = await this._refUserID(hashedEmail).once(VALUE).then(snap => snap.val())
         const oldGroupID = user.groupID;
         const oldID = user._id;
 
@@ -659,7 +758,7 @@ class FireBaseSVC {
         await this._refUserID(hashedEmail).update({ groupID: familyID })
 
         // now this needs to go is the new family at /family
-        const curFam = await this._refFamily(familyID).once('value').then(snap => {
+        const curFam = await this._refFamily(familyID).once(VALUE).then(snap => {
           const val = snap.val();
           return val;
         })
@@ -669,7 +768,7 @@ class FireBaseSVC {
         // and then delete the user from the old family location
 
         // get the index value needed for the _refFamilySpeciifc ref
-        const ind = await this._refFamily(oldGroupID).once('value').then(snap => {
+        const ind = await this._refFamily(oldGroupID).once(VALUE).then(snap => {
           const val = snap.val();
           const familyUsers = val.user;
           let _ind;
@@ -706,7 +805,7 @@ class FireBaseSVC {
   }
 
   async deleteChatFromUser(hashedEmail: string, userType: string, chatID: string) {
-    const res = await this._refUserID(hashedEmail).once('value').then(async snap => {
+    const res = await this._refUserID(hashedEmail).once(VALUE).then(async snap => {
       const val: UserInfoType = snap.val();
       let ind = -1;
       val.classes.forEach((_class: Chat, _ind) => {
@@ -715,7 +814,7 @@ class FireBaseSVC {
         }
       })
 
-      const famInd = await this._refFamily(val.groupID).once('value').then(snap => {
+      const famInd = await this._refFamily(val.groupID).once(VALUE).then(snap => {
         const user = snap.val().user;
         let ind = -1;
         user.forEach((_user, _ind) => {
@@ -726,7 +825,7 @@ class FireBaseSVC {
         return ind
       })
 
-      const classInd = await this._refFamilySpecific(val.groupID, famInd.toString()).once('value').then(async snap => {
+      const classInd = await this._refFamilySpecific(val.groupID, famInd.toString()).once(VALUE).then(async snap => {
         const val: UserInfoType = snap.val();
         let ind = -1;
         const classRef = val.classes.forEach((_class, _ind) => {
@@ -761,7 +860,7 @@ class FireBaseSVC {
   }
 
   async deleteChat(chatID) {
-    const chat: Chat = await this._refChats(chatID).once('value').then(snap => {
+    const chat: Chat = await this._refChats(chatID).once(VALUE).then(snap => {
       const val = snap.val();
       return val;
     })
