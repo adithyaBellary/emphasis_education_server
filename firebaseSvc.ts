@@ -336,37 +336,40 @@ class FireBaseSVC {
       }
 
       // get message marker from db
-      const res: number = await firebase.database().ref(`${CHAT_POINTER_REF_BASE}/${chatID}/${userID}/pointer`).once(VALUE).then(snap => {
+      let res: number = await firebase.database().ref(`${CHAT_POINTER_REF_BASE}/${chatID}/${userID}/pointer`).once(VALUE).then(snap => {
         // val will be null when not defined
         return snap.val();
       })
+      // this changes the element we store (which is a string) to a number bc we need to do things to it
+      res = +res
 
       if (res) {
         // the refetch function has been called
+        console.log('res', res)
         start = res;
-
-        const potentialEnd: number = res - NUM_FETCH_MESSAGES;
-        end = potentialEnd < 0 ? 0 : potentialEnd;
 
       } else {
         // the refetch function has not been called before, so now we need to set the values in the db
 
         // basically, here we want to return back NUM_REFETCH messages or
         start = startIndex + NUM_FETCH_MESSAGES
-        const potentialEnd = start + NUM_FETCH_MESSAGES -1
-        end = potentialEnd > 0 ? 0 : potentialEnd
-
-        const pointerRef = firebase.database().ref(`${CHAT_POINTER_REF_BASE}/${chatID}/${userID}/pointer`)
-        await pointerRef.set(start.toString())
-          .catch(e => {
-            console.log('error setting chat pointer, ', e)
-          })
       }
+
+      const potentialEnd = start + NUM_FETCH_MESSAGES - 1
+      end = potentialEnd > 0 ? 0 : potentialEnd
+      console.log('potentialEnc in the loop', start, NUM_FETCH_MESSAGES, start + NUM_FETCH_MESSAGES)
+
+      const pointerRef = firebase.database().ref(`${CHAT_POINTER_REF_BASE}/${chatID}/${userID}/pointer`)
+      await pointerRef.set(end.toString())
+        .catch(e => {
+          console.log('error setting chat pointer, ', e)
+        })
     }
 
     // basically just need to set the starting and ending pointers of the messages that we want to send
     console.log('start', start)
     console.log('end', end)
+    console.log('\n')
     return await this._refMessage(chatHash)
       .orderByChild('messageID')
       .startAt(start)
