@@ -369,8 +369,7 @@ class FireBaseSVC {
   }
 
   getRecentId = async (chatID: string) => {
-    const chatHash: string = MD5(chatID).toString();
-    return await this._refMessage(chatHash)
+    return await this._refMessage(chatID)
       .limitToLast(1)
       .once(VALUE)
       .then(snap => {
