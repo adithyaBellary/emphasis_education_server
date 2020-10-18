@@ -343,7 +343,7 @@ class FireBaseSVC {
 
       if (res) {
         // the refetch function has been called
-        start = res + 1;
+        start = res;
 
         const potentialEnd: number = res - NUM_FETCH_MESSAGES;
         end = potentialEnd < 0 ? 0 : potentialEnd;
@@ -352,11 +352,9 @@ class FireBaseSVC {
         // the refetch function has not been called before, so now we need to set the values in the db
 
         // basically, here we want to return back NUM_REFETCH messages or
-        console.log('numMessages', numMessages)
-        console.log(startIndex)
-        console.log(NUM_FETCH_MESSAGES)
         start = startIndex + NUM_FETCH_MESSAGES
-        end = start + NUM_FETCH_MESSAGES > 0 ? 0 : start + NUM_FETCH_MESSAGES
+        const potentialEnd = start + NUM_FETCH_MESSAGES -1
+        end = potentialEnd > 0 ? 0 : potentialEnd
 
         const pointerRef = firebase.database().ref(`${CHAT_POINTER_REF_BASE}/${chatID}/${userID}/pointer`)
         await pointerRef.set(start.toString())
