@@ -269,20 +269,18 @@ class FireBaseSVC {
     return true;
   }
 
-  // start at 0
   getMessages = async (chatID: string, userID: string, refresh: boolean | undefined) => {
-    // we will not be using the init param from the query. that will be
-    // taken out soon
-
-    // instead we will be storing those markers on the backend,
-    // because that should not be the client's responsibility
-
-    // what if we dont hash the chat
     const numMessages: number = await this.getNumMessages(chatID);
     const startIndex: number = -1 * (numMessages -1 )
 
     let start: number;
     let end: number;
+    const chatPointerRefLocation = `${CHAT_POINTER_REF_BASE}/${chatID}/${userID}/pointer`
+
+    const chatPointerRef = firebase.database().ref(chatPointerRefLocation)
+
+    const chatPointer = await chatPointerRef.once(VALUE)
+      .then(snap => snap.val())
 
     // we want ref structure to go like
     // chatPointers
@@ -292,10 +290,7 @@ class FireBaseSVC {
 
     if (!refresh) {
       // if we are just opening the chat and just getting the messages plainly
-
-      // we will also need to reset the refetch pointer
-
-      // get the marker from the db(if it exists) and then return the correct messages
+      // we will also need to reset the refetch pointer (if it has previously been set)
 
       if (numMessages < NUM_FETCH_MESSAGES) {
         start = startIndex
@@ -305,17 +300,16 @@ class FireBaseSVC {
         // if they have let us return what they have refetched for before
 
         // if not, then this is NOT the time to set that info in the db
-        const pointerRef = firebase.database().ref(`${CHAT_POINTER_REF_BASE}/${chatID}/${userID}/pointer`)
-        const result = await pointerRef.once(VALUE).then(snap => {
-          return snap.val();
-        })
 
-        if(result) {
+        // const result = await pointerRef.once(VALUE).then(snap => {
+        //   return snap.val();
+        // })
+
+        if(chatPointer) {
           // delete the pointer ref to reset the chat pointers
           // if we preserved them, then if the user were to refresh early on, then they would be getting their
           // messages returned each time
-          await pointerRef.remove();
-          // end = result
+          await chatPointerRef.remove();
         }
         end = startIndex + NUM_FETCH_MESSAGES - 1
         start = startIndex
@@ -327,29 +321,20 @@ class FireBaseSVC {
 
       // if we are calling the refetch function with nothing more to refetch for,
       // return nothing and do nothing to the db
-      if (numMessages <= NUM_FETCH_MESSAGES) {
-        return []
-      }
+      if (numMessages <= NUM_FETCH_MESSAGES) { return [] }
 
-      // get message marker from db
-      let res: number = await firebase.database().ref(`${CHAT_POINTER_REF_BASE}/${chatID}/${userID}/pointer`).once(VALUE).then(snap => {
-        // val will be null when not set
-        return snap.val();
-      })
 
-      if (res > 0) {
-        return []
-      }
-      console.log('res', res)
-      if (res !== null) {
-        // the refetch function has been called
-        console.log('res', res)
-        start = res;
+      // let res: number = await firebase.database()
+      //   .ref(pointerRefLocation)
+      //   .once(VALUE)
+      //   // val will be null when not set
+      //   .then(snap => snap.val())
 
+      if (chatPointer > 0) { return [] }
+
+      if (chatPointer !== null) {
+        start = chatPointer;
       } else {
-        // the refetch function has not been called before, so now we need to set the values in the db
-
-        // basically, here we want to return back NUM_REFETCH messages or
         start = startIndex + NUM_FETCH_MESSAGES
       }
 
@@ -364,10 +349,6 @@ class FireBaseSVC {
         })
     }
 
-    // basically just need to set the starting and ending pointers of the messages that we want to send
-    console.log('start', start)
-    console.log('end', end)
-    console.log('\n')
     return await this._refMessage(chatID)
       .orderByChild('messageID')
       .startAt(start)
