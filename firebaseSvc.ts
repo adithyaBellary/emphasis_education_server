@@ -278,15 +278,11 @@ class FireBaseSVC {
     // because that should not be the client's responsibility
 
     // what if we dont hash the chat
-    const chatHash: string = MD5(chatID).toString();
     const numMessages: number = await this.getNumMessages(chatID);
     const startIndex: number = -1 * (numMessages -1 )
 
     let start: number;
     let end: number;
-
-    // need to know whether we are going to return just the new messages or
-    // the old emssages as well as the new messages
 
     // we want ref structure to go like
     // chatPointers
@@ -372,7 +368,7 @@ class FireBaseSVC {
     console.log('start', start)
     console.log('end', end)
     console.log('\n')
-    return await this._refMessage(chatHash)
+    return await this._refMessage(chatID)
       .orderByChild('messageID')
       .startAt(start)
       .endAt(end)
@@ -477,9 +473,8 @@ class FireBaseSVC {
         messageID: myMesID,
         image
       };
-      const hashChatID: string = MD5(chatID).toString();
       try {
-        await this._refMessage(hashChatID).push(message);
+        await this._refMessage(chatID).push(message);
       } catch (e) {
         console.log('sending message or image failed:', e)
         res = false
