@@ -35,7 +35,7 @@ const typeDefs = gql`
     text: String!
     createdAt: String!
     user: MessageUser!
-    image: String
+    image: String!
     chatID: String!
   }
 
@@ -142,8 +142,6 @@ const typeDefs = gql`
   # need to look over which fields are required
   # letf a lot of them to be nullable because at creation we will not know these details
   type Chat {
-    # seems like a good idea?
-    # _id: String
     # display name
     displayName: String!
     # class name
@@ -249,7 +247,7 @@ const typeDefs = gql`
   }
 
   type Subscription {
-    messageReceived: MessagePayload!
+    messageReceived: MessageType!
   }
 `;
 

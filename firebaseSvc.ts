@@ -360,7 +360,7 @@ class FireBaseSVC {
         const val = snap.val();
         if (!val) { return 0 }
         const key = Object.keys(val);
-        const oldMessageID = val[key[0]].messageID;
+        const oldMessageID = val[key[0]]._id;
         return oldMessageID - 1;
       })
   }
@@ -371,31 +371,34 @@ class FireBaseSVC {
       .on('child_changed', (snapshot) => {
         const val = snapshot.val();
         const key = Object.keys(val).slice(-1)[0]
-        // console.log('publishing!!!')
+        const messageReceived: MessageType = {
+          _id: val[key]._id,
+          chatID: val[key]._id,
+          createdAt: val[key].createdAt,
+          image: val[key].image,
+          text: val[key].text,
+          user: val[key].user,
+        }
         pubsub.publish(MESSAGE_RECEIVED_EVENT, {
-          messageReceived: {
-            MessageId: val[key].messageID,
-            text: val[key].text,
-            createdAt: val[key].createdAt,
-            user: val[key].user,
-            image: val[key].image
-          }
+          messageReceived
         })
       })
 
     // this is the listener for a new child (chat) being added
     this._refMessage('')
       .on('child_added', (snap) => {
-        const snapVal = snap.val();
-        const key = Object.keys(snapVal)[0];
+        const val = snap.val();
+        const key = Object.keys(val)[0];
+        const messageReceived: MessageType = {
+          _id: val[key]._id,
+          chatID: val[key]._id,
+          createdAt: val[key].createdAt,
+          image: val[key].image,
+          text: val[key].text,
+          user: val[key].user,
+        }
         pubsub.publish(MESSAGE_RECEIVED_EVENT, {
-          messageReceived: {
-            MessageId: snapVal[key].messageID,
-            text: snapVal[key].text,
-            createdAt: snapVal[key].createdAt,
-            user: snapVal[key].user,
-            image: snapVal[key].image
-          }
+          messageReceived
         })
       })
   }
@@ -423,7 +426,7 @@ class FireBaseSVC {
     let myMesID;
     let res: Boolean = true;
     const oldMess: number = await this.getRecentId(messages[0].chatID);
-    this.updateNumMessages(messages[0].chatID);
+
     const _chatID = messages[0].chatID;
     // console.log('messages', messages)
 
@@ -438,8 +441,10 @@ class FireBaseSVC {
         image,
         chatID
       };
+      console.log('message', message)
       try {
         await this._refMessage(chatID).push(message);
+        await this.updateNumMessages(messages[0].chatID);
       } catch (e) {
         console.log('sending message or image failed:', e)
         res = false
