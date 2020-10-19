@@ -338,7 +338,7 @@ class FireBaseSVC {
     }
 
     return await this._refMessage(chatID)
-      .orderByChild('messageID')
+      .orderByChild('_id')
       .startAt(start)
       .endAt(end)
       .once(VALUE)
@@ -346,11 +346,7 @@ class FireBaseSVC {
         const val = snap.val();
         const key = Object.keys(val)
         const mess: MessageType[] = key.map(k => {
-          const {messageID, ...rest} = val[k];
-          return {
-            ...rest,
-            _id: val[k].messageID
-          }
+          return val[k]
         })
         return mess
       })
@@ -434,11 +430,11 @@ class FireBaseSVC {
     messages.forEach(async (element: MessageInput) => {
       const { text, user, chatID, image } = element;
       myMesID = oldMess;
-      const message = {
+      const message: MessageType = {
         text,
         user,
         createdAt: moment().format(),
-        messageID: myMesID,
+        _id: myMesID,
         image,
         chatID
       };
