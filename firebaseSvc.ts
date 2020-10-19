@@ -43,7 +43,6 @@ import {
   CHAT_POINTER_REF_BASE
 } from './constants';
 import { FIREBASE_ADMIN_CONFIG } from './config/firebaseAdminConfig';
-import { getHeapSnapshot } from 'v8';
 
 class FireBaseSVC {
 
@@ -424,7 +423,7 @@ class FireBaseSVC {
     await this._refMessageNum(chatID).set(numMessages + 1)
   }
 
-  send = async (messages: MessageInput[]) => {
+  sendMessages = async (messages: MessageInput[]) => {
     let myMesID;
     let res: Boolean = true;
     const oldMess: number = await this.getRecentId(messages[0].chatID);
@@ -440,7 +439,8 @@ class FireBaseSVC {
         user,
         createdAt: moment().format(),
         messageID: myMesID,
-        image
+        image,
+        chatID
       };
       try {
         await this._refMessage(chatID).push(message);

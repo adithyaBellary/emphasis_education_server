@@ -47,6 +47,7 @@ export type MessageType = {
   createdAt: Scalars['String'];
   user: MessageUser;
   image?: Maybe<Scalars['String']>;
+  chatID: Scalars['String'];
 };
 
 export enum Permission {

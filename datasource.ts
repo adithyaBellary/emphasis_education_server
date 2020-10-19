@@ -22,7 +22,7 @@ class dataSource extends RESTDataSource {
   }
 
   async sendMessages(message: MessageInput[]) {
-    return await firebaseSvc.send(message)
+    return await firebaseSvc.sendMessages(message)
   }
 
   async createUser(email: string, password: string, firstName: string, lastName: string) {

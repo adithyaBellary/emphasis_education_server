@@ -36,6 +36,7 @@ const typeDefs = gql`
     createdAt: String!
     user: MessageUser!
     image: String
+    chatID: String!
   }
 
   enum Permission {
