@@ -461,6 +461,10 @@ class FireBaseSVC {
         content_available: '1',
         priority: 'high'
       },
+      notification: {
+        body:"This is an FCM notification message!",
+        title:"FCM Message"
+      },
       apns: {
         payload: {
           aps: {
