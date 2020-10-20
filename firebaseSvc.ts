@@ -459,7 +459,7 @@ class FireBaseSVC {
         message: 'a new chat in a message',
         title: 'New Message',
         content_available: '1',
-        priority: 'high'
+        // priority: 'high'
       },
       // notification: {
       //   body:"This is an FCM notification message!",
