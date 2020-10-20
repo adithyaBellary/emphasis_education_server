@@ -1,5 +1,5 @@
 export const MESSAGE_RECEIVED_EVENT: string = 'messageReceived';
-export const NUM_FETCH_MESSAGES: number = 5;
+export const NUM_FETCH_MESSAGES: number = 10;
 export const CODE_LENGTH: number = 6;
 
 export const MESSAGE_REF_BASE: string = 'Messages';
