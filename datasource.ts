@@ -13,8 +13,8 @@ class dataSource extends RESTDataSource {
     super();
   }
 
-  async getMessages(chatID, init) {
-    return  await firebaseSvc.getMessages(chatID, init);
+  async getMessages(chatID, userID, refresh) {
+    return  await firebaseSvc.getMessages(chatID, userID, refresh);
   }
 
   async login(user) {
@@ -22,7 +22,7 @@ class dataSource extends RESTDataSource {
   }
 
   async sendMessages(message: MessageInput[]) {
-    return await firebaseSvc.send(message)
+    return await firebaseSvc.sendMessages(message)
   }
 
   async createUser(email: string, password: string, firstName: string, lastName: string) {

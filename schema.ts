@@ -35,7 +35,8 @@ const typeDefs = gql`
     text: String!
     createdAt: String!
     user: MessageUser!
-    image: String
+    image: String!
+    chatID: String!
   }
 
   enum Permission {
@@ -141,8 +142,6 @@ const typeDefs = gql`
   # need to look over which fields are required
   # letf a lot of them to be nullable because at creation we will not know these details
   type Chat {
-    # seems like a good idea?
-    # _id: String
     # display name
     displayName: String!
     # class name
@@ -191,6 +190,7 @@ const typeDefs = gql`
 
   type SendMessagePayload {
     res: Boolean!
+    # we should send info about the message to hopefully update the cache automatically instead of adding the -no-cache param
   }
 
   type createCodePayload {
@@ -212,7 +212,10 @@ const typeDefs = gql`
   }
 
   type Query {
-    getMessages(chatID: String, init: Int!): [MessageType]
+    # refresh needs to be optional because we need to differentiate between
+    # just opening the chat and pulling down to refresh
+    # we also want to know who is getting the messages
+    getMessages(chatID: String!, userID: String!, refresh: Boolean): [MessageType]
     getFamily(groupID: String!): [UserInfoType]
     searchUsers(searchTerm: String!): [UserInfoType]!
     searchClasses(searchTerm: String!): searchClassesPayload!
@@ -233,7 +236,7 @@ const typeDefs = gql`
     sendEmail(subject: String!, body: String!): genericResponse!
     sendBugEmail(user: String!, body: String!): genericResponse!
     forgotPassword(email: String!): genericResponse!
-    addChatMember(email: String, chatID: String): genericResponse!
+    addChatMember(email: String!, chatID: String!): genericResponse!
     # deleteChatMember()
 
     # this is descoped to v2
@@ -244,7 +247,7 @@ const typeDefs = gql`
   }
 
   type Subscription {
-    messageReceived: MessagePayload!
+    messageReceived: MessageType!
   }
 `;
 
