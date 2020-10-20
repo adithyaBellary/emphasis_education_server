@@ -473,7 +473,7 @@ class FireBaseSVC {
           'content-available': '1'
         },
       },
-      // priority: "high",
+      priority: "high",
       // the chatID seems to be a good choice to send the message to
       // with the topic, we no longer need to store the registration tokens
       // the user needs to manually refresh their chats first, though, in order to actually start getting push notified
