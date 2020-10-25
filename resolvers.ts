@@ -120,7 +120,7 @@ const resolvers = {
     messageReceived: {
       subscribe: () => {
         console.log('message received in the subscription')
-        return pubsub.asyncIterator(MESSAGE_RECEIVED_EVENT)
+        return pubsub.asyncIterator([MESSAGE_RECEIVED_EVENT])
       },
     }
   }
