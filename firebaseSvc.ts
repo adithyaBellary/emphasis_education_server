@@ -382,7 +382,9 @@ class FireBaseSVC {
         pubsub.publish(MESSAGE_RECEIVED_EVENT, {
           messageReceived
         })
-      })
+        // add sentry message
+        console.log('publishing new message: ', messageReceived)
+      }),
 
     // this is the listener for a new child (chat) being added
     this._refMessage('')
@@ -400,6 +402,7 @@ class FireBaseSVC {
         pubsub.publish(MESSAGE_RECEIVED_EVENT, {
           messageReceived
         })
+        // add sentry message
       })
   }
 
