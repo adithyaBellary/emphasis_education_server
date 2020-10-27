@@ -17,7 +17,7 @@ const server = new ApolloServer({
   subscriptions: {
     onConnect: (connectionParams, webSocket) => {
       console.log('connectionParams', connectionParams)
-      console.log('webSocket', webSocket)
+      console.log('webSocket', !!webSocket)
       return true
     }
   },
@@ -40,6 +40,7 @@ Sentry.init({
 // app.listen({port: process.env.PORT || 4000}, () => console.log(`server on ${server.graphqlPath}`))
 
 server.listen(process.env.PORT).then(({ url, subscriptionsUrl }) => {
+  console.log('the port is', process.env.PORT)
   console.log(`🚀 Server ready at ${url}`);
   console.log(`🚀 Sub Server ready at ${subscriptionsUrl}`);
 });
