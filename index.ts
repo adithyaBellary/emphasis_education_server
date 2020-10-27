@@ -14,6 +14,13 @@ import dataSrc from './datasource';
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  subscriptions: {
+    onConnect: (connectionParams, webSocket) => {
+      console.log('connectionParams', connectionParams)
+      console.log('webSocket', webSocket)
+      return true
+    }
+  },
   dataSources: () => ({
     f: new dataSrc()
   })
@@ -32,6 +39,7 @@ Sentry.init({
 // app.use('/', (req, res) => 'hi')
 // app.listen({port: process.env.PORT || 4000}, () => console.log(`server on ${server.graphqlPath}`))
 
-server.listen(process.env.PORT).then(({ url }) => {
+server.listen(process.env.PORT).then(({ url, subscriptionsUrl }) => {
   console.log(`🚀 Server ready at ${url}`);
+  console.log(`🚀 Sub Server ready at ${subscriptionsUrl}`);
 });
