@@ -19,6 +19,9 @@ const server = new ApolloServer({
       console.log('connectionParams', connectionParams)
       console.log('webSocket', !!webSocket)
       return true
+    },
+    onDisconnect: (websocket, context) => {
+      console.log('the subscription has disconnected', !!websocket)
     }
   },
   dataSources: () => ({
