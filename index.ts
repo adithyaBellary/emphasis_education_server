@@ -32,7 +32,7 @@ const server = new ApolloServer({
     onDisconnect: (websocket, context) => {
       console.log('the subscription has disconnected', !!websocket)
     },
-    path: 'ws://emphasis-education-server.herokuapp.com/graphql',
+    path: '/graphql',
     keepAlive: 1000
   },
   dataSources: () => ({
