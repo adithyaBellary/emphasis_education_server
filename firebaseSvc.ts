@@ -56,7 +56,6 @@ class FireBaseSVC {
     });
     firebase.initializeApp(firebaseConfig);
     console.log('we are initializing');
-    console.log('firebaseConfig', firebaseConfig.apiKey)
     this.test_listen();
     // create the email transporter
     this.state.transporter = nodemailer.createTransport({
