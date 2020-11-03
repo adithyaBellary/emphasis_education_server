@@ -1,1 +1,1 @@
-web: PORT=4000 yarn start
+web: PORT=$PORT yarn start
