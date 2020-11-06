@@ -33,7 +33,7 @@ const server = new ApolloServer({
       console.log('the subscription has disconnected', !!websocket)
     },
     path: '/graphql',
-    keepAlive: 1000
+    // keepAlive: 1000
   },
   dataSources: () => ({
     f: new dataSrc()
@@ -53,7 +53,6 @@ const server = new ApolloServer({
 // })
 
 server.listen(process.env.PORT).then(({ url, subscriptionsUrl }) => {
-  console.log('the port is', process.env.PORT)
   console.log(`🚀 Server ready at ${url}`);
   console.log(`🚀 Sub Server ready at ${subscriptionsUrl}`);
 });
