@@ -379,10 +379,12 @@ class FireBaseSVC {
           text: val[key].text,
           user: val[key].user,
         }
-        pubsub.publish(MESSAGE_RECEIVED_EVENT, {
-          messageReceived
-        })
-      })
+        // pubsub.publish(MESSAGE_RECEIVED_EVENT, {
+        //   messageReceived
+        // })
+        // add sentry message
+        // console.log('publishing new message: ', messageReceived)
+      }),
 
     // this is the listener for a new child (chat) being added
     this._refMessage('')
@@ -397,9 +399,10 @@ class FireBaseSVC {
           text: val[key].text,
           user: val[key].user,
         }
-        pubsub.publish(MESSAGE_RECEIVED_EVENT, {
-          messageReceived
-        })
+        // pubsub.publish(MESSAGE_RECEIVED_EVENT, {
+        //   messageReceived
+        // })
+        // add sentry message
       })
   }
 
@@ -445,6 +448,12 @@ class FireBaseSVC {
       try {
         await this._refMessage(chatID).push(message);
         await this.updateNumMessages(messages[0].chatID);
+
+        // publish from pubsub
+        console.log('publishing new message: ', message)
+        pubsub.publish(MESSAGE_RECEIVED_EVENT, {
+          messageReceived: message
+        })
       } catch (e) {
         console.log('sending message or image failed:', e)
         res = false
