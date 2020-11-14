@@ -678,7 +678,8 @@ class FireBaseSVC {
 
   async createCode(email: string) {
     let res: boolean = true
-    const code: string = getHash(email.toUpperCase());
+    const lowerCaseEmail = email.toLowerCase();
+    const code: string = getHash(lowerCaseEmail);
     const codesRef = this._refCodes(code);
     const shortCode: string = code.toUpperCase().substring(0, CODE_LENGTH);
     try {
@@ -690,7 +691,8 @@ class FireBaseSVC {
   }
 
   async checkCode(email: string, code: string) {
-    const hashedEmail = getHash(email.toUpperCase())
+    const lowerCaseEmail = email.toLowerCase();
+    const hashedEmail = getHash(lowerCaseEmail)
     let res: boolean = true
     await this._refCodes(hashedEmail).once(VALUE).then(snap => {
       const val: string = snap.val();
@@ -699,7 +701,7 @@ class FireBaseSVC {
         return ;
       }
 
-      res = val.toUpperCase() === code.toUpperCase()
+      res = val.toLowerCase() === code.toLowerCase()
     })
 
     return { res }
