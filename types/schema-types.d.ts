@@ -46,7 +46,7 @@ export type MessageType = {
   text: Scalars['String'];
   createdAt: Scalars['String'];
   user: MessageUser;
-  image?: Maybe<Scalars['String']>;
+  image: Scalars['String'];
   chatID: Scalars['String'];
 };
 
@@ -76,7 +76,6 @@ export type UserInputType = {
   password: Scalars['String'];
   userType: Permission;
   phoneNumber: Scalars['String'];
-  gender?: Maybe<Scalars['String']>;
   dob: Scalars['String'];
 };
 
@@ -97,7 +96,6 @@ export type UserInfoTypeInput = {
   chatIDs?: Maybe<Array<Maybe<Scalars['String']>>>;
   classes?: Maybe<Array<Maybe<ChatInput>>>;
   groupID: Scalars['String'];
-  gender: Scalars['String'];
 };
 
 export type UserAdditionalInfo = {
@@ -118,7 +116,6 @@ export type UserInfoType = {
   chatIDs: Array<Maybe<Scalars['String']>>;
   classes?: Maybe<Array<Chat>>;
   groupID: Scalars['String'];
-  gender: Scalars['String'];
   adminChat?: Maybe<Array<AdminChat>>;
   dob: Scalars['String'];
 };
@@ -344,7 +341,7 @@ export type MutationUpdateUserArgs = {
 
 export type Subscription = {
   __typename?: 'Subscription';
-  messageReceived: MessagePayload;
+  messageReceived: MessageType;
 };
 
 export enum CacheControlScope {

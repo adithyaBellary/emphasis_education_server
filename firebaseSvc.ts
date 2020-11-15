@@ -212,7 +212,7 @@ class FireBaseSVC {
     return firebase.database().ref(`${CHAT_POINTER_REF_BASE}`)
   }
 
-  async pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, gender, dob) {
+  async pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, dob) {
     let adminChat: AdminChat[] = []
     // we dont need to make a new admin chat for admins
     if (userType !== 'Admin') {
@@ -251,7 +251,7 @@ class FireBaseSVC {
       chatIDs: [],
       classes: [],
       groupID,
-      gender,
+      // gender: 'M',
       adminChat,
       dob
     }

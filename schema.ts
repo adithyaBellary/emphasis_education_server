@@ -65,7 +65,7 @@ const typeDefs = gql`
     password: String!
     userType: Permission!
     phoneNumber: String!
-    gender: String
+    # gender: String
     dob: String!
   }
 
@@ -93,7 +93,7 @@ const typeDefs = gql`
     # making this a nullable field for now
     classes: [ChatInput]
     groupID: String!
-    gender: String!
+    # gender: String!
   }
 
   # only students will have this
@@ -121,7 +121,7 @@ const typeDefs = gql`
     classes: [Chat!]
     groupID: String!
     # TOOD remove Gender
-    gender: String!
+    # gender: String!
     adminChat: [AdminChat!]
     dob: String!
   }
