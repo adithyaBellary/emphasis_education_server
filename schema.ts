@@ -41,7 +41,7 @@ const typeDefs = gql`
 
   enum Permission {
     Student
-    Parent
+    Guardian
     Tutor
     Admin
   }

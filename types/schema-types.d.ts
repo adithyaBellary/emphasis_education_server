@@ -52,7 +52,7 @@ export type MessageType = {
 
 export enum Permission {
   Student = 'Student',
-  Parent = 'Parent',
+  Guardian = 'Guardian',
   Tutor = 'Tutor',
   Admin = 'Admin'
 }
