@@ -37,11 +37,11 @@ class dataSource extends RESTDataSource {
     userType: Permission,
     phoneNumber: string,
     groupID: string,
-    gender: string,
+    // gender: string,
     dob: string
   ) {
     const hash: string = MD5(email).toString();
-    return await firebaseSvc.pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, gender, dob);
+    return await firebaseSvc.pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, dob);
   }
 
   async getFamily(groupID: string) {

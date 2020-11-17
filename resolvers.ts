@@ -51,7 +51,7 @@ const resolvers = {
       let message: string;
       const badEmails = [];
       const _create = async () => {
-        await asyncForEach(users, async ({ email, password, firstName, lastName, userType, phoneNumber, gender, dob }: UserInputType) => {
+        await asyncForEach(users, async ({ email, password, firstName, lastName, userType, phoneNumber, dob }: UserInputType) => {
           try {
             const lowerCaseEmail = email.toLowerCase();
             const resp = await dataSources.f.createUser(lowerCaseEmail, password, firstName, lastName);
@@ -66,7 +66,7 @@ const resolvers = {
               userType,
               phoneNumber,
               groupID,
-              gender,
+              // gender,
               dob
             )
           } catch (e) {

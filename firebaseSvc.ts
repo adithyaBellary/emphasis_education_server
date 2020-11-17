@@ -212,7 +212,7 @@ class FireBaseSVC {
     return firebase.database().ref(`${CHAT_POINTER_REF_BASE}`)
   }
 
-  async pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, gender, dob) {
+  async pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, dob) {
     let adminChat: AdminChat[] = []
     // we dont need to make a new admin chat for admins
     if (userType !== 'Admin') {
@@ -251,7 +251,7 @@ class FireBaseSVC {
       chatIDs: [],
       classes: [],
       groupID,
-      gender,
+      // gender: 'M',
       adminChat,
       dob
     }
@@ -678,7 +678,8 @@ class FireBaseSVC {
 
   async createCode(email: string) {
     let res: boolean = true
-    const code: string = getHash(email.toUpperCase());
+    const lowerCaseEmail = email.toLowerCase();
+    const code: string = getHash(lowerCaseEmail);
     const codesRef = this._refCodes(code);
     const shortCode: string = code.toUpperCase().substring(0, CODE_LENGTH);
     try {
@@ -690,7 +691,8 @@ class FireBaseSVC {
   }
 
   async checkCode(email: string, code: string) {
-    const hashedEmail = getHash(email.toUpperCase())
+    const lowerCaseEmail = email.toLowerCase();
+    const hashedEmail = getHash(lowerCaseEmail)
     let res: boolean = true
     await this._refCodes(hashedEmail).once(VALUE).then(snap => {
       const val: string = snap.val();
@@ -699,7 +701,7 @@ class FireBaseSVC {
         return ;
       }
 
-      res = val.toUpperCase() === code.toUpperCase()
+      res = val.toLowerCase() === code.toLowerCase()
     })
 
     return { res }
