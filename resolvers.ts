@@ -13,8 +13,8 @@ const resolvers = {
     getFamily: async (_, { groupID }, { dataSources }) => {
       return await dataSources.f.getFamily(groupID)
     },
-    searchUsers: async (_, { searchTerm }, { dataSources}) => {
-      return await dataSources.f.searchUsers(searchTerm)
+    searchUsers: async (_, { searchTerm, includeAdmin }, { dataSources}) => {
+      return await dataSources.f.searchUsers(searchTerm, includeAdmin)
     },
     searchClasses: async (_, { searchTerm }, { dataSources }) => {
       return await dataSources.f.searchClasses(searchTerm)

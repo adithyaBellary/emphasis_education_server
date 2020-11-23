@@ -225,6 +225,7 @@ export type QueryGetFamilyArgs = {
 
 export type QuerySearchUsersArgs = {
   searchTerm: Scalars['String'];
+  includeAdmin?: Maybe<Scalars['Boolean']>;
 };
 
 
