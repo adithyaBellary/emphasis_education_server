@@ -344,6 +344,8 @@ class FireBaseSVC {
       .once(VALUE)
       .then(snap => {
         const val = snap.val();
+        // return empty list if there are no messages
+        if (!val) { return []}
         const key = Object.keys(val)
         const mess: MessageType[] = key.map(k => {
           return val[k]
