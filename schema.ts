@@ -139,15 +139,12 @@ const typeDefs = gql`
     email: String!
   }
 
-  # need to look over which fields are required
-  # letf a lot of them to be nullable because at creation we will not know these details
   type Chat {
     # display name
     displayName: String!
     # class name
     className: String!
     # who is taking this class
-    # userEmails: [String]
     userInfo: [ChatUserInfo!]!
     # who is teaching this class (probs will only be on)
     # tutorEmail: String!
@@ -217,7 +214,7 @@ const typeDefs = gql`
     # we also want to know who is getting the messages
     getMessages(chatID: String!, userID: String!, refresh: Boolean): [MessageType]
     getFamily(groupID: String!): [UserInfoType]
-    searchUsers(searchTerm: String!): [UserInfoType]!
+    searchUsers(searchTerm: String!, includeAdmin: Boolean): [UserInfoType]!
     searchClasses(searchTerm: String!): searchClassesPayload!
     getUser(userEmail: String!): UserInfoType!
     checkCode(email: String!, code: String!): genericResponse!

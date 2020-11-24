@@ -344,6 +344,8 @@ class FireBaseSVC {
       .once(VALUE)
       .then(snap => {
         const val = snap.val();
+        // return empty list if there are no messages
+        if (!val) { return []}
         const key = Object.keys(val)
         const mess: MessageType[] = key.map(k => {
           return val[k]
@@ -527,7 +529,7 @@ class FireBaseSVC {
     return res;
   }
 
-  async searchUsers(searchTerm: string) {
+  async searchUsers(searchTerm: string, includeAdmin?: boolean) {
 
     const relevantFields = [ 'email', 'firstName', 'lastName', 'phoneNumber', 'userType' ];
 
@@ -538,19 +540,19 @@ class FireBaseSVC {
         const keys = Object.keys(val);
         const Users = keys.map((k, index) => {
           const u = val[k];
-          let flag = false;
+          let present = false;
           relevantFields.forEach((_field) => {
             let field = u[_field];
             if (_field === 'email') { field = field.split('@')[0] }
             if (field.toLowerCase().includes(searchTerm.toLowerCase())) {
-              flag = true;
+              present = true;
               return;
             }
           })
-          if (flag) { return u }
+          if (present) { return u }
           // let us filter out the admins
           // only the admins will be searching users and they wont really need to add themselves
-        }).filter(user => !!user).filter(user => user.userType !== 'Admin') //for some reason cannot user Permission.Admin here
+        }).filter(user => !!user).filter(user => includeAdmin || user.userType !== 'Admin') //for some reason cannot user Permission.Admin here
         return Users;
       })
   }
@@ -599,7 +601,6 @@ class FireBaseSVC {
 
   async createChat(displayName: string, className: string, tutorInfo: ChatUserInfo, userInfo: ChatUserInfo[]) {
     // generate chatID / class ID
-    // let us make these two ^ the same
     const chatID: string = genID();
     const tutorID: string = getHash(tutorInfo.email);
     const adminUsers: UserInfoType[] = await Promise.all(ADMIN_EMAILS.map(async _email => {

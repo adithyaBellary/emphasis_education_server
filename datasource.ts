@@ -48,8 +48,8 @@ class dataSource extends RESTDataSource {
     return await firebaseSvc.getFamily(groupID);
   }
 
-  async searchUsers(searchTerm: string) {
-    return await firebaseSvc.searchUsers(searchTerm);
+  async searchUsers(searchTerm: string, includeAdmin?: boolean) {
+    return await firebaseSvc.searchUsers(searchTerm, includeAdmin);
   }
 
   async searchClasses(searchTerm: string) {
