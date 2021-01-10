@@ -473,7 +473,7 @@ class FireBaseSVC {
         // priority: 'high'
       },
       notification: {
-        body: "You received a new message",
+        body: "You received a new message (notification)",
         title: "New Message"
       },
       apns: {
