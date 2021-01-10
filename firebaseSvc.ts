@@ -467,14 +467,14 @@ class FireBaseSVC {
       // store the chat details in the data object
       data: {
         chatID: _chatID,
-        message: 'a new chat in a message',
+        message: 'You received a new message',
         title: 'New Message',
         content_available: '1',
         // priority: 'high'
       },
       notification: {
-        body:"This is an FCM notification message!",
-        title:"FCM Message"
+        body: "You received a new message",
+        title: "New Message"
       },
       apns: {
         payload: {
@@ -496,9 +496,9 @@ class FireBaseSVC {
       topic: messages[0].chatID
     };
     admin.messaging().send(message).then(res => {
-      // console.log('it is a success sending the message', res)
+      console.log('it is a success sending the push notification', res)
     }).catch(error => {
-      console.log('there was an error', error)
+      console.log('there was an error sending the push notification', error)
       // add sentry message or exception
     })
 
