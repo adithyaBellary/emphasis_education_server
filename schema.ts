@@ -221,7 +221,7 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    login(email: String!, password: String!): LoginPayload
+    login(email: String!, password: String!, token: String): LoginPayload
     sendMessage(messages: [MessageInput]): SendMessagePayload!
     createUser(users: [UserInputType]): genericResponse!
     addClass(className: String!): addClassPayload!

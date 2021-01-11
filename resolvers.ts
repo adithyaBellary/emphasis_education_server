@@ -30,12 +30,13 @@ const resolvers = {
   },
 
   Mutation: {
-    login: async (_, { email, password }, { dataSources }) => {
+    login: async (_, { email, password, token }, { dataSources }) => {
       const lowerCaseEmail = email.toLowerCase();
       const response = await dataSources.f.login(
         {
           email: lowerCaseEmail,
-          password
+          password,
+          token
         },
       )
       return response

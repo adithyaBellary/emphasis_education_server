@@ -40,7 +40,8 @@ import {
   ADMIN_EMAIL,
   SERVICE_EMAIL,
   VALUE,
-  CHAT_POINTER_REF_BASE
+  CHAT_POINTER_REF_BASE,
+  FCM_TOKENS_PER_CHAT
 } from './constants';
 import { FIREBASE_ADMIN_CONFIG } from './config/firebaseAdminConfig';
 
@@ -83,7 +84,6 @@ class FireBaseSVC {
 
   async login (user: MutationLoginArgs) {
     let payload: LoginPayload;
-
     const transaction = Sentry.startTransaction({
       op: "test",
       name: "My First Test Transaction",
@@ -92,6 +92,19 @@ class FireBaseSVC {
     const _loginVal: boolean = await this.getLoginVal(user.email, user.password)
     if (_loginVal) {
       const loggedInUser: UserInfoType = await this.getUser(user.email)
+      const deviceToken: string = user.token
+      if (loggedInUser.classes) {
+        // if the user has any classes, we need to register their device token under each class at the FCM token ref
+        // loggedInUser.classes.forEach(_class => {
+        //   const chatREF = this._refFCMDeviceTokensPerChat(_class.chatID)
+        //   await
+        // })
+        await asyncForEach(loggedInUser.classes, async (_class) => {
+          const chatREF = this._refFCMDeviceTokensPerChat(_class.chatID)
+          await chatREF.push(deviceToken)
+        })
+      }
+      console.log('user token', user.token)
       const {__typename, ...rest} = loggedInUser
       payload = {
         res: true,
@@ -210,6 +223,10 @@ class FireBaseSVC {
 
   _refChatPointer() {
     return firebase.database().ref(`${CHAT_POINTER_REF_BASE}`)
+  }
+
+  _refFCMDeviceTokensPerChat(chatID: string) {
+    return firebase.database().ref(`${FCM_TOKENS_PER_CHAT}/${chatID}`)
   }
 
   async pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, dob) {
@@ -495,6 +512,34 @@ class FireBaseSVC {
       // the user needs to manually refresh their chats first, though, in order to actually start getting push notified
       topic: messages[0].chatID
     };
+
+    // admin.messaging().sendToDevice(
+    //   [], //the device fcms
+    //   {
+    //     data: {
+    //       chatID: _chatID,
+    //       message: 'You received a new message',
+    //       title: 'New Message',
+    //     },
+    //     // notification: {
+    //     //   body: "You received a new message (notification)",
+    //     //   title: "New Message"
+    //     // },
+    //   },
+    //   {
+    //     // Required for background/quit data-only messages on iOS
+    //     contentAvailable: true,
+    //     // Required for background/quit data-only messages on Android
+    //     priority: 'high',
+    //   },
+    // )
+    // .then(res => {
+    //   console.log(`success sending to the device ${JSON.stringify(res)}`)
+    // })
+    // .catch(e => {
+    //   console.log(`could not send to the devices ${JSON.stringify(e)} `)
+    // })
+
     admin.messaging().send(message).then(res => {
       console.log('it is a success sending the push notification', res)
     }).catch(error => {

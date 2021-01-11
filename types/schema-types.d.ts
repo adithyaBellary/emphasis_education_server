@@ -266,6 +266,7 @@ export type Mutation = {
 export type MutationLoginArgs = {
   email: Scalars['String'];
   password: Scalars['String'];
+  token?: Maybe<Scalars['String']>;
 };
 
 
