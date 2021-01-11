@@ -484,6 +484,8 @@ class FireBaseSVC {
       }
     });
 
+    const deviceFCM = "dqQFO-mGSk9Yr2cEz6D7eO:APA91bEwOPWX0E5_2DbVRx7gO78LFfa1L3N2BJJ1MSg974wSWyjkbHquhw7D0D7vMQQutSgxrns8SQBeg84B2VkO_I-4_cxfZDbJdV4IiI_3OnDGjOhpAVMvgFnBL5rjGRTLoDn4_bmY"
+
     // send push notification
     const message = {
       // store the chat details in the data object
@@ -516,9 +518,8 @@ class FireBaseSVC {
       // with the topic, we no longer need to store the registration tokens
       // the user needs to manually refresh their chats first, though, in order to actually start getting push notified
       topic: messages[0].chatID
+      // tokens: [deviceFCM]
     };
-
-    const deviceFCM = "dqQFO-mGSk9Yr2cEz6D7eO:APA91bEwOPWX0E5_2DbVRx7gO78LFfa1L3N2BJJ1MSg974wSWyjkbHquhw7D0D7vMQQutSgxrns8SQBeg84B2VkO_I-4_cxfZDbJdV4IiI_3OnDGjOhpAVMvgFnBL5rjGRTLoDn4_bmY"
 
     admin.messaging().sendToDevice(
       [deviceFCM], //the device fcms
@@ -528,16 +529,29 @@ class FireBaseSVC {
           message: 'You received a new message',
           title: 'New Message',
         },
-        // notification: {
-        //   body: "You received a new message (notification)",
-        //   title: "New Message"
-        // },
+        notification: {
+          body: "You received a new message (notification)",
+          title: "New Message"
+        },
       },
       {
         // Required for background/quit data-only messages on iOS
         contentAvailable: true,
         // Required for background/quit data-only messages on Android
         priority: 'high',
+        apns: {
+          payload: {
+            aps: {
+              contentAvailable: true
+            }
+          },
+          headers: {
+            'apns-push-type': 'background',
+            'apns-priority': '5',
+            'apns-topic': 'org.reactjs.native.example.emphasis-education-app', // your app bundle identifier
+            'content-available': '1'
+          },
+        },
       },
     )
     .then(res => {
