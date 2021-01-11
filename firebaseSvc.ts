@@ -518,39 +518,41 @@ class FireBaseSVC {
       topic: messages[0].chatID
     };
 
-    // admin.messaging().sendToDevice(
-    //   [], //the device fcms
-    //   {
-    //     data: {
-    //       chatID: _chatID,
-    //       message: 'You received a new message',
-    //       title: 'New Message',
-    //     },
-    //     // notification: {
-    //     //   body: "You received a new message (notification)",
-    //     //   title: "New Message"
-    //     // },
-    //   },
-    //   {
-    //     // Required for background/quit data-only messages on iOS
-    //     contentAvailable: true,
-    //     // Required for background/quit data-only messages on Android
-    //     priority: 'high',
-    //   },
-    // )
-    // .then(res => {
-    //   console.log(`success sending to the device ${JSON.stringify(res)}`)
-    // })
-    // .catch(e => {
-    //   console.log(`could not send to the devices ${JSON.stringify(e)} `)
-    // })
+    const deviceFCM = "dqQFO-mGSk9Yr2cEz6D7eO:APA91bEwOPWX0E5_2DbVRx7gO78LFfa1L3N2BJJ1MSg974wSWyjkbHquhw7D0D7vMQQutSgxrns8SQBeg84B2VkO_I-4_cxfZDbJdV4IiI_3OnDGjOhpAVMvgFnBL5rjGRTLoDn4_bmY"
 
-    admin.messaging().send(message).then(res => {
-      console.log('it is a success sending the push notification', res)
-    }).catch(error => {
-      console.log('there was an error sending the push notification', error)
-      // add sentry message or exception
+    admin.messaging().sendToDevice(
+      [deviceFCM], //the device fcms
+      {
+        data: {
+          chatID: _chatID,
+          message: 'You received a new message',
+          title: 'New Message',
+        },
+        // notification: {
+        //   body: "You received a new message (notification)",
+        //   title: "New Message"
+        // },
+      },
+      {
+        // Required for background/quit data-only messages on iOS
+        contentAvailable: true,
+        // Required for background/quit data-only messages on Android
+        priority: 'high',
+      },
+    )
+    .then(res => {
+      console.log(`success sending to the device ${JSON.stringify(res)}`)
     })
+    .catch(e => {
+      console.log(`could not send to the devices ${JSON.stringify(e)} `)
+    })
+
+    // admin.messaging().send(message).then(res => {
+    //   console.log('it is a success sending the push notification', res)
+    // }).catch(error => {
+    //   console.log('there was an error sending the push notification', error)
+    //   // add sentry message or exception
+    // })
 
     return { res }
   }
