@@ -208,6 +208,11 @@ const typeDefs = gql`
     family: [UserInfoType!]!
   }
 
+  type FCMDeviceToken {
+    _id: String!
+    token: String!
+  }
+
   type Query {
     # refresh needs to be optional because we need to differentiate between
     # just opening the chat and pulling down to refresh

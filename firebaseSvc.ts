@@ -23,7 +23,8 @@ import {
   ChatUserInfo,
   Permission,
   AdminChat,
-  GenericResponse
+  GenericResponse,
+  FcmDeviceToken
 } from './types/schema-types';
 import { genID, getHash, asyncForEach } from './helper';
 
@@ -99,9 +100,13 @@ class FireBaseSVC {
         //   const chatREF = this._refFCMDeviceTokensPerChat(_class.chatID)
         //   await
         // })
+        const fcmDeviceToken: FcmDeviceToken = {
+          _id: loggedInUser._id,
+          token: deviceToken
+        }
         await asyncForEach(loggedInUser.classes, async (_class) => {
           const chatREF = this._refFCMDeviceTokensPerChat(_class.chatID)
-          await chatREF.push(deviceToken)
+          await chatREF.push(fcmDeviceToken)
         })
       }
       console.log('user token', user.token)
