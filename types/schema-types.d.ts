@@ -245,6 +245,7 @@ export type QuerySearchClassesArgs = {
 
 export type QueryGetUserArgs = {
   userEmail: Scalars['String'];
+  fcmToken?: Maybe<Scalars['String']>;
 };
 
 

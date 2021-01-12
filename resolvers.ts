@@ -19,9 +19,9 @@ const resolvers = {
     searchClasses: async (_, { searchTerm }, { dataSources }) => {
       return await dataSources.f.searchClasses(searchTerm)
     },
-    getUser: async (_, { userEmail }, { dataSources }) => {
+    getUser: async (_, { userEmail, fcmToken }, { dataSources }) => {
       const lowerCaseEmail = userEmail.toLowerCase();
-      const res =  await dataSources.f.getUser(lowerCaseEmail);
+      const res =  await dataSources.f.getUser(lowerCaseEmail, fcmToken);
       return res;
     },
     checkCode: async (_, { email, code }, { dataSources }) => {

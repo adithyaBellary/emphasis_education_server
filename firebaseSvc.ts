@@ -633,8 +633,17 @@ class FireBaseSVC {
     this._refMessage('').off();
   }
 
+  async _getUser(email: string, fcmToken?: string) {
+    console.log('fcm', fcmToken)
+    if (fcmToken) {
+      this.updateFCMTokens(email, fcmToken);
+    }
+    return await this.getUser(email)
+  }
+
   // lets pass in the email and then hash it here
   async getUser(email: string) {
+
     const hashedEmail = getHash(email);
     const user: UserInfoType = await this._refUserID(hashedEmail).once(VALUE)
       .then(snap => {
