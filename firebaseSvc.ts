@@ -535,7 +535,7 @@ class FireBaseSVC {
     });
 
     // const deviceFCM = "dqQFO-mGSk9Yr2cEz6D7eO:APA91bEwOPWX0E5_2DbVRx7gO78LFfa1L3N2BJJ1MSg974wSWyjkbHquhw7D0D7vMQQutSgxrns8SQBeg84B2VkO_I-4_cxfZDbJdV4IiI_3OnDGjOhpAVMvgFnBL5rjGRTLoDn4_bmY"
-    const deviceFCM = "ddigllx0AEllrc2HZ4Zu1h:APA91bHihiVhPRt1yytTPQP02JZmB62nx1QLQgK1UXPKAVATfz-AxUPNQ23oSLVctnSHoOFMw7_vHCQP9c_DzsMgS3llWxezXxPsGkq0dKnQdpOA0BAe4zinGZxmTZBamcc9MH_SjPnj"
+    // const deviceFCM = "ddigllx0AEllrc2HZ4Zu1h:APA91bHihiVhPRt1yytTPQP02JZmB62nx1QLQgK1UXPKAVATfz-AxUPNQ23oSLVctnSHoOFMw7_vHCQP9c_DzsMgS3llWxezXxPsGkq0dKnQdpOA0BAe4zinGZxmTZBamcc9MH_SjPnj"
     // const deviceFCM = "f8DP5mtURW6xbWXcHfO0Mf:APA91bH15I1lp62empkNz5JAhKC5bzZufeQCJPOCoaqC_Kh25dYoP7SoE07lG_AOtA26R8yFX5BJvzHpMgBKNOSCUhLCZ0Ql4fRystBrp-3OU-sYv3YlvgvBoy7N8sYvkZc_DbHD525H"
 
     // send push notification
@@ -573,8 +573,12 @@ class FireBaseSVC {
     //   // tokens: [deviceFCM]
     // };
 
+    const fcms: FcmDeviceToken[] = await this._refFCMDeviceTokensPerChat(_chatID).once(VALUE).then(snap => snap.val())
+    const fcmTokens = fcms.map(token => token.token)
+    console.log('fcmTokens: ', fcmTokens)
     admin.messaging().sendToDevice(
-      [deviceFCM], //the device fcms
+      // [deviceFCM], //the device fcms
+      fcmTokens, //the device fcms
       {
         // looks like the data can have anything in it. it is the notification object that is being used to trigger the notiifcation
         data: {
