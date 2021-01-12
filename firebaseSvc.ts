@@ -86,53 +86,56 @@ class FireBaseSVC {
   async updateFCMTokens (userEmail: string, newToken: string) {
     const loggedInUser: UserInfoType = await this.getUser(userEmail)
 
-    if (loggedInUser.classes && newToken) {
-      const fcmDeviceToken: FcmDeviceToken = {
-        _id: loggedInUser._id,
-        token: newToken,
-        email: loggedInUser.email,
-        firstName: loggedInUser.firstName,
-        lastName: loggedInUser.lastName,
-      }
-      const _runAsync = async () => {
-        await asyncForEach(loggedInUser.classes, async (_class) => {
-          const chatREF = this._refFCMDeviceTokensPerChat(_class.chatID)
-          const tokens: FcmDeviceToken[] = await chatREF.once(VALUE).then(snap => {
-            return snap.val()
-          })
-
-          if (!tokens) {
-            // if this chat ref is empty
-            await chatREF.set([fcmDeviceToken])
-          } else {
-            // we need to check that we are not adding the same device object multiple times
-            // console.log('tokens', tokens)
-
-            let present = false;
-            const newFCMTokens: FcmDeviceToken[] = tokens.reduce<FcmDeviceToken[]>((newTokens, currentToken) => {
-              if (currentToken._id === loggedInUser._id) {
-                present = true;
-                if (currentToken.token === newToken) {
-                  // the token hasnt changed. no need to do anything with the current token
-                  return [...newTokens, currentToken]
-                }
-                // new token
-                return [...newTokens, {...currentToken, token: newToken}]
-              }
-              return [...newTokens, currentToken];
-
-            }, [] as FcmDeviceToken[])
-
-            if (!present) {
-              await chatREF.set([...newFCMTokens, fcmDeviceToken]);
-            } else {
-              await chatREF.set(newFCMTokens)
-            }
-          }
-        })
-      }
-      await _runAsync()
+    if (!newToken || !loggedInUser.classes) {
+      return
     }
+
+    const fcmDeviceToken: FcmDeviceToken = {
+      _id: loggedInUser._id,
+      token: newToken,
+      email: loggedInUser.email,
+      firstName: loggedInUser.firstName,
+      lastName: loggedInUser.lastName,
+    }
+    const _runAsync = async () => {
+      await asyncForEach(loggedInUser.classes, async (_class) => {
+        const chatREF = this._refFCMDeviceTokensPerChat(_class.chatID)
+        const tokens: FcmDeviceToken[] = await chatREF.once(VALUE).then(snap => {
+          return snap.val()
+        })
+
+        if (!tokens) {
+          // if this chat ref is empty
+          await chatREF.set([fcmDeviceToken])
+        } else {
+          // we need to check that we are not adding the same device object multiple times
+          // console.log('tokens', tokens)
+
+          let present = false;
+          const newFCMTokens: FcmDeviceToken[] = tokens.reduce<FcmDeviceToken[]>((newTokens, currentToken) => {
+            if (currentToken._id === loggedInUser._id) {
+              present = true;
+              if (currentToken.token === newToken) {
+                // the token hasnt changed. no need to do anything with the current token
+                return [...newTokens, currentToken]
+              }
+              // new token
+              return [...newTokens, {...currentToken, token: newToken}]
+            }
+            return [...newTokens, currentToken];
+
+          }, [] as FcmDeviceToken[])
+
+          if (!present) {
+            await chatREF.set([...newFCMTokens, fcmDeviceToken]);
+          } else {
+            await chatREF.set(newFCMTokens)
+          }
+        }
+      })
+    }
+    await _runAsync()
+
   }
 
   async login (user: MutationLoginArgs) {
