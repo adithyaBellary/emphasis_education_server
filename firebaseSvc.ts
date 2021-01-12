@@ -86,8 +86,12 @@ class FireBaseSVC {
   async updateFCMTokens (userEmail: string, newToken: string) {
     const loggedInUser: UserInfoType = await this.getUser(userEmail)
 
-    if (!newToken || !loggedInUser.classes) {
-      return
+    if (!newToken || !loggedInUser || !loggedInUser?.classes) {
+      const response: GenericResponse = {
+        res: true,
+        message: 'token not provided or no classes on this user'
+      }
+      return response
     }
 
     const fcmDeviceToken: FcmDeviceToken = {
@@ -134,7 +138,13 @@ class FireBaseSVC {
         }
       })
     }
-    await _runAsync()
+    try {
+      await _runAsync()
+
+      return { res: true }
+    } catch (e) {
+      return { res: false }
+    }
 
   }
 

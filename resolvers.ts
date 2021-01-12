@@ -114,6 +114,9 @@ const resolvers = {
     },
     addChatMember: async(_, { email, chatID}, { dataSources }) => {
       return await dataSources.f.addChatMember(email, chatID);
+    },
+    updateFCMDeviceTokens: async (_, { email, token}, { dataSources }) => {
+      return await dataSources.f.updateFCMDeviceTokens(email, token);
     }
   },
 

@@ -242,6 +242,9 @@ const typeDefs = gql`
     sendBugEmail(user: String!, body: String!): genericResponse!
     forgotPassword(email: String!): genericResponse!
     addChatMember(email: String!, chatID: String!): genericResponse!
+
+    updateFCMDeviceTokens(email: String!, token: String!): genericResponse!
+
     # deleteChatMember()
 
     # this is descoped to v2

@@ -268,6 +268,7 @@ export type Mutation = {
   sendBugEmail: GenericResponse;
   forgotPassword: GenericResponse;
   addChatMember: GenericResponse;
+  updateFCMDeviceTokens: GenericResponse;
   updateUser: GenericResponse;
 };
 
@@ -343,6 +344,12 @@ export type MutationForgotPasswordArgs = {
 export type MutationAddChatMemberArgs = {
   email: Scalars['String'];
   chatID: Scalars['String'];
+};
+
+
+export type MutationUpdateFcmDeviceTokensArgs = {
+  email: Scalars['String'];
+  token: Scalars['String'];
 };
 
 

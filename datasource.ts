@@ -108,6 +108,10 @@ class dataSource extends RESTDataSource {
   async addChatMember(email: string, chatID: string) {
     return await firebaseSvc.addChatMember(email, chatID)
   }
+
+  async updateFCMDeviceTokens(email: string, token: string) {
+    return await firebaseSvc.updateFCMTokens(email, token)
+  }
 }
 
 export default dataSource;
