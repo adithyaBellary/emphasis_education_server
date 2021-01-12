@@ -83,6 +83,58 @@ class FireBaseSVC {
       })
   }
 
+  async updateFCMTokens (userEmail: string, newToken: string) {
+    const loggedInUser: UserInfoType = await this.getUser(userEmail)
+
+    if (loggedInUser.classes && newToken) {
+      const fcmDeviceToken: FcmDeviceToken = {
+        _id: loggedInUser._id,
+        token: newToken,
+        email: loggedInUser.email,
+        firstName: loggedInUser.firstName,
+        lastName: loggedInUser.lastName,
+      }
+      const _runAsync = async () => {
+        await asyncForEach(loggedInUser.classes, async (_class) => {
+          const chatREF = this._refFCMDeviceTokensPerChat(_class.chatID)
+          const tokens: FcmDeviceToken[] = await chatREF.once(VALUE).then(snap => {
+            return snap.val()
+          })
+
+          if (!tokens) {
+            // if this chat ref is empty
+            await chatREF.set([fcmDeviceToken])
+          } else {
+            // we need to check that we are not adding the same device object multiple times
+            // console.log('tokens', tokens)
+
+            let present = false;
+            const newFCMTokens: FcmDeviceToken[] = tokens.reduce<FcmDeviceToken[]>((newTokens, currentToken) => {
+              if (currentToken._id === loggedInUser._id) {
+                present = true;
+                if (currentToken.token === newToken) {
+                  // the token hasnt changed. no need to do anything with the current token
+                  return [...newTokens, currentToken]
+                }
+                // new token
+                return [...newTokens, {...currentToken, token: newToken}]
+              }
+              return [...newTokens, currentToken];
+
+            }, [] as FcmDeviceToken[])
+
+            if (!present) {
+              await chatREF.set([...newFCMTokens, fcmDeviceToken]);
+            } else {
+              await chatREF.set(newFCMTokens)
+            }
+          }
+        })
+      }
+      await _runAsync()
+    }
+  }
+
   async login (user: MutationLoginArgs) {
     let payload: LoginPayload;
     const transaction = Sentry.startTransaction({
@@ -93,23 +145,8 @@ class FireBaseSVC {
     const _loginVal: boolean = await this.getLoginVal(user.email, user.password)
     if (_loginVal) {
       const loggedInUser: UserInfoType = await this.getUser(user.email)
-      const deviceToken: string = user.token
-      if (loggedInUser.classes) {
-        // if the user has any classes, we need to register their device token under each class at the FCM token ref
-        // loggedInUser.classes.forEach(_class => {
-        //   const chatREF = this._refFCMDeviceTokensPerChat(_class.chatID)
-        //   await
-        // })
-        const fcmDeviceToken: FcmDeviceToken = {
-          _id: loggedInUser._id,
-          token: deviceToken
-        }
-        await asyncForEach(loggedInUser.classes, async (_class) => {
-          const chatREF = this._refFCMDeviceTokensPerChat(_class.chatID)
-          await chatREF.push(fcmDeviceToken)
-        })
-      }
-      console.log('user token', user.token)
+      await this.updateFCMTokens(user.email, user.token)
+
       const {__typename, ...rest} = loggedInUser
       payload = {
         res: true,
@@ -484,46 +521,49 @@ class FireBaseSVC {
       }
     });
 
-    const deviceFCM = "dqQFO-mGSk9Yr2cEz6D7eO:APA91bEwOPWX0E5_2DbVRx7gO78LFfa1L3N2BJJ1MSg974wSWyjkbHquhw7D0D7vMQQutSgxrns8SQBeg84B2VkO_I-4_cxfZDbJdV4IiI_3OnDGjOhpAVMvgFnBL5rjGRTLoDn4_bmY"
+    // const deviceFCM = "dqQFO-mGSk9Yr2cEz6D7eO:APA91bEwOPWX0E5_2DbVRx7gO78LFfa1L3N2BJJ1MSg974wSWyjkbHquhw7D0D7vMQQutSgxrns8SQBeg84B2VkO_I-4_cxfZDbJdV4IiI_3OnDGjOhpAVMvgFnBL5rjGRTLoDn4_bmY"
+    const deviceFCM = "ddigllx0AEllrc2HZ4Zu1h:APA91bHihiVhPRt1yytTPQP02JZmB62nx1QLQgK1UXPKAVATfz-AxUPNQ23oSLVctnSHoOFMw7_vHCQP9c_DzsMgS3llWxezXxPsGkq0dKnQdpOA0BAe4zinGZxmTZBamcc9MH_SjPnj"
+    // const deviceFCM = "f8DP5mtURW6xbWXcHfO0Mf:APA91bH15I1lp62empkNz5JAhKC5bzZufeQCJPOCoaqC_Kh25dYoP7SoE07lG_AOtA26R8yFX5BJvzHpMgBKNOSCUhLCZ0Ql4fRystBrp-3OU-sYv3YlvgvBoy7N8sYvkZc_DbHD525H"
 
     // send push notification
-    const message = {
-      // store the chat details in the data object
-      data: {
-        chatID: _chatID,
-        message: 'You received a new message',
-        title: 'New Message',
-        content_available: '1',
-        // priority: 'high'
-      },
-      notification: {
-        body: "You received a new message (notification)",
-        title: "New Message"
-      },
-      apns: {
-        payload: {
-          aps: {
-            contentAvailable: true
-          }
-        },
-        headers: {
-          'apns-push-type': 'background',
-          'apns-priority': '5',
-          'apns-topic': 'org.reactjs.native.example.emphasis-education-app', // your app bundle identifier
-          'content-available': '1'
-        },
-      },
-      // priority: "high",
-      // the chatID seems to be a good choice to send the message to
-      // with the topic, we no longer need to store the registration tokens
-      // the user needs to manually refresh their chats first, though, in order to actually start getting push notified
-      topic: messages[0].chatID
-      // tokens: [deviceFCM]
-    };
+    // const message = {
+    //   // store the chat details in the data object
+    //   data: {
+    //     chatID: _chatID,
+    //     message: 'You received a new message',
+    //     title: 'New Message',
+    //     content_available: '1',
+    //     // priority: 'high'
+    //   },
+    //   notification: {
+    //     body: "You received a new message (notification)",
+    //     title: "New Message"
+    //   },
+    //   apns: {
+    //     payload: {
+    //       aps: {
+    //         contentAvailable: true
+    //       }
+    //     },
+    //     headers: {
+    //       'apns-push-type': 'background',
+    //       'apns-priority': '5',
+    //       'apns-topic': 'org.reactjs.native.example.emphasis-education-app', // your app bundle identifier
+    //       'content-available': '1'
+    //     },
+    //   },
+    //   // priority: "high",
+    //   // the chatID seems to be a good choice to send the message to
+    //   // with the topic, we no longer need to store the registration tokens
+    //   // the user needs to manually refresh their chats first, though, in order to actually start getting push notified
+    //   topic: messages[0].chatID
+    //   // tokens: [deviceFCM]
+    // };
 
     admin.messaging().sendToDevice(
       [deviceFCM], //the device fcms
       {
+        // looks like the data can have anything in it. it is the notification object that is being used to trigger the notiifcation
         data: {
           chatID: _chatID,
           message: 'You received a new message',
@@ -539,6 +579,7 @@ class FireBaseSVC {
         contentAvailable: true,
         // Required for background/quit data-only messages on Android
         priority: 'high',
+        // need the apns headers here to ensure the priority of the fcm coming through
         apns: {
           payload: {
             aps: {

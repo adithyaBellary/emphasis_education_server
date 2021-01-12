@@ -211,6 +211,9 @@ const typeDefs = gql`
   type FCMDeviceToken {
     _id: String!
     token: String!
+    email: String!
+    firstName: String!
+    lastName: String!
   }
 
   type Query {

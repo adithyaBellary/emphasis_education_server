@@ -204,6 +204,9 @@ export type FcmDeviceToken = {
   __typename?: 'FCMDeviceToken';
   _id: Scalars['String'];
   token: Scalars['String'];
+  email: Scalars['String'];
+  firstName: Scalars['String'];
+  lastName: Scalars['String'];
 };
 
 export type Query = {
