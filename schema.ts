@@ -208,6 +208,14 @@ const typeDefs = gql`
     family: [UserInfoType!]!
   }
 
+  type FCMDeviceToken {
+    _id: String!
+    token: String!
+    email: String!
+    firstName: String!
+    lastName: String!
+  }
+
   type Query {
     # refresh needs to be optional because we need to differentiate between
     # just opening the chat and pulling down to refresh
@@ -216,12 +224,12 @@ const typeDefs = gql`
     getFamily(groupID: String!): [UserInfoType]
     searchUsers(searchTerm: String!, includeAdmin: Boolean): [UserInfoType]!
     searchClasses(searchTerm: String!): searchClassesPayload!
-    getUser(userEmail: String!): UserInfoType!
+    getUser(userEmail: String!, fcmToken: String): UserInfoType!
     checkCode(email: String!, code: String!): genericResponse!
   }
 
   type Mutation {
-    login(email: String!, password: String!): LoginPayload
+    login(email: String!, password: String!, token: String): LoginPayload
     sendMessage(messages: [MessageInput]): SendMessagePayload!
     createUser(users: [UserInputType]): genericResponse!
     addClass(className: String!): addClassPayload!
@@ -234,6 +242,9 @@ const typeDefs = gql`
     sendBugEmail(user: String!, body: String!): genericResponse!
     forgotPassword(email: String!): genericResponse!
     addChatMember(email: String!, chatID: String!): genericResponse!
+
+    updateFCMDeviceTokens(email: String!, token: String!): genericResponse!
+
     # deleteChatMember()
 
     # this is descoped to v2

@@ -68,8 +68,8 @@ class dataSource extends RESTDataSource {
     return await firebaseSvc.createChat(displayName, className, tutorInfo, userInfo);
   }
 
-  async getUser(userEmail: string) {
-    const res =  await firebaseSvc.getUser(userEmail);
+  async getUser(userEmail: string, fcmToken: string) {
+    const res =  await firebaseSvc._getUser(userEmail, fcmToken);
     return res;
   }
 
@@ -107,6 +107,10 @@ class dataSource extends RESTDataSource {
 
   async addChatMember(email: string, chatID: string) {
     return await firebaseSvc.addChatMember(email, chatID)
+  }
+
+  async updateFCMDeviceTokens(email: string, token: string) {
+    return await firebaseSvc.updateFCMTokens(email, token)
   }
 }
 

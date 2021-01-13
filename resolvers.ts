@@ -19,9 +19,9 @@ const resolvers = {
     searchClasses: async (_, { searchTerm }, { dataSources }) => {
       return await dataSources.f.searchClasses(searchTerm)
     },
-    getUser: async (_, { userEmail }, { dataSources }) => {
+    getUser: async (_, { userEmail, fcmToken }, { dataSources }) => {
       const lowerCaseEmail = userEmail.toLowerCase();
-      const res =  await dataSources.f.getUser(lowerCaseEmail);
+      const res =  await dataSources.f.getUser(lowerCaseEmail, fcmToken);
       return res;
     },
     checkCode: async (_, { email, code }, { dataSources }) => {
@@ -30,12 +30,13 @@ const resolvers = {
   },
 
   Mutation: {
-    login: async (_, { email, password }, { dataSources }) => {
+    login: async (_, { email, password, token }, { dataSources }) => {
       const lowerCaseEmail = email.toLowerCase();
       const response = await dataSources.f.login(
         {
           email: lowerCaseEmail,
-          password
+          password,
+          token
         },
       )
       return response
@@ -113,6 +114,9 @@ const resolvers = {
     },
     addChatMember: async(_, { email, chatID}, { dataSources }) => {
       return await dataSources.f.addChatMember(email, chatID);
+    },
+    updateFCMDeviceTokens: async (_, { email, token}, { dataSources }) => {
+      return await dataSources.f.updateFCMDeviceTokens(email, token);
     }
   },
 
