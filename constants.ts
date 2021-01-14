@@ -14,10 +14,12 @@ export const FCM_TOKENS_PER_CHAT = 'FCMTokens'
 
 const SHWETA_EMAIL: string = process.env.SHWETA_EMAIL;
 const SAKTHI_EMAIL: string = process.env.SAKTHI_EMAIL;
+const ADITHYA_EMAIL = process.env.ADITHYA_EMAIL;
 
 export const ADMIN_EMAILS: string[] = [
   SHWETA_EMAIL,
-  SAKTHI_EMAIL
+  SAKTHI_EMAIL,
+  ADITHYA_EMAIL
 ];
 
 export const ADMIN_EMAIL = process.env.EMPHASIS_EDUCATION_EMAIL;

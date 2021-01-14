@@ -101,6 +101,12 @@ class FireBaseSVC {
       firstName: loggedInUser.firstName,
       lastName: loggedInUser.lastName,
     }
+    // this needs to take the admin chats as well
+    const allClasses = [
+      ...loggedInUser.classes,
+      ...loggedInUser.adminChat
+    ]
+    console.log('all classes', allClasses)
     const _runAsync = async () => {
       await asyncForEach(loggedInUser.classes, async (_class) => {
         const chatREF = this._refFCMDeviceTokensPerChat(_class.chatID)
