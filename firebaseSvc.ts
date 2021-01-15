@@ -86,7 +86,8 @@ class FireBaseSVC {
   async updateFCMTokens (userEmail: string, newToken: string) {
     const loggedInUser: UserInfoType = await this.getUser(userEmail)
 
-    if (!newToken || !loggedInUser || !loggedInUser?.classes) {
+    // if no token or wrong email or no classes (no reg classes OR admin chats)
+    if (!newToken || !loggedInUser || (!loggedInUser?.classes && !loggedInUser?.adminChat)) {
       const response: GenericResponse = {
         res: true,
         message: 'token not provided or no classes on this user'
@@ -103,12 +104,13 @@ class FireBaseSVC {
     }
     // this needs to take the admin chats as well
     const allClasses = [
-      ...loggedInUser.classes,
-      ...loggedInUser.adminChat
+      ...(loggedInUser.classes ? loggedInUser.classes : []),
+      ...(loggedInUser.adminChat ? loggedInUser.adminChat : []),
     ]
     console.log('all classes', allClasses)
     const _runAsync = async () => {
-      await asyncForEach(loggedInUser.classes, async (_class) => {
+      // await asyncForEach(loggedInUser.classes, async (_class) => {
+      await asyncForEach(allClasses, async (_class) => {
         const chatREF = this._refFCMDeviceTokensPerChat(_class.chatID)
         const tokens: FcmDeviceToken[] = await chatREF.once(VALUE).then(snap => {
           return snap.val()
@@ -163,6 +165,7 @@ class FireBaseSVC {
 
     const _loginVal: boolean = await this.getLoginVal(user.email, user.password)
     if (_loginVal) {
+      console.log('token in login', user.token)
       const loggedInUser: UserInfoType = await this.getUser(user.email)
       await this.updateFCMTokens(user.email, user.token)
 
@@ -640,7 +643,7 @@ class FireBaseSVC {
   }
 
   async _getUser(email: string, fcmToken?: string) {
-    console.log('fcm', fcmToken)
+    // console.log('fcm', fcmToken)
     if (fcmToken) {
       this.updateFCMTokens(email, fcmToken);
     }
