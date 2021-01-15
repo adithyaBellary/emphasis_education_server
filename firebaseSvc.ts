@@ -42,7 +42,8 @@ import {
   SERVICE_EMAIL,
   VALUE,
   CHAT_POINTER_REF_BASE,
-  FCM_TOKENS_PER_CHAT
+  FCM_TOKENS_PER_CHAT,
+  INDIVIDUAL_FCM_TOKEN
 } from './constants';
 import { FIREBASE_ADMIN_CONFIG } from './config/firebaseAdminConfig';
 
@@ -156,6 +157,11 @@ class FireBaseSVC {
 
   }
 
+  async setIndividualFCMToken (email: string, token: string) {
+    const userId = getHash(email);
+    await this._refIndividualFCMTokens(userId).set(token)
+  };
+
   async login (user: MutationLoginArgs) {
     let payload: LoginPayload;
     const transaction = Sentry.startTransaction({
@@ -168,6 +174,7 @@ class FireBaseSVC {
       console.log('token in login', user.token)
       const loggedInUser: UserInfoType = await this.getUser(user.email)
       await this.updateFCMTokens(user.email, user.token)
+      await this.setIndividualFCMToken(user.email, user.token)
 
       const {__typename, ...rest} = loggedInUser
       payload = {
@@ -291,6 +298,10 @@ class FireBaseSVC {
 
   _refFCMDeviceTokensPerChat(chatID: string) {
     return firebase.database().ref(`${FCM_TOKENS_PER_CHAT}/${chatID}`)
+  }
+
+  _refIndividualFCMTokens(userId: string) {
+    return firebase.database().ref(`${INDIVIDUAL_FCM_TOKEN}/${userId}`)
   }
 
   async pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, dob) {
@@ -645,7 +656,7 @@ class FireBaseSVC {
   async _getUser(email: string, fcmToken?: string) {
     // console.log('fcm', fcmToken)
     if (fcmToken) {
-      this.updateFCMTokens(email, fcmToken);
+      await this.updateFCMTokens(email, fcmToken);
     }
     return await this.getUser(email)
   }
@@ -810,6 +821,16 @@ class FireBaseSVC {
           await this._refUserID(_user._id).update({ classes: [...classes, newChat]})
           await this._refFamilySpecific(_user.groupID, ind).update({ classes: [...classes, newChat]})
         }
+
+        // get the token from the Individualfcmtoken ref location
+        const userID = getHash(_user.email);
+        const token = await this._refIndividualFCMTokens(userID).once(VALUE).then(snap => {
+          const val = snap.val()
+          return val
+        })
+
+        // now update each user this info
+        await this.updateFCMTokens(_user.email, token);
       })
     }
     await _runAsync();
