@@ -1104,10 +1104,6 @@ class FireBaseSVC {
   async addChatMember(email, chatID) {
     const chatObject: Chat = await firebase.database().ref(`${CHAT_REF_BASE}/${chatID}`).once(VALUE).then(snap => snap.val())
     const userInfo = chatObject.userInfo;
-    // const userInfo = await firebase.database().ref(`${CHAT_REF_BASE}/${chatID}/userInfo`).once(VALUE).then(snap => {
-    //   const val = snap.val()
-    //   return val;
-    // })
 
     const user = await this.getUser(email);
 
@@ -1128,7 +1124,7 @@ class FireBaseSVC {
       // in their family locations as well. we we need this though??
     // OTHER MEMBERS IN THIS CHAT (in userInfo)
       // in their family locations as well
-    const updatedCHat = await this._refChats(chatID).once(VALUE).then(snap => {
+    const updatedChat = await this._refChats(chatID).once(VALUE).then(snap => {
       const val = snap.val()
       return val
     })
@@ -1140,14 +1136,13 @@ class FireBaseSVC {
         let ind = 0;
         val.classes.forEach((_class, index) => {
           console.log(_class)
-          if (_class.chatID === updatedCHat.chatID) {
+          if (_class.chatID === updatedChat.chatID) {
             ind = index
           }
         })
         return ind;
       })
 
-      console.log('index in async foreach', classIndex)
       const oldClasses = await firebase.database().ref(`${User_REF_BASE}/${getHash(_email)}/classes`).once(VALUE).then(snap => {
         const val = snap.val()
         return val
@@ -1156,7 +1151,7 @@ class FireBaseSVC {
       const updateClasses = []
       oldClasses.forEach((_oldClass, index) => {
         if (index === classIndex) {
-          updateClasses.push(updatedCHat)
+          updateClasses.push(updatedChat)
         } else {
           updateClasses.push(_oldClass)
         }
@@ -1173,7 +1168,7 @@ class FireBaseSVC {
         const val = snap.val();
         let ind = 0;
         val.classes.forEach((_class, index) => {
-          if (_class.chatID === updatedCHat.chatID) {
+          if (_class.chatID === updatedChat.chatID) {
             ind = index
           }
         })
@@ -1188,7 +1183,7 @@ class FireBaseSVC {
       const updatedClasses = []
       oldClasses.forEach((_oldClass, index) => {
         if (index === classIndex) {
-          updatedClasses.push(updatedCHat)
+          updatedClasses.push(updatedChat)
         } else {
           updatedClasses.push(_oldClass)
         }
@@ -1210,7 +1205,7 @@ class FireBaseSVC {
         const val = snap.val();
         let ind = 0;
         val.classes.forEach((_class, index) => {
-          if (_class.chatID === updatedCHat.chatID) {
+          if (_class.chatID === updatedChat.chatID) {
             ind = index
           }
         })
@@ -1225,7 +1220,7 @@ class FireBaseSVC {
       const updatedClasses = []
       oldClasses.forEach((_oldClass, index) => {
         if (index === classIndex) {
-          updatedClasses.push(updatedCHat)
+          updatedClasses.push(updatedChat)
         } else {
           updatedClasses.push(_oldClass)
         }
