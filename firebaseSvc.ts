@@ -108,7 +108,7 @@ class FireBaseSVC {
       ...(loggedInUser.classes ? loggedInUser.classes : []),
       ...(loggedInUser.adminChat ? loggedInUser.adminChat : []),
     ]
-    console.log('all classes', allClasses)
+    // console.log('all classes', allClasses)
     const _runAsync = async () => {
       // await asyncForEach(loggedInUser.classes, async (_class) => {
       await asyncForEach(allClasses, async (_class) => {
@@ -801,6 +801,12 @@ class FireBaseSVC {
       await this._refFamilySpecific(tutor.groupID, ind).update({ classes: [...classes, newChat] })
     }
 
+    const tutorFCMToken = await this._refIndividualFCMTokens(tutor._id).once(VALUE).then(snap => {
+      const val = snap.val();
+      return val
+    })
+    await this.updateFCMTokens(tutor.email, tutorFCMToken);
+
     const _runAsync = async () => {
       await asyncForEach(allUsers, async (_user) => {
         // console.log('the _user', _user)
@@ -828,7 +834,6 @@ class FireBaseSVC {
           const val = snap.val()
           return val
         })
-
         // now update each user this info
         await this.updateFCMTokens(_user.email, token);
       })
