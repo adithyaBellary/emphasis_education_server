@@ -42,7 +42,8 @@ import {
   SERVICE_EMAIL,
   VALUE,
   CHAT_POINTER_REF_BASE,
-  FCM_TOKENS_PER_CHAT
+  FCM_TOKENS_PER_CHAT,
+  INDIVIDUAL_FCM_TOKEN
 } from './constants';
 import { FIREBASE_ADMIN_CONFIG } from './config/firebaseAdminConfig';
 
@@ -86,7 +87,8 @@ class FireBaseSVC {
   async updateFCMTokens (userEmail: string, newToken: string) {
     const loggedInUser: UserInfoType = await this.getUser(userEmail)
 
-    if (!newToken || !loggedInUser || !loggedInUser?.classes) {
+    // if no token or wrong email or no classes (no reg classes OR admin chats)
+    if (!newToken || !loggedInUser || (!loggedInUser?.classes && !loggedInUser?.adminChat)) {
       const response: GenericResponse = {
         res: true,
         message: 'token not provided or no classes on this user'
@@ -101,8 +103,15 @@ class FireBaseSVC {
       firstName: loggedInUser.firstName,
       lastName: loggedInUser.lastName,
     }
+    // this needs to take the admin chats as well
+    const allClasses = [
+      ...(loggedInUser.classes ? loggedInUser.classes : []),
+      ...(loggedInUser.adminChat ? loggedInUser.adminChat : []),
+    ]
+    // console.log('all classes', allClasses)
     const _runAsync = async () => {
-      await asyncForEach(loggedInUser.classes, async (_class) => {
+      // await asyncForEach(loggedInUser.classes, async (_class) => {
+      await asyncForEach(allClasses, async (_class) => {
         const chatREF = this._refFCMDeviceTokensPerChat(_class.chatID)
         const tokens: FcmDeviceToken[] = await chatREF.once(VALUE).then(snap => {
           return snap.val()
@@ -148,6 +157,20 @@ class FireBaseSVC {
 
   }
 
+  async getFCMToken(email: string) {
+    const userID = getHash(email)
+    const fcm = await this._refIndividualFCMTokens(userID).once(VALUE).then(snap => {
+      return snap.val()
+    })
+
+    return fcm
+  }
+
+  async setIndividualFCMToken (email: string, token: string) {
+    const userId = getHash(email);
+    await this._refIndividualFCMTokens(userId).set(token)
+  };
+
   async login (user: MutationLoginArgs) {
     let payload: LoginPayload;
     const transaction = Sentry.startTransaction({
@@ -157,8 +180,10 @@ class FireBaseSVC {
 
     const _loginVal: boolean = await this.getLoginVal(user.email, user.password)
     if (_loginVal) {
+      console.log('token in login', user.token)
       const loggedInUser: UserInfoType = await this.getUser(user.email)
       await this.updateFCMTokens(user.email, user.token)
+      await this.setIndividualFCMToken(user.email, user.token)
 
       const {__typename, ...rest} = loggedInUser
       payload = {
@@ -282,6 +307,10 @@ class FireBaseSVC {
 
   _refFCMDeviceTokensPerChat(chatID: string) {
     return firebase.database().ref(`${FCM_TOKENS_PER_CHAT}/${chatID}`)
+  }
+
+  _refIndividualFCMTokens(userId: string) {
+    return firebase.database().ref(`${INDIVIDUAL_FCM_TOKEN}/${userId}`)
   }
 
   async pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, dob) {
@@ -575,7 +604,7 @@ class FireBaseSVC {
 
     const fcms: FcmDeviceToken[] = await this._refFCMDeviceTokensPerChat(_chatID).once(VALUE).then(snap => snap.val())
     const fcmTokens = fcms.map(token => token.token)
-    console.log('fcmTokens: ', fcmTokens)
+    // console.log('fcmTokens: ', fcmTokens)
     admin.messaging().sendToDevice(
       // [deviceFCM], //the device fcms
       fcmTokens, //the device fcms
@@ -634,9 +663,9 @@ class FireBaseSVC {
   }
 
   async _getUser(email: string, fcmToken?: string) {
-    console.log('fcm', fcmToken)
+    // console.log('fcm', fcmToken)
     if (fcmToken) {
-      this.updateFCMTokens(email, fcmToken);
+      await this.updateFCMTokens(email, fcmToken);
     }
     return await this.getUser(email)
   }
@@ -781,6 +810,12 @@ class FireBaseSVC {
       await this._refFamilySpecific(tutor.groupID, ind).update({ classes: [...classes, newChat] })
     }
 
+    const tutorFCMToken = await this._refIndividualFCMTokens(tutor._id).once(VALUE).then(snap => {
+      const val = snap.val();
+      return val
+    })
+    await this.updateFCMTokens(tutor.email, tutorFCMToken);
+
     const _runAsync = async () => {
       await asyncForEach(allUsers, async (_user) => {
         // console.log('the _user', _user)
@@ -801,6 +836,15 @@ class FireBaseSVC {
           await this._refUserID(_user._id).update({ classes: [...classes, newChat]})
           await this._refFamilySpecific(_user.groupID, ind).update({ classes: [...classes, newChat]})
         }
+
+        // get the token from the Individualfcmtoken ref location
+        const userID = getHash(_user.email);
+        const token = await this._refIndividualFCMTokens(userID).once(VALUE).then(snap => {
+          const val = snap.val()
+          return val
+        })
+        // now update each user this info
+        await this.updateFCMTokens(_user.email, token);
       })
     }
     await _runAsync();
@@ -1004,6 +1048,9 @@ class FireBaseSVC {
     const chatRef = await this._refChats(chatID);
     await chatRef.remove();
 
+    // delete the chat from the fcmtoken location
+    await this._refFCMDeviceTokensPerChat(chatID).remove();
+
     return { res: true }
 
   }
@@ -1069,10 +1116,6 @@ class FireBaseSVC {
   async addChatMember(email, chatID) {
     const chatObject: Chat = await firebase.database().ref(`${CHAT_REF_BASE}/${chatID}`).once(VALUE).then(snap => snap.val())
     const userInfo = chatObject.userInfo;
-    // const userInfo = await firebase.database().ref(`${CHAT_REF_BASE}/${chatID}/userInfo`).once(VALUE).then(snap => {
-    //   const val = snap.val()
-    //   return val;
-    // })
 
     const user = await this.getUser(email);
 
@@ -1093,7 +1136,7 @@ class FireBaseSVC {
       // in their family locations as well. we we need this though??
     // OTHER MEMBERS IN THIS CHAT (in userInfo)
       // in their family locations as well
-    const updatedCHat = await this._refChats(chatID).once(VALUE).then(snap => {
+    const updatedChat = await this._refChats(chatID).once(VALUE).then(snap => {
       const val = snap.val()
       return val
     })
@@ -1105,14 +1148,13 @@ class FireBaseSVC {
         let ind = 0;
         val.classes.forEach((_class, index) => {
           console.log(_class)
-          if (_class.chatID === updatedCHat.chatID) {
+          if (_class.chatID === updatedChat.chatID) {
             ind = index
           }
         })
         return ind;
       })
 
-      console.log('index in async foreach', classIndex)
       const oldClasses = await firebase.database().ref(`${User_REF_BASE}/${getHash(_email)}/classes`).once(VALUE).then(snap => {
         const val = snap.val()
         return val
@@ -1121,12 +1163,12 @@ class FireBaseSVC {
       const updateClasses = []
       oldClasses.forEach((_oldClass, index) => {
         if (index === classIndex) {
-          updateClasses.push(updatedCHat)
+          updateClasses.push(updatedChat)
         } else {
           updateClasses.push(_oldClass)
         }
       })
-      console.log('updated classes', updateClasses)
+      // console.log('updated classes', updateClasses)
       await this._refUserID(getHash(_email)).update({ classes: updateClasses})
     })
 
@@ -1138,7 +1180,7 @@ class FireBaseSVC {
         const val = snap.val();
         let ind = 0;
         val.classes.forEach((_class, index) => {
-          if (_class.chatID === updatedCHat.chatID) {
+          if (_class.chatID === updatedChat.chatID) {
             ind = index
           }
         })
@@ -1153,7 +1195,7 @@ class FireBaseSVC {
       const updatedClasses = []
       oldClasses.forEach((_oldClass, index) => {
         if (index === classIndex) {
-          updatedClasses.push(updatedCHat)
+          updatedClasses.push(updatedChat)
         } else {
           updatedClasses.push(_oldClass)
         }
@@ -1175,7 +1217,7 @@ class FireBaseSVC {
         const val = snap.val();
         let ind = 0;
         val.classes.forEach((_class, index) => {
-          if (_class.chatID === updatedCHat.chatID) {
+          if (_class.chatID === updatedChat.chatID) {
             ind = index
           }
         })
@@ -1190,7 +1232,7 @@ class FireBaseSVC {
       const updatedClasses = []
       oldClasses.forEach((_oldClass, index) => {
         if (index === classIndex) {
-          updatedClasses.push(updatedCHat)
+          updatedClasses.push(updatedChat)
         } else {
           updatedClasses.push(_oldClass)
         }
@@ -1242,6 +1284,9 @@ class FireBaseSVC {
     })
 
     await this._refFamilySpecific(user.groupID, index.toString()).update({ classes: newClasses})
+
+    const fcmToken = await this.getFCMToken(email)
+    await this.updateFCMTokens(email, fcmToken)
 
     return { res: true }
   }
