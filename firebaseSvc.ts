@@ -1048,6 +1048,9 @@ class FireBaseSVC {
     const chatRef = await this._refChats(chatID);
     await chatRef.remove();
 
+    // delete the chat from the fcmtoken location
+    await this._refFCMDeviceTokensPerChat(chatID).remove();
+
     return { res: true }
 
   }
