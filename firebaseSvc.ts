@@ -108,7 +108,6 @@ class FireBaseSVC {
       ...(loggedInUser.classes ? loggedInUser.classes : []),
       ...(loggedInUser.adminChat ? loggedInUser.adminChat : []),
     ]
-    // console.log('all classes', allClasses)
     const _runAsync = async () => {
       // await asyncForEach(loggedInUser.classes, async (_class) => {
       await asyncForEach(allClasses, async (_class) => {
