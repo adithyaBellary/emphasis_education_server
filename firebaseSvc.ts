@@ -157,6 +157,15 @@ class FireBaseSVC {
 
   }
 
+  async getFCMToken(email: string) {
+    const userID = getHash(email)
+    const fcm = await this._refIndividualFCMTokens(userID).once(VALUE).then(snap => {
+      return snap.val()
+    })
+
+    return fcm
+  }
+
   async setIndividualFCMToken (email: string, token: string) {
     const userId = getHash(email);
     await this._refIndividualFCMTokens(userId).set(token)
@@ -1272,6 +1281,9 @@ class FireBaseSVC {
     })
 
     await this._refFamilySpecific(user.groupID, index.toString()).update({ classes: newClasses})
+
+    const fcmToken = await this.getFCMToken(email)
+    await this.updateFCMTokens(email, fcmToken)
 
     return { res: true }
   }
