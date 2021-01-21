@@ -604,7 +604,7 @@ class FireBaseSVC {
 
     const fcms: FcmDeviceToken[] = await this._refFCMDeviceTokensPerChat(_chatID).once(VALUE).then(snap => snap.val())
     const fcmTokens = fcms.map(token => token.token)
-    console.log('fcmTokens: ', fcmTokens)
+    // console.log('fcmTokens: ', fcmTokens)
     admin.messaging().sendToDevice(
       // [deviceFCM], //the device fcms
       fcmTokens, //the device fcms
@@ -1165,7 +1165,7 @@ class FireBaseSVC {
           updateClasses.push(_oldClass)
         }
       })
-      console.log('updated classes', updateClasses)
+      // console.log('updated classes', updateClasses)
       await this._refUserID(getHash(_email)).update({ classes: updateClasses})
     })
 
