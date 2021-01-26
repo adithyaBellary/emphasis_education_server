@@ -216,6 +216,12 @@ const typeDefs = gql`
     lastName: String!
   }
 
+  type ChatNotification {
+    # userID: String!
+    chatID: String!
+    isAdmin: Boolean!
+  }
+
   type Query {
     # refresh needs to be optional because we need to differentiate between
     # just opening the chat and pulling down to refresh

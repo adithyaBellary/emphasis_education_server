@@ -24,7 +24,8 @@ import {
   Permission,
   AdminChat,
   GenericResponse,
-  FcmDeviceToken
+  FcmDeviceToken,
+  ChatNotification
 } from './types/schema-types';
 import { genID, getHash, asyncForEach } from './helper';
 
@@ -43,7 +44,8 @@ import {
   VALUE,
   CHAT_POINTER_REF_BASE,
   FCM_TOKENS_PER_CHAT,
-  INDIVIDUAL_FCM_TOKEN
+  INDIVIDUAL_FCM_TOKEN,
+  CHAT_NOTIFICATION
 } from './constants';
 import { FIREBASE_ADMIN_CONFIG } from './config/firebaseAdminConfig';
 
@@ -312,6 +314,22 @@ class FireBaseSVC {
     return firebase.database().ref(`${INDIVIDUAL_FCM_TOKEN}/${userId}`)
   }
 
+  _refChatNotification(userID: string) {
+    return firebase.database().ref(`${CHAT_NOTIFICATION}/${userID}`)
+  }
+
+  // {
+  //   userID: {
+  //     chatID: {
+    // might not need the status
+    // if the chatID is here, then that means the notification should be present
+  //       status: boolean,
+  //       admin: boolean,
+  //     }
+  //   }
+  // }
+
+
   async pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, dob) {
     let adminChat: AdminChat[] = []
     // we dont need to make a new admin chat for admins
@@ -562,10 +580,6 @@ class FireBaseSVC {
       }
     });
 
-    // const deviceFCM = "dqQFO-mGSk9Yr2cEz6D7eO:APA91bEwOPWX0E5_2DbVRx7gO78LFfa1L3N2BJJ1MSg974wSWyjkbHquhw7D0D7vMQQutSgxrns8SQBeg84B2VkO_I-4_cxfZDbJdV4IiI_3OnDGjOhpAVMvgFnBL5rjGRTLoDn4_bmY"
-    // const deviceFCM = "ddigllx0AEllrc2HZ4Zu1h:APA91bHihiVhPRt1yytTPQP02JZmB62nx1QLQgK1UXPKAVATfz-AxUPNQ23oSLVctnSHoOFMw7_vHCQP9c_DzsMgS3llWxezXxPsGkq0dKnQdpOA0BAe4zinGZxmTZBamcc9MH_SjPnj"
-    // const deviceFCM = "f8DP5mtURW6xbWXcHfO0Mf:APA91bH15I1lp62empkNz5JAhKC5bzZufeQCJPOCoaqC_Kh25dYoP7SoE07lG_AOtA26R8yFX5BJvzHpMgBKNOSCUhLCZ0Ql4fRystBrp-3OU-sYv3YlvgvBoy7N8sYvkZc_DbHD525H"
-
     // send push notification
     // const message = {
     //   // store the chat details in the data object
@@ -603,7 +617,6 @@ class FireBaseSVC {
 
     const fcms: FcmDeviceToken[] = await this._refFCMDeviceTokensPerChat(_chatID).once(VALUE).then(snap => snap.val())
     const fcmTokens = fcms.map(token => token.token)
-    // console.log('fcmTokens: ', fcmTokens)
     admin.messaging().sendToDevice(
       // [deviceFCM], //the device fcms
       fcmTokens, //the device fcms
@@ -641,18 +654,40 @@ class FireBaseSVC {
       },
     )
     .then(res => {
-      console.log(`success sending to the device ${JSON.stringify(res)}`)
+      // console.log(`success sending to the device ${JSON.stringify(res)}`)
     })
     .catch(e => {
       console.log(`could not send to the devices ${JSON.stringify(e)} `)
     })
 
-    // admin.messaging().send(message).then(res => {
-    //   console.log('it is a success sending the push notification', res)
-    // }).catch(error => {
-    //   console.log('there was an error sending the push notification', error)
-    //   // add sentry message or exception
-    // })
+    let isAdmin: boolean = false
+    const user = await this._getUser(messages[0].user.email);
+    user.adminChat?.forEach(_adminChat => {
+      if (_adminChat.chatID === _chatID) {
+        isAdmin = true
+      }
+    })
+    // update the chat notification in the db
+    const userID = messages[0].user._id;
+    const chatNotifRef = this._refChatNotification(userID)
+    const notif: ChatNotification = {
+      chatID: _chatID,
+      isAdmin
+    }
+
+    const oldNotifs: ChatNotification[] = await this._refChatNotification(userID).once(VALUE).then(snap => snap.val())
+    let present = false;
+    oldNotifs?.forEach(_notif =>
+      _notif.chatID === _chatID
+        ? present = true
+        : null
+    )
+
+    if (!present) {
+      oldNotifs?.length > 0
+        ? await chatNotifRef.set([...oldNotifs, notif])
+        : await chatNotifRef.set([notif])
+    }
 
     return { res }
   }
@@ -662,7 +697,6 @@ class FireBaseSVC {
   }
 
   async _getUser(email: string, fcmToken?: string) {
-    // console.log('fcm', fcmToken)
     if (fcmToken) {
       await this.updateFCMTokens(email, fcmToken);
     }

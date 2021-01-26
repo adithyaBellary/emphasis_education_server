@@ -12,6 +12,7 @@ export const CODES_REF_BASE: string = 'Codes';
 export const CHAT_POINTER_REF_BASE = 'ChatPointer';
 export const FCM_TOKENS_PER_CHAT = 'FCMTokens';
 export const INDIVIDUAL_FCM_TOKEN = 'IndividualFCMToken';
+export const CHAT_NOTIFICATION = 'ChatNotification';
 
 const SHWETA_EMAIL: string = process.env.SHWETA_EMAIL;
 const SAKTHI_EMAIL: string = process.env.SAKTHI_EMAIL;

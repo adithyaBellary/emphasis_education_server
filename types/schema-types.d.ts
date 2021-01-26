@@ -209,6 +209,12 @@ export type FcmDeviceToken = {
   lastName: Scalars['String'];
 };
 
+export type ChatNotification = {
+  __typename?: 'ChatNotification';
+  chatID: Scalars['String'];
+  isAdmin: Scalars['Boolean'];
+};
+
 export type Query = {
   __typename?: 'Query';
   getMessages?: Maybe<Array<Maybe<MessageType>>>;
