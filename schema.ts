@@ -222,6 +222,15 @@ const typeDefs = gql`
     isAdmin: Boolean!
   }
 
+  # type ChatNotificationWrapper = {
+  #   [chatID: String]: ChatNotification
+  # }
+
+  type getUserPayload {
+    user: UserInfoType!
+    chatNotifications: [ChatNotification]!
+  }
+
   type Query {
     # refresh needs to be optional because we need to differentiate between
     # just opening the chat and pulling down to refresh
@@ -230,7 +239,7 @@ const typeDefs = gql`
     getFamily(groupID: String!): [UserInfoType]
     searchUsers(searchTerm: String!, includeAdmin: Boolean): [UserInfoType]!
     searchClasses(searchTerm: String!): searchClassesPayload!
-    getUser(userEmail: String!, fcmToken: String): UserInfoType!
+    getUser(userEmail: String!, fcmToken: String): getUserPayload!
     checkCode(email: String!, code: String!): genericResponse!
   }
 

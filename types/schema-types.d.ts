@@ -215,13 +215,19 @@ export type ChatNotification = {
   isAdmin: Scalars['Boolean'];
 };
 
+export type GetUserPayload = {
+  __typename?: 'getUserPayload';
+  user: UserInfoType;
+  chatNotifications: Array<Maybe<ChatNotification>>;
+};
+
 export type Query = {
   __typename?: 'Query';
   getMessages?: Maybe<Array<Maybe<MessageType>>>;
   getFamily?: Maybe<Array<Maybe<UserInfoType>>>;
   searchUsers: Array<Maybe<UserInfoType>>;
   searchClasses: SearchClassesPayload;
-  getUser: UserInfoType;
+  getUser: GetUserPayload;
   checkCode: GenericResponse;
 };
 

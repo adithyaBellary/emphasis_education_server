@@ -25,7 +25,8 @@ import {
   AdminChat,
   GenericResponse,
   FcmDeviceToken,
-  ChatNotification
+  ChatNotification,
+  GetUserPayload
 } from './types/schema-types';
 import { genID, getHash, asyncForEach } from './helper';
 
@@ -640,7 +641,8 @@ class FireBaseSVC {
     })
 
     let isAdmin: boolean = false
-    const user = await this._getUser(messages[0].user.email);
+    // const user = await this._getUser(messages[0].user.email);
+    const user = await this.getUser(messages[0].user.email);
     user.adminChat?.forEach(_adminChat => {
       if (_adminChat.chatID === _chatID) {
         isAdmin = true
@@ -763,11 +765,27 @@ class FireBaseSVC {
     this._refMessage('').off();
   }
 
-  async _getUser(email: string, fcmToken?: string) {
+  // async getChatNotificationObject (userID: string, chatID: string) {
+  //   return await this._refChatNotification(userID, chatID).once(VALUE).then(snap => snap.val())
+  // }
+
+  async _getUser(email: string, fcmToken?: string): Promise<GetUserPayload> {
     if (fcmToken) {
       await this.updateFCMTokens(email, fcmToken);
     }
-    return await this.getUser(email)
+    const user = await this.getUser(email)
+    const userID = getHash(email)
+    const chatNotifObject = await firebase.database().ref(`${CHAT_NOTIFICATION}/${userID}`).once(VALUE).then(snap => snap.val())
+    const convertedArr: ChatNotification[] = chatNotifObject ? Object.keys(chatNotifObject).map(chatID => (
+      {
+        chatID,
+        isAdmin: chatNotifObject[chatID].isAdmin
+      }
+    )) : []
+    return {
+      user,
+      chatNotifications: convertedArr
+    }
   }
 
   // lets pass in the email and then hash it here
