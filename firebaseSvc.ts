@@ -48,6 +48,7 @@ import {
   CHAT_NOTIFICATION
 } from './constants';
 import { FIREBASE_ADMIN_CONFIG } from './config/firebaseAdminConfig';
+import { access } from 'fs';
 
 class FireBaseSVC {
 
@@ -314,8 +315,8 @@ class FireBaseSVC {
     return firebase.database().ref(`${INDIVIDUAL_FCM_TOKEN}/${userId}`)
   }
 
-  _refChatNotification(userID: string) {
-    return firebase.database().ref(`${CHAT_NOTIFICATION}/${userID}`)
+  _refChatNotification(userID: string, chatID: string) {
+    return firebase.database().ref(`${CHAT_NOTIFICATION}/${userID}/${chatID}`)
   }
 
   // {
@@ -455,6 +456,18 @@ class FireBaseSVC {
         })
     }
 
+    // clear chat notifications
+    // const notifs: ChatNotification[] = await this._refChatNotification(userID).once(VALUE).then(snap => snap.val())
+
+    // if (notifs?.length > 0) {
+
+    // }
+
+    // const newNotifs: ChatNotification[] = (notifs?.length > 0 ? notifs : []).reduce<ChatNotification[]>((acc, cur) => {
+    //   if (cur.chatID === chatID) {
+    //     // if the chatID we are querying for has a
+    //   }
+    // }, [] as ChatNotification[])
     return await this._refMessage(chatID)
       .orderByChild('_id')
       .startAt(start)
@@ -564,13 +577,13 @@ class FireBaseSVC {
         image,
         chatID
       };
-      console.log('message', message)
+      // console.log('message', message)
       try {
         await this._refMessage(chatID).push(message);
         await this.updateNumMessages(messages[0].chatID);
 
         // publish from pubsub
-        console.log('publishing new message: ', message)
+        // console.log('publishing new message: ', message)
         pubsub.publish(MESSAGE_RECEIVED_EVENT, {
           messageReceived: message
         })
@@ -580,41 +593,7 @@ class FireBaseSVC {
       }
     });
 
-    // send push notification
-    // const message = {
-    //   // store the chat details in the data object
-    //   data: {
-    //     chatID: _chatID,
-    //     message: 'You received a new message',
-    //     title: 'New Message',
-    //     content_available: '1',
-    //     // priority: 'high'
-    //   },
-    //   notification: {
-    //     body: "You received a new message (notification)",
-    //     title: "New Message"
-    //   },
-    //   apns: {
-    //     payload: {
-    //       aps: {
-    //         contentAvailable: true
-    //       }
-    //     },
-    //     headers: {
-    //       'apns-push-type': 'background',
-    //       'apns-priority': '5',
-    //       'apns-topic': 'org.reactjs.native.example.emphasis-education-app', // your app bundle identifier
-    //       'content-available': '1'
-    //     },
-    //   },
-    //   // priority: "high",
-    //   // the chatID seems to be a good choice to send the message to
-    //   // with the topic, we no longer need to store the registration tokens
-    //   // the user needs to manually refresh their chats first, though, in order to actually start getting push notified
-    //   topic: messages[0].chatID
-    //   // tokens: [deviceFCM]
-    // };
-
+    const senderUserInfo = await this.getUser(messages[0].user.email);
     const fcms: FcmDeviceToken[] = await this._refFCMDeviceTokensPerChat(_chatID).once(VALUE).then(snap => snap.val())
     const fcmTokens = fcms.map(token => token.token)
     admin.messaging().sendToDevice(
@@ -668,26 +647,114 @@ class FireBaseSVC {
       }
     })
     // update the chat notification in the db
-    const userID = messages[0].user._id;
-    const chatNotifRef = this._refChatNotification(userID)
+    // const userID = messages[0].user._id;
+
     const notif: ChatNotification = {
       chatID: _chatID,
       isAdmin
     }
 
-    const oldNotifs: ChatNotification[] = await this._refChatNotification(userID).once(VALUE).then(snap => snap.val())
-    let present = false;
-    oldNotifs?.forEach(_notif =>
-      _notif.chatID === _chatID
-        ? present = true
-        : null
-    )
+    const chatObject: Chat = await this._refChats(_chatID).once(VALUE).then(snap => snap.val())
+    console.log('chat object', chatObject)
 
-    if (!present) {
-      oldNotifs?.length > 0
-        ? await chatNotifRef.set([...oldNotifs, notif])
-        : await chatNotifRef.set([notif])
+
+    // const init = new Promise<ChatUserInfo[]>(res => [])
+
+    // const adminUserInfo: ChatUserInfo[] = await ADMIN_EMAILS.reduce<Promise<ChatUserInfo[]>>(async (acc, cur) => {
+    //   const adminUser = await this.getUser(cur)
+    //   const awaitedAcc = await acc;
+    //   console.log('admin user', awaitedAcc)
+    //   console.log('admin user', acc)
+    //   const c: ChatUserInfo = {
+    //     firstName: adminUser.firstName,
+    //     lastName: adminUser.lastName,
+    //     email: adminUser.email
+    //   }
+    //   return [
+    //     ...awaitedAcc,
+    //     c
+    //   ]
+    // }, init)
+
+    // console.log('admin User Info', adminUserInfo)
+
+    const admin1: ChatUserInfo = await this.getUser(ADMIN_EMAILS[0]).then(user => ({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email
+    }))
+    const admin2: ChatUserInfo = await this.getUser(ADMIN_EMAILS[1]).then(user => ({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email
+    }))
+    const admin3: ChatUserInfo = await this.getUser(ADMIN_EMAILS[2]).then(user => ({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email
+    }))
+
+    const adminUserInfo: ChatUserInfo[] = [admin1, admin2, admin3]
+
+    const chatUsers = [
+      chatObject?.tutorInfo,
+      ...(chatObject?.userInfo || [])
+    ]
+
+    let relUsers: ChatUserInfo[]
+    if(isAdmin) {
+      // if its admin, then we will include admins and the user
+      if (senderUserInfo.userType === 'Admin') {
+        // this the student / tutor / guardian this admin chat is for
+        const e: string = senderUserInfo.adminChat.reduce<string>((acc, cur) => {
+          if (cur.chatID === _chatID) {
+            return cur.user.email
+          }
+        }, '')
+        const regUserObject = await this.getUser(e)
+        relUsers = [
+          ...adminUserInfo,
+          {
+            firstName: regUserObject.firstName,
+            lastName: regUserObject.lastName,
+            email: regUserObject.email,
+          }
+        ]
+      } else {
+        relUsers = [
+          ...adminUserInfo,
+          {
+            firstName: senderUserInfo.firstName,
+            lastName: senderUserInfo.lastName,
+            email: senderUserInfo.email,
+          }
+        ]
+      }
+    } else {
+      // if a reg chat, then we will include admins and the chat members
+      relUsers = [
+        ...chatUsers,
+        ...adminUserInfo,
+      ]
     }
+
+    const _runAsync = async () => {
+      await asyncForEach(relUsers, async (_user) => {
+        if (_user.email !== user) {
+          const userID = getHash(_user.email)
+          const chatNotifRef = this._refChatNotification(userID, _chatID)
+          const oldNotifs = await chatNotifRef.once(VALUE).then(snap => snap.val())
+          console.log('old', oldNotifs)
+          if (oldNotifs) {
+            await chatNotifRef.update(notif)
+          } else {
+            await chatNotifRef.set(notif)
+          }
+        }
+      })
+    }
+
+    await _runAsync();
 
     return { res }
   }
