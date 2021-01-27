@@ -183,7 +183,7 @@ class FireBaseSVC {
 
     const _loginVal: boolean = await this.getLoginVal(user.email, user.password)
     if (_loginVal) {
-      console.log('token in login', user.token)
+      // console.log('token in login', user.token)
       const loggedInUser: UserInfoType = await this.getUser(user.email)
       await this.updateFCMTokens(user.email, user.token)
       await this.setIndividualFCMToken(user.email, user.token)
@@ -458,17 +458,8 @@ class FireBaseSVC {
     }
 
     // clear chat notifications
-    // const notifs: ChatNotification[] = await this._refChatNotification(userID).once(VALUE).then(snap => snap.val())
+    await this._refChatNotification(userID, chatID).remove()
 
-    // if (notifs?.length > 0) {
-
-    // }
-
-    // const newNotifs: ChatNotification[] = (notifs?.length > 0 ? notifs : []).reduce<ChatNotification[]>((acc, cur) => {
-    //   if (cur.chatID === chatID) {
-    //     // if the chatID we are querying for has a
-    //   }
-    // }, [] as ChatNotification[])
     return await this._refMessage(chatID)
       .orderByChild('_id')
       .startAt(start)
@@ -657,8 +648,7 @@ class FireBaseSVC {
     }
 
     const chatObject: Chat = await this._refChats(_chatID).once(VALUE).then(snap => snap.val())
-    console.log('chat object', chatObject)
-
+    // console.log('chat object', chatObject)
 
     // const init = new Promise<ChatUserInfo[]>(res => [])
 
@@ -721,15 +711,15 @@ class FireBaseSVC {
             lastName: regUserObject.lastName,
             email: regUserObject.email,
           }
-        ]
+        ].filter(_user => _user.email !== senderUserInfo.email)
       } else {
         relUsers = [
           ...adminUserInfo,
-          {
-            firstName: senderUserInfo.firstName,
-            lastName: senderUserInfo.lastName,
-            email: senderUserInfo.email,
-          }
+          // {
+          //   firstName: senderUserInfo.firstName,
+          //   lastName: senderUserInfo.lastName,
+          //   email: senderUserInfo.email,
+          // }
         ]
       }
     } else {
@@ -737,7 +727,7 @@ class FireBaseSVC {
       relUsers = [
         ...chatUsers,
         ...adminUserInfo,
-      ]
+      ].filter(_user => _user.email !== senderUserInfo.email)
     }
 
     const _runAsync = async () => {
@@ -746,7 +736,7 @@ class FireBaseSVC {
           const userID = getHash(_user.email)
           const chatNotifRef = this._refChatNotification(userID, _chatID)
           const oldNotifs = await chatNotifRef.once(VALUE).then(snap => snap.val())
-          console.log('old', oldNotifs)
+          // console.log('old', oldNotifs)
           if (oldNotifs) {
             await chatNotifRef.update(notif)
           } else {
