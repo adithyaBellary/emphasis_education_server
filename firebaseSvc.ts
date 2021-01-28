@@ -585,6 +585,14 @@ class FireBaseSVC {
       }
     });
 
+    let isAdmin: boolean = false
+    const user = await this.getUser(messages[0].user.email);
+    user.adminChat?.forEach(_adminChat => {
+      if (_adminChat.chatID === _chatID) {
+        isAdmin = true
+      }
+    })
+
     const senderUserInfo = await this.getUser(messages[0].user.email);
     const fcms: FcmDeviceToken[] = await this._refFCMDeviceTokensPerChat(_chatID).once(VALUE).then(snap => snap.val())
     const fcmTokens = fcms.map(token => token.token)
@@ -595,6 +603,7 @@ class FireBaseSVC {
         // looks like the data can have anything in it. it is the notification object that is being used to trigger the notiifcation
         data: {
           chatID: _chatID,
+          isAdmin: isAdmin ? 'TRUE' : 'FALSE',
           message: 'You received a new message',
           title: 'New Message',
         },
@@ -631,24 +640,13 @@ class FireBaseSVC {
       console.log(`could not send to the devices ${JSON.stringify(e)} `)
     })
 
-    let isAdmin: boolean = false
-    // const user = await this._getUser(messages[0].user.email);
-    const user = await this.getUser(messages[0].user.email);
-    user.adminChat?.forEach(_adminChat => {
-      if (_adminChat.chatID === _chatID) {
-        isAdmin = true
-      }
-    })
     // update the chat notification in the db
-    // const userID = messages[0].user._id;
-
     const notif: ChatNotification = {
       chatID: _chatID,
       isAdmin
     }
 
     const chatObject: Chat = await this._refChats(_chatID).once(VALUE).then(snap => snap.val())
-    // console.log('chat object', chatObject)
 
     // const init = new Promise<ChatUserInfo[]>(res => [])
 
