@@ -699,7 +699,7 @@ class FireBaseSVC {
         const e: string = senderUserInfo.adminChat.reduce<string>((acc, cur) => {
           if (cur.chatID === _chatID) {
             return cur.user.email
-          }
+          } else return acc
         }, '')
         const regUserObject = await this.getUser(e)
         relUsers = [
