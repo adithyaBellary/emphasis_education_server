@@ -117,6 +117,9 @@ const resolvers = {
     },
     updateFCMDeviceTokens: async (_, { email, token}, { dataSources }) => {
       return await dataSources.f.updateFCMDeviceTokens(email, token);
+    },
+    logout: async (_, {email}, {dataSources}) => {
+      return await dataSources.f.logout(email);
     }
   },
 

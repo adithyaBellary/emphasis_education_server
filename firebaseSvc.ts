@@ -202,6 +202,20 @@ class FireBaseSVC {
     return payload;
   }
 
+  async logout (email: string) {
+    // clear this user at ChatNotification
+    const userID = getHash(email)
+    try {
+      await this._refIndividualFCMTokens(userID).remove()
+      await firebase.database().ref(`${CHAT_NOTIFICATION}/${userID}`).remove()
+      console.log('we good')
+      return { res: true }
+    } catch (e) {
+      return { res: false }
+    }
+
+  }
+
   // upload user avatar functionality
   // uploadImage = async uri => {
   //   console.log('got image to upload. uri:' + uri);
@@ -696,6 +710,7 @@ class FireBaseSVC {
       // if its admin, then we will include admins and the user
       if (senderUserInfo.userType === 'Admin') {
         // this the student / tutor / guardian this admin chat is for
+
         const e: string = senderUserInfo.adminChat.reduce<string>((acc, cur) => {
           if (cur.chatID === _chatID) {
             return cur.user.email

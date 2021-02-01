@@ -112,6 +112,10 @@ class dataSource extends RESTDataSource {
   async updateFCMDeviceTokens(email: string, token: string) {
     return await firebaseSvc.updateFCMTokens(email, token)
   }
+
+  async logout(email: string) {
+    return await firebaseSvc.logout(email)
+  }
 }
 
 export default dataSource;
