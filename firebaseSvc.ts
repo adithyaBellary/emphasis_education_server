@@ -678,7 +678,7 @@ class FireBaseSVC {
         const val = snap.val()
         return val
       })
-    const cleanedOutUser = {...user, classes: user.classes.filter(c => !!c)}
+    const cleanedOutUser = {...user, classes: user.classes?.filter(c => !!c)}
     return cleanedOutUser
   }
 
