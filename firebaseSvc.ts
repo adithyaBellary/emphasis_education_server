@@ -678,7 +678,7 @@ class FireBaseSVC {
         const val = snap.val()
         return val
       })
-    return user;
+    return {...user, classes: user.classes?.filter(c => !!c)};
   }
 
   async getFamily(groupID: string) {
