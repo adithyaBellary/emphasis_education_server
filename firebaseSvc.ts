@@ -24,7 +24,9 @@ import {
   Permission,
   AdminChat,
   GenericResponse,
-  FcmDeviceToken
+  FcmDeviceToken,
+  ChatNotification,
+  GetUserPayload
 } from './types/schema-types';
 import { genID, getHash, asyncForEach } from './helper';
 
@@ -43,9 +45,11 @@ import {
   VALUE,
   CHAT_POINTER_REF_BASE,
   FCM_TOKENS_PER_CHAT,
-  INDIVIDUAL_FCM_TOKEN
+  INDIVIDUAL_FCM_TOKEN,
+  CHAT_NOTIFICATION
 } from './constants';
 import { FIREBASE_ADMIN_CONFIG } from './config/firebaseAdminConfig';
+import { access } from 'fs';
 
 class FireBaseSVC {
 
@@ -179,7 +183,7 @@ class FireBaseSVC {
 
     const _loginVal: boolean = await this.getLoginVal(user.email, user.password)
     if (_loginVal) {
-      console.log('token in login', user.token)
+      // console.log('token in login', user.token)
       const loggedInUser: UserInfoType = await this.getUser(user.email)
       await this.updateFCMTokens(user.email, user.token)
       await this.setIndividualFCMToken(user.email, user.token)
@@ -312,6 +316,22 @@ class FireBaseSVC {
     return firebase.database().ref(`${INDIVIDUAL_FCM_TOKEN}/${userId}`)
   }
 
+  _refChatNotification(userID: string, chatID: string) {
+    return firebase.database().ref(`${CHAT_NOTIFICATION}/${userID}/${chatID}`)
+  }
+
+  // {
+  //   userID: {
+  //     chatID: {
+    // might not need the status
+    // if the chatID is here, then that means the notification should be present
+  //       status: boolean,
+  //       admin: boolean,
+  //     }
+  //   }
+  // }
+
+
   async pushUser(firstName, lastName, email, userType, phoneNumber, hash, groupID, dob) {
     let adminChat: AdminChat[] = []
     // we dont need to make a new admin chat for admins
@@ -437,6 +457,9 @@ class FireBaseSVC {
         })
     }
 
+    // clear chat notifications
+    await this._refChatNotification(userID, chatID).remove()
+
     return await this._refMessage(chatID)
       .orderByChild('_id')
       .startAt(start)
@@ -546,13 +569,13 @@ class FireBaseSVC {
         image,
         chatID
       };
-      console.log('message', message)
+      // console.log('message', message)
       try {
         await this._refMessage(chatID).push(message);
         await this.updateNumMessages(messages[0].chatID);
 
         // publish from pubsub
-        console.log('publishing new message: ', message)
+        // console.log('publishing new message: ', message)
         pubsub.publish(MESSAGE_RECEIVED_EVENT, {
           messageReceived: message
         })
@@ -562,48 +585,9 @@ class FireBaseSVC {
       }
     });
 
-    // const deviceFCM = "dqQFO-mGSk9Yr2cEz6D7eO:APA91bEwOPWX0E5_2DbVRx7gO78LFfa1L3N2BJJ1MSg974wSWyjkbHquhw7D0D7vMQQutSgxrns8SQBeg84B2VkO_I-4_cxfZDbJdV4IiI_3OnDGjOhpAVMvgFnBL5rjGRTLoDn4_bmY"
-    // const deviceFCM = "ddigllx0AEllrc2HZ4Zu1h:APA91bHihiVhPRt1yytTPQP02JZmB62nx1QLQgK1UXPKAVATfz-AxUPNQ23oSLVctnSHoOFMw7_vHCQP9c_DzsMgS3llWxezXxPsGkq0dKnQdpOA0BAe4zinGZxmTZBamcc9MH_SjPnj"
-    // const deviceFCM = "f8DP5mtURW6xbWXcHfO0Mf:APA91bH15I1lp62empkNz5JAhKC5bzZufeQCJPOCoaqC_Kh25dYoP7SoE07lG_AOtA26R8yFX5BJvzHpMgBKNOSCUhLCZ0Ql4fRystBrp-3OU-sYv3YlvgvBoy7N8sYvkZc_DbHD525H"
-
-    // send push notification
-    // const message = {
-    //   // store the chat details in the data object
-    //   data: {
-    //     chatID: _chatID,
-    //     message: 'You received a new message',
-    //     title: 'New Message',
-    //     content_available: '1',
-    //     // priority: 'high'
-    //   },
-    //   notification: {
-    //     body: "You received a new message (notification)",
-    //     title: "New Message"
-    //   },
-    //   apns: {
-    //     payload: {
-    //       aps: {
-    //         contentAvailable: true
-    //       }
-    //     },
-    //     headers: {
-    //       'apns-push-type': 'background',
-    //       'apns-priority': '5',
-    //       'apns-topic': 'org.reactjs.native.example.emphasis-education-app', // your app bundle identifier
-    //       'content-available': '1'
-    //     },
-    //   },
-    //   // priority: "high",
-    //   // the chatID seems to be a good choice to send the message to
-    //   // with the topic, we no longer need to store the registration tokens
-    //   // the user needs to manually refresh their chats first, though, in order to actually start getting push notified
-    //   topic: messages[0].chatID
-    //   // tokens: [deviceFCM]
-    // };
-
+    const senderUserInfo = await this.getUser(messages[0].user.email);
     const fcms: FcmDeviceToken[] = await this._refFCMDeviceTokensPerChat(_chatID).once(VALUE).then(snap => snap.val())
     const fcmTokens = fcms.map(token => token.token)
-    // console.log('fcmTokens: ', fcmTokens)
     admin.messaging().sendToDevice(
       // [deviceFCM], //the device fcms
       fcmTokens, //the device fcms
@@ -641,18 +625,128 @@ class FireBaseSVC {
       },
     )
     .then(res => {
-      console.log(`success sending to the device ${JSON.stringify(res)}`)
+      // console.log(`success sending to the device ${JSON.stringify(res)}`)
     })
     .catch(e => {
       console.log(`could not send to the devices ${JSON.stringify(e)} `)
     })
 
-    // admin.messaging().send(message).then(res => {
-    //   console.log('it is a success sending the push notification', res)
-    // }).catch(error => {
-    //   console.log('there was an error sending the push notification', error)
-    //   // add sentry message or exception
-    // })
+    let isAdmin: boolean = false
+    // const user = await this._getUser(messages[0].user.email);
+    const user = await this.getUser(messages[0].user.email);
+    user.adminChat?.forEach(_adminChat => {
+      if (_adminChat.chatID === _chatID) {
+        isAdmin = true
+      }
+    })
+    // update the chat notification in the db
+    // const userID = messages[0].user._id;
+
+    const notif: ChatNotification = {
+      chatID: _chatID,
+      isAdmin
+    }
+
+    const chatObject: Chat = await this._refChats(_chatID).once(VALUE).then(snap => snap.val())
+    // console.log('chat object', chatObject)
+
+    // const init = new Promise<ChatUserInfo[]>(res => [])
+
+    // const adminUserInfo: ChatUserInfo[] = await ADMIN_EMAILS.reduce<Promise<ChatUserInfo[]>>(async (acc, cur) => {
+    //   const adminUser = await this.getUser(cur)
+    //   const awaitedAcc = await acc;
+    //   console.log('admin user', awaitedAcc)
+    //   console.log('admin user', acc)
+    //   const c: ChatUserInfo = {
+    //     firstName: adminUser.firstName,
+    //     lastName: adminUser.lastName,
+    //     email: adminUser.email
+    //   }
+    //   return [
+    //     ...awaitedAcc,
+    //     c
+    //   ]
+    // }, init)
+
+    // console.log('admin User Info', adminUserInfo)
+
+    const admin1: ChatUserInfo = await this.getUser(ADMIN_EMAILS[0]).then(user => ({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email
+    }))
+    const admin2: ChatUserInfo = await this.getUser(ADMIN_EMAILS[1]).then(user => ({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email
+    }))
+    const admin3: ChatUserInfo = await this.getUser(ADMIN_EMAILS[2]).then(user => ({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email
+    }))
+
+    const adminUserInfo: ChatUserInfo[] = [admin1, admin2, admin3]
+
+    const chatUsers = [
+      chatObject?.tutorInfo,
+      ...(chatObject?.userInfo || [])
+    ]
+
+    let relUsers: ChatUserInfo[]
+    if(isAdmin) {
+      // if its admin, then we will include admins and the user
+      if (senderUserInfo.userType === 'Admin') {
+        // this the student / tutor / guardian this admin chat is for
+        const e: string = senderUserInfo.adminChat.reduce<string>((acc, cur) => {
+          if (cur.chatID === _chatID) {
+            return cur.user.email
+          }
+        }, '')
+        const regUserObject = await this.getUser(e)
+        relUsers = [
+          ...adminUserInfo,
+          {
+            firstName: regUserObject.firstName,
+            lastName: regUserObject.lastName,
+            email: regUserObject.email,
+          }
+        ].filter(_user => _user.email !== senderUserInfo.email)
+      } else {
+        relUsers = [
+          ...adminUserInfo,
+          // {
+          //   firstName: senderUserInfo.firstName,
+          //   lastName: senderUserInfo.lastName,
+          //   email: senderUserInfo.email,
+          // }
+        ]
+      }
+    } else {
+      // if a reg chat, then we will include admins and the chat members
+      relUsers = [
+        ...chatUsers,
+        ...adminUserInfo,
+      ].filter(_user => _user.email !== senderUserInfo.email)
+    }
+
+    const _runAsync = async () => {
+      await asyncForEach(relUsers, async (_user) => {
+        if (_user.email !== user) {
+          const userID = getHash(_user.email)
+          const chatNotifRef = this._refChatNotification(userID, _chatID)
+          const oldNotifs = await chatNotifRef.once(VALUE).then(snap => snap.val())
+          // console.log('old', oldNotifs)
+          if (oldNotifs) {
+            await chatNotifRef.update(notif)
+          } else {
+            await chatNotifRef.set(notif)
+          }
+        }
+      })
+    }
+
+    await _runAsync();
 
     return { res }
   }
@@ -661,12 +755,28 @@ class FireBaseSVC {
     this._refMessage('').off();
   }
 
-  async _getUser(email: string, fcmToken?: string) {
-    // console.log('fcm', fcmToken)
+  // async getChatNotificationObject (userID: string, chatID: string) {
+  //   return await this._refChatNotification(userID, chatID).once(VALUE).then(snap => snap.val())
+  // }
+
+  async _getUser(email: string, fcmToken?: string): Promise<UserInfoType> {
     if (fcmToken) {
       await this.updateFCMTokens(email, fcmToken);
     }
-    return await this.getUser(email)
+    const user = await this.getUser(email)
+    const userID = getHash(email)
+    const chatNotifObject = await firebase.database().ref(`${CHAT_NOTIFICATION}/${userID}`).once(VALUE).then(snap => snap.val())
+    const convertedArr: ChatNotification[] = chatNotifObject ? Object.keys(chatNotifObject).map(chatID => (
+      {
+        chatID,
+        isAdmin: chatNotifObject[chatID].isAdmin
+      }
+    )) : []
+    // return {
+    //   user,
+    //   chatNotifications: convertedArr
+    // }
+    return user
   }
 
   // lets pass in the email and then hash it here
@@ -678,7 +788,8 @@ class FireBaseSVC {
         const val = snap.val()
         return val
       })
-    return {...user, classes: user.classes?.filter(c => !!c)};
+    const cleanedOutUser = {...user, classes: user.classes?.filter(c => !!c)}
+    return cleanedOutUser
   }
 
   async getFamily(groupID: string) {
