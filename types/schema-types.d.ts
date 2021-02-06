@@ -227,7 +227,7 @@ export type Query = {
   getFamily?: Maybe<Array<Maybe<UserInfoType>>>;
   searchUsers: Array<Maybe<UserInfoType>>;
   searchClasses: SearchClassesPayload;
-  getUser: GetUserPayload;
+  getUser: UserInfoType;
   checkCode: GenericResponse;
 };
 
