@@ -1122,6 +1122,7 @@ class FireBaseSVC {
       const _res: boolean = await this.deleteChatFromUser(_info.email, _info.userType, chatID)
       res = res && _res;
     })
+    return res;
   }
 
   async deleteChat(chatID) {
@@ -1150,15 +1151,20 @@ class FireBaseSVC {
     ]
 
     const res = await this.deleteChatsFromUsers(hashedInfo, chatID);
+    let _res: boolean;
+    try {
+      // delete the chat object itself
+      const chatRef = await this._refChats(chatID);
+      await chatRef.remove();
+      // delete the chat from the fcmtoken location
+      await this._refFCMDeviceTokensPerChat(chatID).remove();
+      _res = true
+    } catch (e) {
+      _res = false;
+    }
 
-    // // delete the chat object itself
-    const chatRef = await this._refChats(chatID);
-    await chatRef.remove();
 
-    // delete the chat from the fcmtoken location
-    await this._refFCMDeviceTokensPerChat(chatID).remove();
-
-    return { res: true }
+    return { res: res && _res }
 
   }
 
