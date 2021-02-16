@@ -741,6 +741,8 @@ class FireBaseSVC {
         ...chatUsers,
         ...adminUserInfo,
       ].filter(_user => _user.email !== senderUserInfo.email)
+      console.log('send user info', senderUserInfo)
+      console.log('relUsers:', relUsers)
     }
 
     const _runAsync = async () => {
