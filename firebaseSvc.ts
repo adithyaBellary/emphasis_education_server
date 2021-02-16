@@ -608,51 +608,6 @@ class FireBaseSVC {
     })
 
     const senderUserInfo = await this.getUser(messages[0].user.email);
-    const fcms: FcmDeviceToken[] = await this._refFCMDeviceTokensPerChat(_chatID).once(VALUE).then(snap => snap.val())
-    const fcmTokens = fcms.map(token => token.token)
-    admin.messaging().sendToDevice(
-      // [deviceFCM], //the device fcms
-      fcmTokens, //the device fcms
-      {
-        // looks like the data can have anything in it. it is the notification object that is being used to trigger the notiifcation
-        data: {
-          chatID: _chatID,
-          isAdmin: isAdmin ? 'TRUE' : 'FALSE',
-          message: 'You received a new message',
-          title: 'New Message',
-        },
-        notification: {
-          body: "You received a new message (notification)",
-          title: "New Message"
-        },
-      },
-      {
-        // Required for background/quit data-only messages on iOS
-        contentAvailable: true,
-        // Required for background/quit data-only messages on Android
-        priority: 'high',
-        // need the apns headers here to ensure the priority of the fcm coming through
-        apns: {
-          payload: {
-            aps: {
-              contentAvailable: true
-            }
-          },
-          headers: {
-            'apns-push-type': 'background',
-            'apns-priority': '5',
-            'apns-topic': 'org.reactjs.native.example.emphasis-education-app', // your app bundle identifier
-            'content-available': '1'
-          },
-        },
-      },
-    )
-    .then(res => {
-      // console.log(`success sending to the device ${JSON.stringify(res)}`)
-    })
-    .catch(e => {
-      console.log(`could not send to the devices ${JSON.stringify(e)} `)
-    })
 
     // update the chat notification in the db
     const notif: ChatNotification = {
@@ -661,26 +616,6 @@ class FireBaseSVC {
     }
 
     const chatObject: Chat = await this._refChats(_chatID).once(VALUE).then(snap => snap.val())
-
-    // const init = new Promise<ChatUserInfo[]>(res => [])
-
-    // const adminUserInfo: ChatUserInfo[] = await ADMIN_EMAILS.reduce<Promise<ChatUserInfo[]>>(async (acc, cur) => {
-    //   const adminUser = await this.getUser(cur)
-    //   const awaitedAcc = await acc;
-    //   console.log('admin user', awaitedAcc)
-    //   console.log('admin user', acc)
-    //   const c: ChatUserInfo = {
-    //     firstName: adminUser.firstName,
-    //     lastName: adminUser.lastName,
-    //     email: adminUser.email
-    //   }
-    //   return [
-    //     ...awaitedAcc,
-    //     c
-    //   ]
-    // }, init)
-
-    // console.log('admin User Info', adminUserInfo)
 
     const admin1: ChatUserInfo = await this.getUser(ADMIN_EMAILS[0]).then(user => ({
       firstName: user.firstName,
@@ -762,6 +697,55 @@ class FireBaseSVC {
     }
 
     await _runAsync();
+
+    const fcms: FcmDeviceToken[] = await this._refFCMDeviceTokensPerChat(_chatID).once(VALUE).then(snap => snap.val())
+    // let us not send fcm messages to the sender themself
+    const fcmTokens = fcms.filter(f => f.email !== senderUserInfo.email).map(token => token.token)
+    const relevantUserEmails = relUsers.map(_user => _user.email).join(',')
+    admin.messaging().sendToDevice(
+      // [deviceFCM], //the device fcms
+      fcmTokens, //the device fcms
+      {
+        // looks like the data can have anything in it. it is the notification object that is being used to trigger the notiifcation
+        data: {
+          chatID: _chatID,
+          emails: relevantUserEmails,
+          isAdmin: isAdmin ? 'TRUE' : 'FALSE',
+          message: 'You received a new message',
+          title: 'New Message',
+        },
+        notification: {
+          body: "You received a new message (notification)",
+          title: "New Message"
+        },
+      },
+      {
+        // Required for background/quit data-only messages on iOS
+        contentAvailable: true,
+        // Required for background/quit data-only messages on Android
+        priority: 'high',
+        // need the apns headers here to ensure the priority of the fcm coming through
+        apns: {
+          payload: {
+            aps: {
+              contentAvailable: true
+            }
+          },
+          headers: {
+            'apns-push-type': 'background',
+            'apns-priority': '5',
+            'apns-topic': 'org.reactjs.native.example.emphasis-education-app', // your app bundle identifier
+            'content-available': '1'
+          },
+        },
+      },
+    )
+    .then(res => {
+      // console.log(`success sending to the device ${JSON.stringify(res)}`)
+    })
+    .catch(e => {
+      console.log(`could not send to the devices ${JSON.stringify(e)} `)
+    })
 
     return { res }
   }
