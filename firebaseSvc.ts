@@ -715,7 +715,7 @@ class FireBaseSVC {
           title: 'New Message',
         },
         notification: {
-          body: `${senderUserInfo.firstName}: ${messages[0].text}`,
+          body: `${senderUserInfo.firstName} ${senderUserInfo.lastName}: ${messages[0].text}`,
           title: `New Message in ${chatObject.className}`,
         },
       },
