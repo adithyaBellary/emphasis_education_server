@@ -284,9 +284,9 @@ class FireBaseSVC {
     return firebase.database().ref(`${FAMILY_REF_BASE}/${groupID}/user/${ind}`)
   }
 
-  _refFamilClassCpecific(groupID: string, userInd: string, classInd: string) {
-    return firebase.database().ref(`${FAMILY_REF_BASE}/${groupID}/user/${userInd}/classes/${classInd}`)
-  }
+  // _refFamilClassCpecific(groupID: string, userInd: string, classInd: string) {
+  //   return firebase.database().ref(`${FAMILY_REF_BASE}/${groupID}/user/${userInd}/classes/${classInd}`)
+  // }
 
   _refClasses() {
     return firebase.database().ref(`${CLASS_REF_BASE}`);
@@ -798,7 +798,7 @@ class FireBaseSVC {
         const val = snap.val();
         return val.user
       })
-    return res;
+    return res.map(user => ({...user, classes: user.classes?.filter(c => !!c)}));
   }
 
   async searchUsers(searchTerm: string, includeAdmin?: boolean) {
@@ -1073,16 +1073,16 @@ class FireBaseSVC {
   }
 
   async deleteChatFromUser(hashedEmail: string, userType: string, chatID: string) {
-    const res = await this._refUserID(hashedEmail).once(VALUE).then(async snap => {
-      const val: UserInfoType = snap.val();
-      let ind = -1;
-      val.classes.forEach((_class: Chat, _ind) => {
-        if (_class.chatID === chatID) {
-          ind = _ind
-        }
-      })
+    const res: boolean = await this._refUserID(hashedEmail).once(VALUE).then(async (snap): Promise<boolean> => {
+      const user: UserInfoType = snap.val();
+      // let ind = -1;
+      // user.classes.forEach((_class: Chat, _ind) => {
+      //   if (_class.chatID === chatID) {
+      //     ind = _ind
+      //   }
+      // })
 
-      const famInd = await this._refFamily(val.groupID).once(VALUE).then(snap => {
+      const familyIndex = await this._refFamily(user.groupID).once(VALUE).then(snap => {
         const user = snap.val().user;
         let ind = -1;
         user.forEach((_user, _ind) => {
@@ -1093,27 +1093,24 @@ class FireBaseSVC {
         return ind
       })
 
-      const classInd = await this._refFamilySpecific(val.groupID, famInd.toString()).once(VALUE).then(async snap => {
-        const val: UserInfoType = snap.val();
-        let ind = -1;
-        const classRef = val.classes.forEach((_class, _ind) => {
-          if (_class.chatID === chatID) {
-            ind = _ind
-          }
-        })
+      // basically, for each user, we need to delete the chat at the user ref, and the family ref
+      const familyUserSpecificref = firebase.database().ref(`${FAMILY_REF_BASE}/${user.groupID}/user/${familyIndex.toString()}/classes`)
+      const familyUserSpecificClasses: Chat[] = await familyUserSpecificref.once(VALUE).then(snap => snap.val())
+      const filteredClasses = familyUserSpecificClasses.filter(c => c.chatID !== chatID)
 
-        return ind;
-      })
+      const userClassRef = firebase.database().ref(`${User_REF_BASE}/${hashedEmail}/classes`)
+      const userClasses: Chat[] = await userClassRef.once(VALUE).then(snap => snap.val())
+      const userFilteredClasses = userClasses.filter(c => c.chatID !== chatID)
 
-      const classRef = await this._refFamilClassCpecific(val.groupID, famInd.toString(), classInd.toString());
-      await classRef.remove();
-
-      return ind
-    }).then(async (val: number) => {
-      const classRef = await this._refUserClassSpecific(hashedEmail, val);
-      await classRef.remove();
-
-      return true;
+      try {
+        // the family ref
+        await familyUserSpecificref.set(filteredClasses)
+        // the user ref
+        await userClassRef.set(userFilteredClasses)
+        return true
+      } catch (e) {
+        return false
+      }
     })
 
     return res;
@@ -1125,6 +1122,7 @@ class FireBaseSVC {
       const _res: boolean = await this.deleteChatFromUser(_info.email, _info.userType, chatID)
       res = res && _res;
     })
+    return res;
   }
 
   async deleteChat(chatID) {
@@ -1153,15 +1151,20 @@ class FireBaseSVC {
     ]
 
     const res = await this.deleteChatsFromUsers(hashedInfo, chatID);
+    let _res: boolean;
+    try {
+      // delete the chat object itself
+      const chatRef = await this._refChats(chatID);
+      await chatRef.remove();
+      // delete the chat from the fcmtoken location
+      await this._refFCMDeviceTokensPerChat(chatID).remove();
+      _res = true
+    } catch (e) {
+      _res = false;
+    }
 
-    // // delete the chat object itself
-    const chatRef = await this._refChats(chatID);
-    await chatRef.remove();
 
-    // delete the chat from the fcmtoken location
-    await this._refFCMDeviceTokensPerChat(chatID).remove();
-
-    return { res: true }
+    return { res: res && _res }
 
   }
 
