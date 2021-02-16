@@ -774,7 +774,7 @@ class FireBaseSVC {
   //   return await this._refChatNotification(userID, chatID).once(VALUE).then(snap => snap.val())
   // }
 
-  async _getUser(email: string, fcmToken?: string): Promise<UserInfoType> {
+  async _getUser(email: string, fcmToken?: string): Promise<GetUserPayload> {
     if (fcmToken) {
       await this.updateFCMTokens(email, fcmToken);
     }
@@ -787,11 +787,11 @@ class FireBaseSVC {
         isAdmin: chatNotifObject[chatID].isAdmin
       }
     )) : []
-    // return {
-    //   user,
-    //   chatNotifications: convertedArr
-    // }
-    return user
+    return {
+      user,
+      chatNotifications: convertedArr
+    }
+    // return user
   }
 
   // lets pass in the email and then hash it here

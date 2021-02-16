@@ -239,8 +239,8 @@ const typeDefs = gql`
     getFamily(groupID: String!): [UserInfoType]
     searchUsers(searchTerm: String!, includeAdmin: Boolean): [UserInfoType]!
     searchClasses(searchTerm: String!): searchClassesPayload!
-    # getUser(userEmail: String!, fcmToken: String): getUserPayload!
-    getUser(userEmail: String!, fcmToken: String): UserInfoType!
+    getUser(userEmail: String!, fcmToken: String): getUserPayload!
+    # getUser(userEmail: String!, fcmToken: String): UserInfoType!
     checkCode(email: String!, code: String!): genericResponse!
   }
 
