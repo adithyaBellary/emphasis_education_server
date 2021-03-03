@@ -564,7 +564,7 @@ class FireBaseSVC {
     await this._refMessageNum(chatID).set(numMessages + 1)
   }
 
-  sendMessages = async (messages: MessageInput[]) => {
+  sendMessage = async (messages: MessageInput[], isAdminMessage: boolean) => {
     let myMesID;
     let res: Boolean = true;
     const oldMess: number = await this.getRecentId(messages[0].chatID);
@@ -702,6 +702,7 @@ class FireBaseSVC {
     // let us not send fcm messages to the sender themself
     const fcmTokens = fcms.filter(f => f.email !== senderUserInfo.email).map(token => token.token)
     const relevantUserEmails = relUsers.map(_user => _user.email).join(',')
+    const notificationTitle = isAdminMessage ? 'New Admin Chat Message' : `New Message in ${chatObject.className}`
     admin.messaging().sendToDevice(
       // [deviceFCM], //the device fcms
       fcmTokens, //the device fcms
@@ -716,7 +717,7 @@ class FireBaseSVC {
         },
         notification: {
           body: `${senderUserInfo.firstName} ${senderUserInfo.lastName}: ${messages[0].text}`,
-          title: `New Message in ${chatObject.className}`,
+          title: notificationTitle
         },
       },
       {
