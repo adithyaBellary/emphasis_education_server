@@ -92,7 +92,7 @@ class FireBaseSVC {
     const loggedInUser: UserInfoType = await this.getUser(userEmail)
 
     // if no token or wrong email or no classes (no reg classes OR admin chats)
-    if (!newToken || !loggedInUser || (!loggedInUser?.classes && !loggedInUser?.adminChat)) {
+    if (!userEmail || !newToken || !loggedInUser || (!loggedInUser?.classes && !loggedInUser?.adminChat)) {
       const response: GenericResponse = {
         res: true,
         message: 'token not provided or no classes on this user'
@@ -152,6 +152,7 @@ class FireBaseSVC {
     }
     try {
       await _runAsync()
+      await this.setIndividualFCMToken(userEmail, newToken)
 
       return { res: true }
     } catch (e) {
