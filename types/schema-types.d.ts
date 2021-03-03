@@ -363,8 +363,8 @@ export type MutationAddChatMemberArgs = {
 
 
 export type MutationUpdateFcmDeviceTokensArgs = {
-  email: Scalars['String'];
-  token: Scalars['String'];
+  email?: Maybe<Scalars['String']>;
+  token?: Maybe<Scalars['String']>;
 };
 
 
