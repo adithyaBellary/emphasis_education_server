@@ -21,8 +21,8 @@ class dataSource extends RESTDataSource {
     return await firebaseSvc.login(user)
   }
 
-  async sendMessages(message: MessageInput[]) {
-    return await firebaseSvc.sendMessages(message)
+  async sendMessage(message: MessageInput[], isAdminMessage: boolean) {
+    return await firebaseSvc.sendMessage(message, isAdminMessage)
   }
 
   async createUser(email: string, password: string, firstName: string, lastName: string) {

@@ -41,8 +41,8 @@ const resolvers = {
       )
       return response
     },
-    sendMessage: async (_, { messages }, { dataSources }) => {
-      const res = await dataSources.f.sendMessages(messages);
+    sendMessage: async (_, { messages, isAdminMessage }, { dataSources }) => {
+      const res = await dataSources.f.sendMessage(messages, isAdminMessage);
       return res;
     },
     createUser: async (_, { users }, { dataSources }) => {
