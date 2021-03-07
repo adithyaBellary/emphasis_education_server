@@ -90,9 +90,11 @@ class FireBaseSVC {
 
   async updateFCMTokens (userEmail: string, newToken: string) {
     const loggedInUser: UserInfoType = await this.getUser(userEmail)
-
+    console.log('email in update fcm tokens', userEmail)
+    console.log('loggedin user', loggedInUser )
     // if no token or wrong email or no classes (no reg classes OR admin chats)
     if (!userEmail || !newToken || !loggedInUser || (!loggedInUser?.classes && !loggedInUser?.adminChat)) {
+      console.log('getting kicked out')
       const response: GenericResponse = {
         res: true,
         message: 'token not provided or no classes on this user'
