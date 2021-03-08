@@ -97,7 +97,8 @@ class FireBaseSVC {
       return response
     }
     const loggedInUser: UserInfoType = await this.getUser(userEmail)
-
+    // console.log('email in update fcm tokens', userEmail)
+    // console.log('loggedin user', loggedInUser )
     // if no token or wrong email or no classes (no reg classes OR admin chats)
     if ( !loggedInUser || (!loggedInUser?.classes && !loggedInUser?.adminChat)) {
       console.log('getting kicked out')
