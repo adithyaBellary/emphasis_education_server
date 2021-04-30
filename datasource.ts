@@ -21,8 +21,8 @@ class dataSource extends RESTDataSource {
     return await firebaseSvc.login(user)
   }
 
-  async sendMessages(message: MessageInput[]) {
-    return await firebaseSvc.sendMessages(message)
+  async sendMessage(message: MessageInput[], isAdminMessage: boolean) {
+    return await firebaseSvc.sendMessage(message, isAdminMessage)
   }
 
   async createUser(email: string, password: string, firstName: string, lastName: string) {
@@ -111,6 +111,10 @@ class dataSource extends RESTDataSource {
 
   async updateFCMDeviceTokens(email: string, token: string) {
     return await firebaseSvc.updateFCMTokens(email, token)
+  }
+
+  async logout(email: string) {
+    return await firebaseSvc.logout(email)
   }
 }
 

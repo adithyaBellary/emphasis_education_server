@@ -239,14 +239,14 @@ const typeDefs = gql`
     getFamily(groupID: String!): [UserInfoType]
     searchUsers(searchTerm: String!, includeAdmin: Boolean): [UserInfoType]!
     searchClasses(searchTerm: String!): searchClassesPayload!
-    # getUser(userEmail: String!, fcmToken: String): getUserPayload!
-    getUser(userEmail: String!, fcmToken: String): UserInfoType!
+    getUser(userEmail: String!, fcmToken: String): getUserPayload!
+    # getUser(userEmail: String!, fcmToken: String): UserInfoType!
     checkCode(email: String!, code: String!): genericResponse!
   }
 
   type Mutation {
     login(email: String!, password: String!, token: String): LoginPayload
-    sendMessage(messages: [MessageInput]): SendMessagePayload!
+    sendMessage(messages: [MessageInput], isAdminMessage: Boolean!): SendMessagePayload!
     createUser(users: [UserInputType]): genericResponse!
     addClass(className: String!): addClassPayload!
     deleteClass(className: String!): deleteClassPayload!
@@ -258,8 +258,8 @@ const typeDefs = gql`
     sendBugEmail(user: String!, body: String!): genericResponse!
     forgotPassword(email: String!): genericResponse!
     addChatMember(email: String!, chatID: String!): genericResponse!
-
-    updateFCMDeviceTokens(email: String!, token: String!): genericResponse!
+    updateFCMDeviceTokens(email: String, token: String): genericResponse!
+    logout(email: String!): genericResponse!
 
     # deleteChatMember()
 

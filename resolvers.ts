@@ -41,8 +41,8 @@ const resolvers = {
       )
       return response
     },
-    sendMessage: async (_, { messages }, { dataSources }) => {
-      const res = await dataSources.f.sendMessages(messages);
+    sendMessage: async (_, { messages, isAdminMessage }, { dataSources }) => {
+      const res = await dataSources.f.sendMessage(messages, isAdminMessage);
       return res;
     },
     createUser: async (_, { users }, { dataSources }) => {
@@ -58,18 +58,20 @@ const resolvers = {
             const resp = await dataSources.f.createUser(lowerCaseEmail, password, firstName, lastName);
             if (!resp) {
               badEmails.push(email)
-              throw new Error;
+              // throw new Error;
+            } else {
+              const result = await dataSources.f.pushUser(
+                firstName,
+                lastName,
+                lowerCaseEmail,
+                userType,
+                phoneNumber,
+                groupID,
+                // gender,
+                dob
+              )
             }
-            const result = await dataSources.f.pushUser(
-              firstName,
-              lastName,
-              lowerCaseEmail,
-              userType,
-              phoneNumber,
-              groupID,
-              // gender,
-              dob
-            )
+
           } catch (e) {
             response = false
             console.log('There was an error creating the user', e)
@@ -78,8 +80,11 @@ const resolvers = {
       }
       await _create();
       const badEmailsString = badEmails.join(', ')
-      if (!response) { message = `There was an issue with these emails: ${badEmailsString}`; }
-      const result: GenericResponse = { res: response, message };
+      if (badEmails.length > 0) {
+        message = `There was an issue with these emails: ${badEmailsString}. They might already be in use. If you have created other users, however, those have been successfully created.`;
+      }
+      const res = (badEmails.length === 0) && response
+      const result: GenericResponse = { res, message };
       return result;
     },
     addClass: async (_, { className }, { dataSources }) => {
@@ -117,6 +122,9 @@ const resolvers = {
     },
     updateFCMDeviceTokens: async (_, { email, token}, { dataSources }) => {
       return await dataSources.f.updateFCMDeviceTokens(email, token);
+    },
+    logout: async (_, {email}, {dataSources}) => {
+      return await dataSources.f.logout(email);
     }
   },
 

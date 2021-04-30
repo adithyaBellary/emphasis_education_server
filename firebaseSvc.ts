@@ -89,12 +89,20 @@ class FireBaseSVC {
   }
 
   async updateFCMTokens (userEmail: string, newToken: string) {
+    if (!userEmail || !newToken) {
+      const response: GenericResponse = {
+        res: false,
+        message: 'token not provided or no classes on this user'
+      }
+      return response
+    }
     const loggedInUser: UserInfoType = await this.getUser(userEmail)
 
     // if no token or wrong email or no classes (no reg classes OR admin chats)
-    if (!newToken || !loggedInUser || (!loggedInUser?.classes && !loggedInUser?.adminChat)) {
+    if ( !loggedInUser || (!loggedInUser?.classes && !loggedInUser?.adminChat)) {
+      console.log('getting kicked out')
       const response: GenericResponse = {
-        res: true,
+        res: false,
         message: 'token not provided or no classes on this user'
       }
       return response
@@ -152,6 +160,7 @@ class FireBaseSVC {
     }
     try {
       await _runAsync()
+      await this.setIndividualFCMToken(userEmail, newToken)
 
       return { res: true }
     } catch (e) {
@@ -200,6 +209,20 @@ class FireBaseSVC {
     }
 
     return payload;
+  }
+
+  async logout (email: string) {
+    // clear this user at ChatNotification
+    const userID = getHash(email)
+    try {
+      await this._refIndividualFCMTokens(userID).remove()
+      await firebase.database().ref(`${CHAT_NOTIFICATION}/${userID}`).remove()
+      console.log('we good')
+      return { res: true }
+    } catch (e) {
+      return { res: false }
+    }
+
   }
 
   // upload user avatar functionality
@@ -284,9 +307,9 @@ class FireBaseSVC {
     return firebase.database().ref(`${FAMILY_REF_BASE}/${groupID}/user/${ind}`)
   }
 
-  _refFamilClassCpecific(groupID: string, userInd: string, classInd: string) {
-    return firebase.database().ref(`${FAMILY_REF_BASE}/${groupID}/user/${userInd}/classes/${classInd}`)
-  }
+  // _refFamilClassCpecific(groupID: string, userInd: string, classInd: string) {
+  //   return firebase.database().ref(`${FAMILY_REF_BASE}/${groupID}/user/${userInd}/classes/${classInd}`)
+  // }
 
   _refClasses() {
     return firebase.database().ref(`${CLASS_REF_BASE}`);
@@ -550,7 +573,7 @@ class FireBaseSVC {
     await this._refMessageNum(chatID).set(numMessages + 1)
   }
 
-  sendMessages = async (messages: MessageInput[]) => {
+  sendMessage = async (messages: MessageInput[], isAdminMessage: boolean) => {
     let myMesID;
     let res: Boolean = true;
     const oldMess: number = await this.getRecentId(messages[0].chatID);
@@ -585,9 +608,110 @@ class FireBaseSVC {
       }
     });
 
+    let isAdmin: boolean = false
+    const user = await this.getUser(messages[0].user.email);
+    user.adminChat?.forEach(_adminChat => {
+      if (_adminChat.chatID === _chatID) {
+        isAdmin = true
+      }
+    })
+
     const senderUserInfo = await this.getUser(messages[0].user.email);
+
+    // update the chat notification in the db
+    const notif: ChatNotification = {
+      chatID: _chatID,
+      isAdmin
+    }
+
+    const chatObject: Chat = await this._refChats(_chatID).once(VALUE).then(snap => snap.val())
+
+    const admin1: ChatUserInfo = await this.getUser(ADMIN_EMAILS[0]).then(user => ({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email
+    }))
+    const admin2: ChatUserInfo = await this.getUser(ADMIN_EMAILS[1]).then(user => ({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email
+    }))
+    const admin3: ChatUserInfo = await this.getUser(ADMIN_EMAILS[2]).then(user => ({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email
+    }))
+
+    const adminUserInfo: ChatUserInfo[] = [admin1, admin2, admin3]
+
+    const chatUsers = [
+      chatObject?.tutorInfo,
+      ...(chatObject?.userInfo || [])
+    ]
+
+    let relUsers: ChatUserInfo[]
+    if(isAdmin) {
+      // if its admin, then we will include admins and the user
+      if (senderUserInfo.userType === 'Admin') {
+        // this the student / tutor / guardian this admin chat is for
+
+        const e: string = senderUserInfo.adminChat.reduce<string>((acc, cur) => {
+          if (cur.chatID === _chatID) {
+            return cur.user.email
+          } else return acc
+        }, '')
+        const regUserObject = await this.getUser(e)
+        relUsers = [
+          ...adminUserInfo,
+          {
+            firstName: regUserObject.firstName,
+            lastName: regUserObject.lastName,
+            email: regUserObject.email,
+          }
+        ].filter(_user => _user.email !== senderUserInfo.email)
+      } else {
+        relUsers = [
+          ...adminUserInfo,
+          // {
+          //   firstName: senderUserInfo.firstName,
+          //   lastName: senderUserInfo.lastName,
+          //   email: senderUserInfo.email,
+          // }
+        ]
+      }
+    } else {
+      // if a reg chat, then we will include admins and the chat members
+      relUsers = [
+        ...chatUsers,
+        ...adminUserInfo,
+      ].filter(_user => _user.email !== senderUserInfo.email)
+      console.log('send user info', senderUserInfo)
+      console.log('relUsers:', relUsers)
+    }
+
+    const _runAsync = async () => {
+      await asyncForEach(relUsers, async (_user) => {
+        if (_user.email !== user) {
+          const userID = getHash(_user.email)
+          const chatNotifRef = this._refChatNotification(userID, _chatID)
+          const oldNotifs = await chatNotifRef.once(VALUE).then(snap => snap.val())
+          // console.log('old', oldNotifs)
+          if (oldNotifs) {
+            await chatNotifRef.update(notif)
+          } else {
+            await chatNotifRef.set(notif)
+          }
+        }
+      })
+    }
+
+    await _runAsync();
+
     const fcms: FcmDeviceToken[] = await this._refFCMDeviceTokensPerChat(_chatID).once(VALUE).then(snap => snap.val())
-    const fcmTokens = fcms.map(token => token.token)
+    // let us not send fcm messages to the sender themself
+    const fcmTokens = fcms.filter(f => f.email !== senderUserInfo.email).map(token => token.token)
+    const relevantUserEmails = relUsers.map(_user => _user.email).join(',')
+    const notificationTitle = isAdminMessage ? 'New Admin Chat Message' : `New Message in ${chatObject.className}`
     admin.messaging().sendToDevice(
       // [deviceFCM], //the device fcms
       fcmTokens, //the device fcms
@@ -595,12 +719,14 @@ class FireBaseSVC {
         // looks like the data can have anything in it. it is the notification object that is being used to trigger the notiifcation
         data: {
           chatID: _chatID,
+          emails: relevantUserEmails,
+          isAdmin: isAdmin ? 'TRUE' : 'FALSE',
           message: 'You received a new message',
           title: 'New Message',
         },
         notification: {
-          body: "You received a new message (notification)",
-          title: "New Message"
+          body: `${senderUserInfo.firstName} ${senderUserInfo.lastName}: ${messages[0].text}`,
+          title: notificationTitle
         },
       },
       {
@@ -631,123 +757,6 @@ class FireBaseSVC {
       console.log(`could not send to the devices ${JSON.stringify(e)} `)
     })
 
-    let isAdmin: boolean = false
-    // const user = await this._getUser(messages[0].user.email);
-    const user = await this.getUser(messages[0].user.email);
-    user.adminChat?.forEach(_adminChat => {
-      if (_adminChat.chatID === _chatID) {
-        isAdmin = true
-      }
-    })
-    // update the chat notification in the db
-    // const userID = messages[0].user._id;
-
-    const notif: ChatNotification = {
-      chatID: _chatID,
-      isAdmin
-    }
-
-    const chatObject: Chat = await this._refChats(_chatID).once(VALUE).then(snap => snap.val())
-    // console.log('chat object', chatObject)
-
-    // const init = new Promise<ChatUserInfo[]>(res => [])
-
-    // const adminUserInfo: ChatUserInfo[] = await ADMIN_EMAILS.reduce<Promise<ChatUserInfo[]>>(async (acc, cur) => {
-    //   const adminUser = await this.getUser(cur)
-    //   const awaitedAcc = await acc;
-    //   console.log('admin user', awaitedAcc)
-    //   console.log('admin user', acc)
-    //   const c: ChatUserInfo = {
-    //     firstName: adminUser.firstName,
-    //     lastName: adminUser.lastName,
-    //     email: adminUser.email
-    //   }
-    //   return [
-    //     ...awaitedAcc,
-    //     c
-    //   ]
-    // }, init)
-
-    // console.log('admin User Info', adminUserInfo)
-
-    const admin1: ChatUserInfo = await this.getUser(ADMIN_EMAILS[0]).then(user => ({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email
-    }))
-    const admin2: ChatUserInfo = await this.getUser(ADMIN_EMAILS[1]).then(user => ({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email
-    }))
-    const admin3: ChatUserInfo = await this.getUser(ADMIN_EMAILS[2]).then(user => ({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email
-    }))
-
-    const adminUserInfo: ChatUserInfo[] = [admin1, admin2, admin3]
-
-    const chatUsers = [
-      chatObject?.tutorInfo,
-      ...(chatObject?.userInfo || [])
-    ]
-
-    let relUsers: ChatUserInfo[]
-    if(isAdmin) {
-      // if its admin, then we will include admins and the user
-      if (senderUserInfo.userType === 'Admin') {
-        // this the student / tutor / guardian this admin chat is for
-        const e: string = senderUserInfo.adminChat.reduce<string>((acc, cur) => {
-          if (cur.chatID === _chatID) {
-            return cur.user.email
-          }
-        }, '')
-        const regUserObject = await this.getUser(e)
-        relUsers = [
-          ...adminUserInfo,
-          {
-            firstName: regUserObject.firstName,
-            lastName: regUserObject.lastName,
-            email: regUserObject.email,
-          }
-        ].filter(_user => _user.email !== senderUserInfo.email)
-      } else {
-        relUsers = [
-          ...adminUserInfo,
-          // {
-          //   firstName: senderUserInfo.firstName,
-          //   lastName: senderUserInfo.lastName,
-          //   email: senderUserInfo.email,
-          // }
-        ]
-      }
-    } else {
-      // if a reg chat, then we will include admins and the chat members
-      relUsers = [
-        ...chatUsers,
-        ...adminUserInfo,
-      ].filter(_user => _user.email !== senderUserInfo.email)
-    }
-
-    const _runAsync = async () => {
-      await asyncForEach(relUsers, async (_user) => {
-        if (_user.email !== user) {
-          const userID = getHash(_user.email)
-          const chatNotifRef = this._refChatNotification(userID, _chatID)
-          const oldNotifs = await chatNotifRef.once(VALUE).then(snap => snap.val())
-          // console.log('old', oldNotifs)
-          if (oldNotifs) {
-            await chatNotifRef.update(notif)
-          } else {
-            await chatNotifRef.set(notif)
-          }
-        }
-      })
-    }
-
-    await _runAsync();
-
     return { res }
   }
 
@@ -759,7 +768,7 @@ class FireBaseSVC {
   //   return await this._refChatNotification(userID, chatID).once(VALUE).then(snap => snap.val())
   // }
 
-  async _getUser(email: string, fcmToken?: string): Promise<UserInfoType> {
+  async _getUser(email: string, fcmToken?: string): Promise<GetUserPayload> {
     if (fcmToken) {
       await this.updateFCMTokens(email, fcmToken);
     }
@@ -772,11 +781,11 @@ class FireBaseSVC {
         isAdmin: chatNotifObject[chatID].isAdmin
       }
     )) : []
-    // return {
-    //   user,
-    //   chatNotifications: convertedArr
-    // }
-    return user
+    return {
+      user,
+      chatNotifications: convertedArr
+    }
+    // return user
   }
 
   // lets pass in the email and then hash it here
@@ -798,7 +807,7 @@ class FireBaseSVC {
         const val = snap.val();
         return val.user
       })
-    return res;
+    return res.map(user => ({...user, classes: user.classes?.filter(c => !!c)}));
   }
 
   async searchUsers(searchTerm: string, includeAdmin?: boolean) {
@@ -1073,16 +1082,16 @@ class FireBaseSVC {
   }
 
   async deleteChatFromUser(hashedEmail: string, userType: string, chatID: string) {
-    const res = await this._refUserID(hashedEmail).once(VALUE).then(async snap => {
-      const val: UserInfoType = snap.val();
-      let ind = -1;
-      val.classes.forEach((_class: Chat, _ind) => {
-        if (_class.chatID === chatID) {
-          ind = _ind
-        }
-      })
+    const res: boolean = await this._refUserID(hashedEmail).once(VALUE).then(async (snap): Promise<boolean> => {
+      const user: UserInfoType = snap.val();
+      // let ind = -1;
+      // user.classes.forEach((_class: Chat, _ind) => {
+      //   if (_class.chatID === chatID) {
+      //     ind = _ind
+      //   }
+      // })
 
-      const famInd = await this._refFamily(val.groupID).once(VALUE).then(snap => {
+      const familyIndex = await this._refFamily(user.groupID).once(VALUE).then(snap => {
         const user = snap.val().user;
         let ind = -1;
         user.forEach((_user, _ind) => {
@@ -1093,27 +1102,24 @@ class FireBaseSVC {
         return ind
       })
 
-      const classInd = await this._refFamilySpecific(val.groupID, famInd.toString()).once(VALUE).then(async snap => {
-        const val: UserInfoType = snap.val();
-        let ind = -1;
-        const classRef = val.classes.forEach((_class, _ind) => {
-          if (_class.chatID === chatID) {
-            ind = _ind
-          }
-        })
+      // basically, for each user, we need to delete the chat at the user ref, and the family ref
+      const familyUserSpecificref = firebase.database().ref(`${FAMILY_REF_BASE}/${user.groupID}/user/${familyIndex.toString()}/classes`)
+      const familyUserSpecificClasses: Chat[] = await familyUserSpecificref.once(VALUE).then(snap => snap.val())
+      const filteredClasses = familyUserSpecificClasses.filter(c => c.chatID !== chatID)
 
-        return ind;
-      })
+      const userClassRef = firebase.database().ref(`${User_REF_BASE}/${hashedEmail}/classes`)
+      const userClasses: Chat[] = await userClassRef.once(VALUE).then(snap => snap.val())
+      const userFilteredClasses = userClasses.filter(c => c.chatID !== chatID)
 
-      const classRef = await this._refFamilClassCpecific(val.groupID, famInd.toString(), classInd.toString());
-      await classRef.remove();
-
-      return ind
-    }).then(async (val: number) => {
-      const classRef = await this._refUserClassSpecific(hashedEmail, val);
-      await classRef.remove();
-
-      return true;
+      try {
+        // the family ref
+        await familyUserSpecificref.set(filteredClasses)
+        // the user ref
+        await userClassRef.set(userFilteredClasses)
+        return true
+      } catch (e) {
+        return false
+      }
     })
 
     return res;
@@ -1125,6 +1131,7 @@ class FireBaseSVC {
       const _res: boolean = await this.deleteChatFromUser(_info.email, _info.userType, chatID)
       res = res && _res;
     })
+    return res;
   }
 
   async deleteChat(chatID) {
@@ -1153,15 +1160,20 @@ class FireBaseSVC {
     ]
 
     const res = await this.deleteChatsFromUsers(hashedInfo, chatID);
+    let _res: boolean;
+    try {
+      // delete the chat object itself
+      const chatRef = await this._refChats(chatID);
+      await chatRef.remove();
+      // delete the chat from the fcmtoken location
+      await this._refFCMDeviceTokensPerChat(chatID).remove();
+      _res = true
+    } catch (e) {
+      _res = false;
+    }
 
-    // // delete the chat object itself
-    const chatRef = await this._refChats(chatID);
-    await chatRef.remove();
 
-    // delete the chat from the fcmtoken location
-    await this._refFCMDeviceTokensPerChat(chatID).remove();
-
-    return { res: true }
+    return { res: res && _res }
 
   }
 
