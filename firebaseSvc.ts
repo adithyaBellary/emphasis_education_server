@@ -4,6 +4,7 @@ import { MD5 } from "crypto-js"
 import nodemailer from 'nodemailer';
 import * as admin from 'firebase-admin';
 import * as Sentry from '@sentry/node';
+import * as _ from 'lodash';
 
 import pubsub from './pubsub';
 import { firebaseConfig } from './config/firebaseConfig';
@@ -49,8 +50,6 @@ import {
   CHAT_NOTIFICATION
 } from './constants';
 import { FIREBASE_ADMIN_CONFIG } from './config/firebaseAdminConfig';
-import { access } from 'fs';
-
 class FireBaseSVC {
 
   public state: { transporter: any } = {
@@ -686,8 +685,6 @@ class FireBaseSVC {
         ...chatUsers,
         ...adminUserInfo,
       ].filter(_user => _user.email !== senderUserInfo.email)
-      console.log('send user info', senderUserInfo)
-      console.log('relUsers:', relUsers)
     }
 
     const _runAsync = async () => {
@@ -709,8 +706,14 @@ class FireBaseSVC {
     await _runAsync();
 
     const fcms: FcmDeviceToken[] = await this._refFCMDeviceTokensPerChat(_chatID).once(VALUE).then(snap => snap.val())
+    // the issue regarding multiple notifications being sent for the same message
+    // is most likely a product of duplicate objects in the `fcms` array.
+    // I have not been able to find evidence of this in the db, but this unique constraint
+    // should catch any discrepancies
+    const uniqFCMs = _.uniq(fcms)
+
     // let us not send fcm messages to the sender themself
-    const fcmTokens = fcms.filter(f => f.email !== senderUserInfo.email).map(token => token.token)
+    const fcmTokens = uniqFCMs.filter(f => f.email !== senderUserInfo.email).map(token => token.token)
     const relevantUserEmails = relUsers.map(_user => _user.email).join(',')
     const notificationTitle = isAdminMessage ? 'New Admin Chat Message' : `New Message in ${chatObject.className}`
     admin.messaging().sendToDevice(
