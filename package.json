@@ -9,7 +9,7 @@
     "@types/crypto-js": "^3.1.47",
     "@types/lodash": "^4.14.176",
     "apollo-datasource-rest": "^0.9.2",
-    "apollo-server": "^2.14.1",
+    "apollo-server": "^2.25.3",
     "apollo-server-express": "^2.14.1",
     "base-64": "^0.1.0",
     "crypto-js": "^4.0.0",
